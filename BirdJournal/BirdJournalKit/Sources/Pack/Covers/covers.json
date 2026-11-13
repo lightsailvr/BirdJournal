@@ -38,5 +38,29 @@
     "workflowVersion": "set-cover@1 cover-prompts@1",
     "seed": 2635883174,
     "painting": "a79f8f550a5e4e31351f6b1fd2ee86a323aa9cfc260d9c3b6c801a8101e16a78"
+  },
+  "us-la-south": {
+    "file": "us-la-south.jpg",
+    "set": "us-la-south.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 744739735,
+    "painting": "73b51bad5eb870200f7e68bf01c5a896e54e5617c6c49218d2e529cfd9adaab5"
+  },
+  "us-ny-nyc": {
+    "file": "us-ny-nyc.jpg",
+    "set": "us-ny-nyc.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 810122571,
+    "painting": "a120e722b4c9924cdbd23f8e2c9a4451f77ac635cf14d37df6c78a397d6793bc"
+  },
+  "us-pnw": {
+    "file": "us-pnw.jpg",
+    "set": "us-pnw.set.json",
+    "model": "FLUX.3 Image Klein",
+    "workflowVersion": "set-cover@1 cover-prompts@1",
+    "seed": 3781794614,
+    "painting": "0470f4c92d095c51e2af4aac15c24b35b36380fab8c747ff1dd7e67cbee869ba"
   }
 }

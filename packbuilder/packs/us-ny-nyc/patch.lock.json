@@ -1,0 +1,5006 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 2957918715,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 14.4,
+        "dE_p95": 31.4,
+        "dL": 8.8,
+        "dC": 7.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bbdd7ccf82364dc3fc05e4b0b1232eddbf83ba943981531326c8cbbc067d2742",
+      "photos": [
+        216662775
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 214740629,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 9.0,
+        "dE_p95": 21.2,
+        "dL": 7.0,
+        "dC": 0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b2f5f5308cfe1c0a5aea61168fbe342448d83f986a9a3963fa89de4850ae6004",
+      "photos": [
+        675036627
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from bill to tail, in matte black thread, with no white, cream or grey anywhere on its head, breast, belly or wings; the only colour is one scarlet red patch on the shoulder of the folded wing, with a narrow yellow lower edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        2076941827
+      ],
+      "why": "a white breast, throat and wing streaks on an adult male that is black all over"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 170643305,
+      "dark": false,
+      "measure": {
+        "iou": 0.934,
+        "dE_mean": 11.4,
+        "dE_p95": 26.7,
+        "dL": 3.6,
+        "dC": 3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "fbb58fda105b84b6b55db286f7fc9fd3a28feacfd4467b4546766a8d404bca34",
+      "photos": [
+        620016003
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "ammospiza-caudacuta": {
+      "common_name": "Saltmarsh Sparrow",
+      "seed": 3914608938,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 6.1,
+        "dE_p95": 14.2,
+        "dL": 3.2,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3e89279836f381420db685aae6230b24cb58e0f266596957b0249f7875d521c0",
+      "photos": [
+        567048051
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "seed": 3904906957,
+      "dark": false,
+      "measure": {
+        "iou": 0.975,
+        "dE_mean": 6.9,
+        "dE_p95": 13.4,
+        "dL": -4.3,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ac4401efa64bd9c707410deb4469ad7a1a16ce1f4d29af2f085e7ee678a4b411",
+      "photos": [
+        555706719
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 1660552425,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 15.9,
+        "dE_p95": 26.0,
+        "dL": 2.8,
+        "dC": -1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a2b97de5685579eef94a2076ad481a4aac6a4ad63f3079bee2f7efae5b9afe37",
+      "photos": [
+        665284237
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-rubripes": {
+      "common_name": "American Black Duck",
+      "seed": 3578040790,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 8.7,
+        "dE_p95": 14.8,
+        "dL": -1.6,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1885ecdca4d355ff3c61e56bbf800c9993c3bf7e3e5bbc711d218e5d4c73bce5",
+      "photos": [
+        602601541
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anser-caerulescens": {
+      "common_name": "Snow Goose",
+      "seed": 3225419704,
+      "dark": false,
+      "measure": {
+        "iou": 0.871,
+        "dE_mean": 18.8,
+        "dE_p95": 29.0,
+        "dL": 5.7,
+        "dC": -4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f4e735388be9cab1530fd003eb260b664da2467a77d92092a04e0dd5ed6a055c",
+      "photos": [
+        473471749
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige or tan anywhere; only the wingtips are black; the bill is pink with a black line along its edge and the legs pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        3073953582
+      ],
+      "why": "the whole bird came out cream; it is white"
+    },
+    "antrostomus-vociferus": {
+      "common_name": "Eastern Whip-poor-will",
+      "seed": 3085032991,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 6.7,
+        "dE_p95": 13.8,
+        "dL": 4.2,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4dc6348abd15e4d8e27d0fd7df0c321015bdba7b15043b5cb014eba28e3c0782",
+      "photos": [
+        94916494
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3236359817
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "archilochus-colubris": {
+      "common_name": "Ruby-throated Hummingbird",
+      "seed": 1174891006,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "19ce4a29bb7041cc1f89f77c65337939db6c82bfebb5413c715f8626cbd5889a",
+      "photos": [
+        510776810
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 1746781010,
+      "dark": false,
+      "measure": {
+        "iou": 0.865,
+        "dE_mean": 30.8,
+        "dE_p95": 42.8,
+        "dL": 27.1,
+        "dC": -6.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ba35b6238098d854bba28584b59ee591678ba64b87df44be2e3b1e2b5b42ae35",
+      "photos": [
+        574491231
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill is yellow and the legs and feet black.",
+      "review": "approved"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 2688560392,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 17.1,
+        "dE_p95": 24.2,
+        "dL": -13.8,
+        "dC": -4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "43f79e0edb540ccf92b79ea6c876258adf19583f95cd8a70eea3f91b1a2da8c1",
+      "photos": [
+        607554880
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "arenaria-interpres": {
+      "common_name": "Ruddy Turnstone",
+      "seed": 2208642253,
+      "dark": false,
+      "measure": {
+        "iou": 0.903,
+        "dE_mean": 8.2,
+        "dE_p95": 21.5,
+        "dL": -1.5,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a7bfbf66c0aa4f1cb3579ffd76ed8123b6ccdc2af7478036a39df9d1ae4d3fa8",
+      "photos": [
+        420972556
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 555642059,
+      "dark": false,
+      "measure": {
+        "iou": 0.863,
+        "dE_mean": 9.3,
+        "dE_p95": 18.9,
+        "dL": -3.5,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0d9ad7289925d9cf682f5b2db7f519cec0056998c0b6ce4550cf05e545a08ab7",
+      "photos": [
+        755549006
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 113930905,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 30.8,
+        "dE_p95": 55.3,
+        "dL": -8.3,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e084cd5b9256588098309c9be2c71c03d76c9ba7a40caedb9a58e0caab2e8b2a",
+      "photos": [
+        113939262
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck, breast and back are glossy black, not brown; the sides are pale grey with a white wedge at the front; the bill is grey with a white ring and a black tip; the eye is yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        1909277199
+      ],
+      "why": "a brown head and back with a dark eye read as a female; the reference is a drake"
+    },
+    "aythya-marila": {
+      "common_name": "Greater Scaup",
+      "seed": 2894890413,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 8.9,
+        "dE_p95": 18.8,
+        "dL": 3.1,
+        "dC": 5.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ab884214640634927bd565b62f71646f73b958a9d3f8d8dffb760def34234c1b",
+      "photos": [
+        625170248
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        3683366203
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "baeolophus-bicolor": {
+      "common_name": "Tufted Titmouse",
+      "seed": 2313121378,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0053,
+      "attempts": 1,
+      "sha256": "9c2c130adc2880bab7d41d782e564e39c229c4b7ca91ede2bf92c60ee8e0a2bf",
+      "photos": [
+        620014212
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 897351914,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 6.3,
+        "dE_p95": 12.5,
+        "dL": -1.5,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "62dbd965f0a6cdfb8662547617e7ed80308e4aac96c2554427a4fe65a4549267",
+      "photos": [
+        671903116
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "branta-bernicla": {
+      "common_name": "Brant Goose",
+      "seed": 1830768722,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 10.9,
+        "dE_p95": 20.8,
+        "dL": -7.2,
+        "dC": 4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "054481438bb2bb04c2e80a59c2378b296375af1b5893f74e10220b97158c6f00",
+      "photos": [
+        630151014
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 1292331300,
+      "dark": false,
+      "measure": {
+        "iou": 0.848,
+        "dE_mean": 15.9,
+        "dE_p95": 36.6,
+        "dL": -14.3,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "05a6dd4f93a6e471aa5f53507e4c66da59094b99acafe6404943c21bd42ba69c",
+      "photos": [
+        674142407
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 1344052760,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 11.2,
+        "dE_p95": 17.8,
+        "dL": 8.2,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3ac25195c0dcda4cf0cc8ce12c61121c0d850da46c1a6087a98d7ef1e2725a23",
+      "photos": [
+        675595466
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "seed": 3832464231,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "24b8eff192bd4fc0a38935b9dc6ab7d026797343af1132eb262f249117b8e3e0",
+      "photos": [
+        615906501
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 2648177071,
+      "dark": false,
+      "measure": {
+        "iou": 0.897,
+        "dE_mean": 11.4,
+        "dE_p95": 23.3,
+        "dL": -6.1,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d85d739b63d614b65c61efa8aae35adde4bcf132f3a3e7b65c566d79a61c42bd",
+      "photos": [
+        678418736
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 1289784612,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 8.6,
+        "dE_p95": 16.9,
+        "dL": -0.8,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d9c25142d4238c44d9fdd9201aa98fe63973e05878d88aed92dfead84e0fd1dc",
+      "photos": [
+        549035973
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1005043122
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 2484667802,
+      "dark": false,
+      "measure": {
+        "iou": 0.42,
+        "dE_mean": 60.3,
+        "dE_p95": 81.6,
+        "dL": -59.1,
+        "dC": 9.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ab1c3008096d9e31cb0028de40a1d29bd0e86fe6d0d35b4ff29b6199bccf4a88",
+      "photos": [
+        493080925
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "seed": 812763270,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "749c19768b80cfdffe0f2d2ed879e34064583235044dbde5c3fd0bb93e8087da",
+      "photos": [
+        509571627
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-alpina": {
+      "common_name": "Dunlin",
+      "seed": 58348073,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 4.5,
+        "dE_p95": 10.4,
+        "dL": -1.1,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ded003aa8c99979ce3f0d5880cfd14de77daa564bd299f907334000e74d8aed1",
+      "photos": [
+        133331431
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 3678081222,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 6.0,
+        "dE_p95": 12.9,
+        "dL": -4.6,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fb00f24b15a192b9cb2ebb2960fab4322df888155049c42c201741d3ce634ef3",
+      "photos": [
+        154773044
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-pusilla": {
+      "common_name": "Semipalmated Sandpiper",
+      "seed": 453873490,
+      "dark": false,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 7.9,
+        "dE_p95": 13.9,
+        "dL": -0.4,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "8f66f399de737ef91423e95f22ef4f1b39e7d7687906d7f7f09a12a497b67ccb",
+      "photos": [
+        314817220
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "seed": 923564372,
+      "dark": false,
+      "measure": {
+        "iou": 0.882,
+        "dE_mean": 23.4,
+        "dE_p95": 51.6,
+        "dL": -7.1,
+        "dC": 13.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "525b67b6b1fc844d04f23d0ec1fcf3a08204001ea2c142cd8d88c2c77f8d33af",
+      "photos": [
+        681203391
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright pure red, crest, back, wings and tail included, in red thread only: no orange, brown, blue or grey patches. A black mask surrounds the bill and covers the throat. The thick bill is orange-red.",
+      "review": "approved",
+      "rejected_seeds": [
+        1074481602
+      ],
+      "why": "orange-brown with blue-grey patches; the bird is bright red"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 3247244702,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 5.3,
+        "dE_p95": 11.2,
+        "dL": -2.6,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fc21664788ae4fe1908c0858c3c8b6c032753136c4835f15ab43ded1839d1f53",
+      "photos": [
+        160326749
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body and folded wings are dark blackish brown thread, with no white, cream or grey patches on the back or wings; the small bare head is red and the bill pale.",
+      "review": "approved",
+      "rejected_seeds": [
+        797140146,
+        1485067300
+      ],
+      "why": "the folded wing came out cream-white and grey"
+    },
+    "catharus-fuscescens": {
+      "common_name": "Veery",
+      "seed": 1716329872,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 13.5,
+        "dE_p95": 22.8,
+        "dL": -12.1,
+        "dC": 2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "961a6f002c316898a0d7ea2be75331280a8b46fdc613676267f4d733a8272c5a",
+      "photos": [
+        373321259
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "seed": 4089482725,
+      "dark": false,
+      "measure": {
+        "iou": 0.875,
+        "dE_mean": 5.2,
+        "dE_p95": 11.6,
+        "dL": -0.8,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f4238960dd8cb408ca21c83a50da0425a4a59f2cfa03f089bebecad06520ccf0",
+      "photos": [
+        633422235
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "seed": 138028301,
+      "dark": false,
+      "measure": {
+        "iou": 0.83,
+        "dE_mean": 10.4,
+        "dE_p95": 18.3,
+        "dL": 3.0,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "8014c150cd9b82b53da1c47044a67c8eb136f90a4cc0556f6d44bff0249d1fa2",
+      "photos": [
+        549079484
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "certhia-americana": {
+      "common_name": "Brown Creeper",
+      "seed": 3368440530,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 4.6,
+        "dE_p95": 10.7,
+        "dL": -3.6,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8b473ce2393d5783bcaeeabeecddcb50e6a793f05d2371218b74c2c65ad0327d",
+      "photos": [
+        549016607
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "chaetura-pelagica": {
+      "common_name": "Chimney Swift",
+      "seed": 4009291284,
+      "dark": true,
+      "measure": {
+        "iou": 0.718,
+        "dE_mean": 14.2,
+        "dE_p95": 23.6,
+        "dL": 11.5,
+        "dC": 1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "83909dbc6f1b4de110339adac4a23e55b87f322370d9ed74ae3adcdcb0da43c9",
+      "photos": [
+        126994044
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The whole bird is plain sooty grey-brown, only a little paler on the throat; there is no white patch on the face, throat or wings.",
+      "review": "approved",
+      "rejected_seeds": [
+        2583682691
+      ],
+      "why": "an invented white patch on the face and throat and pale marks; the bird is plain sooty"
+    },
+    "charadrius-melodus": {
+      "common_name": "Piping Plover",
+      "seed": 301488493,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8cdabc9e80b8752883018ae7def0629246dd7e4c9d5b65978ed859cceb8294d7",
+      "photos": [
+        208324436
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "charadrius-semipalmatus": {
+      "common_name": "Semipalmated Plover",
+      "seed": 2949635251,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 10.8,
+        "dE_p95": 20.8,
+        "dL": -3.2,
+        "dC": 5.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e15e143536cb95a0f9329b6550b22f12821f3d47afaac4d082fbc4adc2132a05",
+      "photos": [
+        557373897
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        3637046309
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 3996737410,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2a05126c2b90471eee17daf49ccf0ae6c4bbc208cbf99b43c930e62e28260555",
+      "photos": [
+        533670268
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "cistothorus-palustris": {
+      "common_name": "Marsh Wren",
+      "seed": 1617447851,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 8.5,
+        "dE_p95": 18.6,
+        "dL": -6.4,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1e13435a66a07405bbf282c6043adcdcdf25e6123e399cb39313454ebc970de1",
+      "photos": [
+        325028944
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "A bold white eyebrow runs over the eye below a dark brown cap; the upper back is black with fine white streaks; the wings and tail are warm rufous brown barred dark and the underparts pale buff. It clings to the stem with both feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        2389060231,
+        4183890449
+      ],
+      "why": "no white eyebrow and no black-and-white streaked back, and it stands on the lawn instead of a perch"
+    },
+    "clangula-hyemalis": {
+      "common_name": "Long-tailed Duck",
+      "seed": 1012593852,
+      "dark": false,
+      "measure": {
+        "iou": 0.724,
+        "dE_mean": 38.8,
+        "dE_p95": 81.6,
+        "dL": -6.2,
+        "dC": 9.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f496dc3c2509df93e805e6f2373b252ded038cf3dcbf625aaa6c3fe569851a47",
+      "photos": [
+        353712852
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "coccyzus-americanus": {
+      "common_name": "Yellow-billed Cuckoo",
+      "seed": 3045441190,
+      "dark": false,
+      "measure": {
+        "iou": 0.762,
+        "dE_mean": 20.2,
+        "dE_p95": 42.8,
+        "dL": -1.2,
+        "dC": 8.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cdee57feb4d2cc6d7078c68f99a063e1d35bf00841d53885f2faf5d54f0b96b3",
+      "photos": [
+        549063292
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 4040809880,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "518adf8c21490308d8c15b5d5acaa58a889ffe8b2c961b507c5c4b2da8ad8f3e",
+      "photos": [
+        566859371
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 96383964,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0091,
+      "attempts": 1,
+      "sha256": "fc541bd79e851afa4f40395e25dac3d8f0f7043c0abc2a54740c7d5798fd8f40",
+      "photos": [
+        755548787
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "contopus-virens": {
+      "common_name": "Eastern Wood Pewee",
+      "seed": 3043014110,
+      "dark": false,
+      "measure": {
+        "iou": 0.834,
+        "dE_mean": 14.0,
+        "dE_p95": 28.5,
+        "dL": 4.9,
+        "dC": 6.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1c2144f10a332ba5c6de00a89d85c6617d1ec7692609466954d7db59d1cedbf9",
+      "photos": [
+        225361457
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 128141018,
+      "dark": false,
+      "measure": {
+        "iou": 0.573,
+        "dE_mean": 15.1,
+        "dE_p95": 33.1,
+        "dL": -0.4,
+        "dC": 0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f8afe275734c3c57db23c15399ea775dc4acd208cb476761afd1284e56c8ea95",
+      "photos": [
+        594222812
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 1245975066,
+      "dark": false,
+      "measure": {
+        "iou": 0.836,
+        "dE_mean": 8.7,
+        "dE_p95": 22.2,
+        "dL": 0.2,
+        "dC": -4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0e56a3ce19a2d518eb53b382df0b01ec3b00b206c7e6671dc65c92d28c826c09",
+      "photos": [
+        111154349
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches.",
+      "review": "approved",
+      "rejected_seeds": [
+        1027809932
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "seed": 1030742539,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 5.5,
+        "dE_p95": 16.1,
+        "dL": -0.5,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "b20cb5470d63a4a38ad7049f9ec7d2e2b6672637998565c6b665c1999186a3ca",
+      "photos": [
+        539722762
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches.",
+      "review": "approved",
+      "rejected_seeds": [
+        1248383644
+      ],
+      "why": "a pale grey-white panel on the wing of a bird that is black all over"
+    },
+    "corvus-ossifragus": {
+      "common_name": "Fish Crow",
+      "seed": 1921371095,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 4.7,
+        "dE_p95": 10.3,
+        "dL": 1.0,
+        "dC": -1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8ffe52f1bdb68b278f26c27ab1f96bf952f915205fdb6c9e0628726b1825ccc5",
+      "photos": [
+        494422271
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches.",
+      "review": "approved",
+      "rejected_seeds": [
+        92470081
+      ],
+      "why": "a pale grey-white wing panel and pale tail on a bird that is black all over"
+    },
+    "cyanocitta-cristata": {
+      "common_name": "Blue Jay",
+      "seed": 3176716780,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 11.2,
+        "dE_p95": 20.2,
+        "dL": 4.2,
+        "dC": -0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5305ef58d6b0fbc7ebf84a2a170adeec99e1d466e815085bd75a6c25c1df2094",
+      "photos": [
+        725485432
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "cygnus-olor": {
+      "common_name": "Mute Swan",
+      "seed": 1745576598,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 18.4,
+        "dE_p95": 25.7,
+        "dL": 5.6,
+        "dC": -3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "43d77a0b2b4ab5669320700d164de2ad27cf2a8b9463a8e0fe72c42c85006e4d",
+      "photos": [
+        614622553
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, tan or grey anywhere; the bill is orange with a black knob at its base and black skin between the bill and the eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        520901120
+      ],
+      "why": "the whole bird came out beige-tan; it is white"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 1864145152,
+      "dark": false,
+      "measure": {
+        "iou": 0.572,
+        "dE_mean": 32.1,
+        "dE_p95": 61.8,
+        "dL": -5.0,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e8c6aa340c760addafc89e48ddcefc1a76c3d941a2769a2a86bcce87f3c17c93",
+      "photos": [
+        633914045
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved",
+      "rejected_seeds": [
+        404466070
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "dryobates-villosus": {
+      "common_name": "Hairy Woodpecker",
+      "seed": 2479592731,
+      "dark": true,
+      "measure": {
+        "iou": 0.836,
+        "dE_mean": 17.1,
+        "dE_p95": 33.7,
+        "dL": 6.3,
+        "dC": -6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e65e028346976df1083257d1827f8859e6cdcba1f8f49a5c7f03013c0099d4f5",
+      "photos": [
+        587347433
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        3838616973
+      ],
+      "why": "maintainer: backwards; tree and legs should be on the other side"
+    },
+    "dumetella-carolinensis": {
+      "common_name": "Grey Catbird",
+      "seed": 1113744421,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 7.4,
+        "dE_p95": 14.0,
+        "dL": 1.0,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7ae08e78a89e17fe259d33152ace0053b3e377d54a138484584152fa202491fa",
+      "photos": [
+        681201242
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 2789274375,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 14.5,
+        "dE_p95": 24.0,
+        "dL": -13.0,
+        "dC": 3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8f7db115590708f65695f1b0b886b17ad0c96e277dd309f5ff167ee28b0ee5d2",
+      "photos": [
+        549017181
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill and legs are black, the bare skin in front of the eye and the feet bright yellow.",
+      "review": "approved"
+    },
+    "empidonax-traillii": {
+      "common_name": "Willow Flycatcher",
+      "seed": 2984949762,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 12.9,
+        "dE_p95": 25.4,
+        "dL": 10.0,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fd6f416cd38a11837c61af7eef77c728e5f306ecf10b69b105088163c98f9f85",
+      "photos": [
+        41289175
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "euphagus-carolinus": {
+      "common_name": "Rusty Blackbird",
+      "seed": 1098554496,
+      "dark": false,
+      "measure": {
+        "iou": 0.738,
+        "dE_mean": 6.7,
+        "dE_p95": 17.9,
+        "dL": -0.2,
+        "dC": -1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b07ee021badb669ada13c2889affb3d06f666d0de033e3596397194249060234",
+      "photos": [
+        548969188
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black with only a faint dark sheen, in matte black thread with no white, grey or pale thread on its breast, belly, wings or back. The eye is pale yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        914205718
+      ],
+      "why": "painted with a white breast and belly like a magpie; the reference is a black male with a yellow eye"
+    },
+    "falco-columbarius": {
+      "common_name": "Merlin",
+      "seed": 965346864,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 16.0,
+        "dE_p95": 27.0,
+        "dL": 7.3,
+        "dC": 9.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7672595a0f52d6cf6396ba6a708680c3555b3d6b4a0a11a115fc6164175067a9",
+      "photos": [
+        473436209
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1317877414
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 2121117005,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 8.5,
+        "dE_p95": 18.4,
+        "dL": -3.0,
+        "dC": 0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "989287d254c54cbf9d9af2c0874b54220073fd107011c9cc850b2433aa91dee8",
+      "photos": [
+        347322480
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 1175377564,
+      "dark": false,
+      "measure": {
+        "iou": 0.96,
+        "dE_mean": 7.3,
+        "dE_p95": 17.5,
+        "dL": -2.6,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0b9caf4e4ee6a1b56e7de32a1ed325fd2f0423dd468caf0af61e58b461553869",
+      "photos": [
+        549045453
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 1772763923,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3b629a0e625a2b627b75c68f85aea49e23817d6644b414d3c0505f4be1a0c5a3",
+      "photos": [
+        358726414
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved"
+    },
+    "gavia-immer": {
+      "common_name": "Common Loon",
+      "seed": 1637590829,
+      "dark": true,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 9.7,
+        "dE_p95": 20.5,
+        "dL": -5.4,
+        "dC": -1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6ff7863cf6f82faf710d3bab38275cfaac9c9275a3b41382060657446e14dd27",
+      "photos": [
+        171597121
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is red, stitched in red thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        2408957441,
+        4170380951
+      ],
+      "why": "the eye came out dark; the loon's eye is red"
+    },
+    "gavia-stellata": {
+      "common_name": "Red-throated Loon",
+      "seed": 1409459372,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 10.8,
+        "dE_p95": 18.6,
+        "dL": -6.1,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0053,
+      "attempts": 1,
+      "sha256": "45c76ae6146419cbd85cd9cbe97ba87f41720740e861deae48fbadd50f645a56",
+      "photos": [
+        175110580
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 283748452,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 12.3,
+        "dE_p95": 26.8,
+        "dL": -4.6,
+        "dC": -2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "55e16e6da29ff358f56102c29774f91a7867777d8c7382412b8e969a9ada2977",
+      "photos": [
+        657511271
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1743689970
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "haematopus-palliatus": {
+      "common_name": "American Oystercatcher",
+      "seed": 618982331,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 5.5,
+        "dE_p95": 12.0,
+        "dL": -0.7,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2fc1ca99f31f65a51d826efef9943faa01b8804adb60ee46366447df47e394ad",
+      "photos": [
+        502793417
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "rejected_seeds": [
+        1407441709
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 3378589662,
+      "dark": false,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 8.4,
+        "dE_p95": 13.1,
+        "dL": -6.0,
+        "dC": 5.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c8ddd88a604f7bf28bb663cb8c444848b74bc542522e01ac42476c8ad724a496",
+      "photos": [
+        608029206
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The forehead, eyebrow, throat and breast are red; the back and wings are streaked brown, and the belly is whitish with brown streaks. It perches on the branch, both feet gripping it.",
+      "review": "approved",
+      "rejected_seeds": [
+        661606130,
+        1349025380
+      ],
+      "why": "the bird sits low on the lawn and its feet grip no branch"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "seed": 3258392173,
+      "dark": true,
+      "measure": {
+        "iou": 0.896,
+        "dE_mean": 13.6,
+        "dE_p95": 22.0,
+        "dL": 5.2,
+        "dC": 2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c724d8eda1203f56372a588d1fa4ffcd86edf082997391bb8603beb61e5b9275",
+      "photos": [
+        548936562
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The body and both wings are plain dark blackish brown from base to tip: the long flight feathers at the wingtips are the same dark brown, with no white, grey or pale feathers, spots, panels or streaks. Only the head and the tail are pure white. The bill and feet are yellow and the eye is small and pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        741965633,
+        1530810327
+      ],
+      "why": "white and grey feathers at the wingtips"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "seed": 233908467,
+      "dark": false,
+      "measure": {
+        "iou": 0.712,
+        "dE_mean": 17.0,
+        "dE_p95": 26.5,
+        "dL": -14.1,
+        "dC": 2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "66b61419b498a188661caa0e4c338d3441ee1a6d06e132ec8dafd0187bd8053a",
+      "photos": [
+        637322845
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved",
+      "rejected_seeds": [
+        2062948453
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "hylocichla-mustelina": {
+      "common_name": "Wood Thrush",
+      "seed": 2922611943,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "24b771c430676d080a46e25f77d9f08c69c9adbf5ee7afd64b619dc440431ae6",
+      "photos": [
+        392663959
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "icterus-galbula": {
+      "common_name": "Baltimore Oriole",
+      "seed": 3098239252,
+      "dark": false,
+      "measure": {
+        "iou": 0.821,
+        "dE_mean": 16.3,
+        "dE_p95": 36.8,
+        "dL": 3.7,
+        "dC": -4.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eee1c6ceb2272c212736c7cda07b57e904075744a7cd4ff8ecbec6d2af8e654d",
+      "photos": [
+        660186447
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "seed": 1990033362,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 7.4,
+        "dE_p95": 11.7,
+        "dL": -3.2,
+        "dC": 5.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "24d745195d28b65f9fc8dfb802d4acdc5d42300693b852f0aafa92d70b76ec64",
+      "photos": [
+        607571153
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 4127968228,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 9.8,
+        "dE_p95": 17.7,
+        "dL": -2.6,
+        "dC": 4.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c88dffc6c706cedd9aac409845c3b8cf545f61f56639353a0903941cb1c808cd",
+      "photos": [
+        615792848
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The back and folded wings are pale silver grey, the head and body white, with no cream or beige; the wingtips are black with small white spots; the bill is yellow with a black ring near its tip, the eye pale yellow and the legs yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2165111666
+      ],
+      "why": "the head and body came out cream-beige and the black ring on the bill is lost"
+    },
+    "larus-fuscus": {
+      "common_name": "Lesser Black-backed Gull",
+      "seed": 2725297877,
+      "dark": false,
+      "measure": {
+        "iou": 0.942,
+        "dE_mean": 13.2,
+        "dE_p95": 25.1,
+        "dL": 7.7,
+        "dC": 3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "088eeedacf1b2ee23fb71e7c322386214a0f4b5fa543bd0d8ad1ed2b3d75dfbe",
+      "photos": [
+        594110580
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "larus-marinus": {
+      "common_name": "Great Black-backed Gull",
+      "seed": 3433066046,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 12.8,
+        "dE_p95": 23.8,
+        "dL": 4.3,
+        "dC": -2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e1a5343540863ecc9cb2e890a19fc78e8d960aaa2dd5143e13a60aecdddb1dd3",
+      "photos": [
+        557213203
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The head, neck and underparts are pure white; the back and folded wings are slate black, not brown; the heavy bill is yellow with a red spot near the tip and the legs are pale pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        3148308136
+      ],
+      "why": "the back and wings came out dark brown; they are slate black"
+    },
+    "larus-smithsonianus": {
+      "common_name": "American Herring Gull",
+      "seed": 2248256872,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 15.9,
+        "dE_p95": 32.9,
+        "dL": 6.2,
+        "dC": 0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e05697628fe0eae23a64be5805a05b5de188e5fb3ef1a829579bd4b5d48eff7f",
+      "photos": [
+        716993393
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The head, neck and underparts are pure white; the back and folded wings are pale silver grey with black wingtips spotted white; the bill is yellow with a red spot near the tip; the eye is small and pale yellow and the legs pink.",
+      "review": "approved"
+    },
+    "leucophaeus-atricilla": {
+      "common_name": "Laughing Gull",
+      "seed": 1123791392,
+      "dark": false,
+      "measure": {
+        "iou": 0.865,
+        "dE_mean": 20.6,
+        "dE_p95": 32.6,
+        "dL": -15.1,
+        "dC": 1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2caac4aaa5248cb345e0f47e7e9ef99741c6c2b7cf06d100814c23cba3d3dca1",
+      "photos": [
+        699876054
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "seed": 381319417,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d60f302217bdff61add479d0e19f28e6115ce805f55d651dfcafd022dbf43631",
+      "photos": [
+        607449383
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 1325229813,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 7.9,
+        "dE_p95": 17.6,
+        "dL": -2.9,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "63941f6f63a8a63e5cd44edc1733ebfc47bf0f07be0f81e100e7680f808eb2a5",
+      "photos": [
+        184752077
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "seed": 4117487330,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 9.8,
+        "dE_p95": 20.1,
+        "dL": 6.7,
+        "dC": 4.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "98064fa7e029cc2f6fb2e62c50189a048041f979ed1d279e2b2c7215797bc12b",
+      "photos": [
+        607514456
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 1539806794,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 8.5,
+        "dE_p95": 17.2,
+        "dL": 1.6,
+        "dC": -3.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5cf0d674f9a4c7e3d22003460e3e0d86f2afe7998a297c4ffba308af2346060c",
+      "photos": [
+        478742887
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "megascops-asio": {
+      "common_name": "Eastern Screech Owl",
+      "seed": 671275688,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 6.1,
+        "dE_p95": 13.5,
+        "dL": -3.1,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "746e63936138d7b6a791f9490c76f8be57c03f82b0a26fa1bfab8b8190d52e34",
+      "photos": [
+        353607682
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "Its two eyes are closed, thin slits on its face; there is no eye or eye-like spot anywhere else on its body or wings.",
+      "review": "approved",
+      "rejected_seeds": [
+        1594223166
+      ],
+      "why": "an extra eye is stitched on the right shoulder"
+    },
+    "melanerpes-carolinus": {
+      "common_name": "Red-bellied Woodpecker",
+      "seed": 4024135281,
+      "dark": false,
+      "measure": {
+        "iou": 0.879,
+        "dE_mean": 12.3,
+        "dE_p95": 27.2,
+        "dL": -1.0,
+        "dC": 1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6284c25137a4dde1551a33615c77608afdb6038e262568b794a5ac824fc8a3e4",
+      "photos": [
+        647198552
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        2564579047
+      ],
+      "why": "maintainer: backwards; tree and legs should be on the other side, to match the reference"
+    },
+    "melanitta-americana": {
+      "common_name": "Black Scoter",
+      "seed": 3660754173,
+      "dark": false,
+      "measure": {
+        "iou": 0.878,
+        "dE_mean": 8.7,
+        "dE_p95": 23.0,
+        "dL": 5.0,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6b04f04fcb9db098aef92fef6d5fb61ed9a5b605e728035940945ac0e245030f",
+      "photos": [
+        464151629
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is black, in matte black thread with no white, grey or pale thread on its neck, breast, sides or wings; only the knob at the base of the bill is bright yellow-orange.",
+      "review": "approved",
+      "rejected_seeds": [
+        2905971819
+      ],
+      "why": "a white neck and breast and grey-white flanks; the drake is black all over"
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "seed": 1865367967,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 9.5,
+        "dE_p95": 17.8,
+        "dL": -0.7,
+        "dC": 4.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f557d8f01093d80f16f6c4466871a323cdab1cef33aa88e6b782020d1d37f743",
+      "photos": [
+        549120594
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        405303561
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "melospiza-georgiana": {
+      "common_name": "Swamp Sparrow",
+      "seed": 3305450813,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 11.0,
+        "dE_p95": 18.3,
+        "dL": 8.0,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "eb17d4b7ccf2e7227b6c16fb28f60b45bb9ca4214a2c6f264e8d460fd41946f6",
+      "photos": [
+        657507612
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "seed": 1199639779,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 7.7,
+        "dE_p95": 15.5,
+        "dL": -2.3,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f2d63a59adf9f7338f8d51e6e30aed1602762f753963b5540f31b66ba3ae7be7",
+      "photos": [
+        678418591
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "mergus-serrator": {
+      "common_name": "Red-breasted Merganser",
+      "seed": 2230120637,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 9.4,
+        "dE_p95": 17.2,
+        "dL": -0.0,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "595b85256c2b783ea9812ec886b72d0cf5f73f81ef799cca42afd8194fdffe9d",
+      "photos": [
+        621360141
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "rejected_seeds": [
+        4092313643
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 3801219723,
+      "dark": false,
+      "measure": {
+        "iou": 0.903,
+        "dE_mean": 10.9,
+        "dE_p95": 22.2,
+        "dL": -9.8,
+        "dC": -0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b4d3bee9c4f3f4dcd91234cd6166634536ce612a47168060cb5ddd0cd6ccb171",
+      "photos": [
+        749642916
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The upperparts are plain mid grey and the underparts pale grey-white; the wings and tail are dark grey with a white patch on the wing and white outer tail feathers. There is no brown, mauve, purple or blue thread on it. The eye is pale yellow.",
+      "review": "approved"
+    },
+    "mniotilta-varia": {
+      "common_name": "Black-and-white Warbler",
+      "seed": 759926772,
+      "dark": false,
+      "measure": {
+        "iou": 0.894,
+        "dE_mean": 13.6,
+        "dE_p95": 29.8,
+        "dL": 2.0,
+        "dC": -2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "acc0dacc3c8de8d8f6f494e2aef58aafb86cd1c7096fd2aa8c6f2531efe07aef",
+      "photos": [
+        660418681
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is striped black and white from crown to tail, with a white stripe over the eye and two white wing bars; there is no brown, chestnut or yellow anywhere.",
+      "review": "approved",
+      "rejected_seeds": [
+        3276140255,
+        3024281161
+      ],
+      "why": "an invented chestnut streak on the wing"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 3807905532,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 32.7,
+        "dE_p95": 57.7,
+        "dL": -31.2,
+        "dC": -7.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "00dd73292cb72a6850f5d32b96232c76d861bfa1a6d478caa72221bbf0f26237",
+      "photos": [
+        555163882
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and neck are chocolate brown. The rest of the bird, its back, shoulder, folded wing, belly and tail, is black, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak or feather edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        2516530794
+      ],
+      "why": "the body came out blue-grey with pale sheen; the male is black"
+    },
+    "myiarchus-crinitus": {
+      "common_name": "Great Crested Flycatcher",
+      "seed": 4211328672,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 21.0,
+        "dE_p95": 33.0,
+        "dL": -10.0,
+        "dC": -11.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "465991864792c615d55ac357c98b0b509278912b51282a4102c79f3a9e97b336",
+      "photos": [
+        387030779
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "myiopsitta-monachus": {
+      "common_name": "Monk Parakeet",
+      "seed": 3942794597,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 16.8,
+        "dE_p95": 29.5,
+        "dL": -6.4,
+        "dC": -9.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "11c809a98c988ef450230b212c0b5f009c0cba29bf22365f7f6a8e45b5a6cbb2",
+      "photos": [
+        604891118
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2617603571
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 3556295344,
+      "dark": false,
+      "measure": {
+        "iou": 0.805,
+        "dE_mean": 9.3,
+        "dE_p95": 18.9,
+        "dL": 1.2,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "388c8a00ed2babc167db778d1da3afa9308b141de691e3586033b45c6109a3f4",
+      "photos": [
+        731735402
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black with a faint bronze-green sheen, in matte black thread with no white, grey or pale thread anywhere on it: no pale patch, bar, streak or feather edge. Only the bare skin of the throat and face is orange-yellow. The bird stands upright on top of a thick branch that passes under its feet; both grey webbed feet rest on that branch, and the tail hangs down behind and below it.",
+      "review": "approved",
+      "rejected_seeds": [
+        1039573916,
+        1257345802
+      ],
+      "why": "maintainer: bird not on branch"
+    },
+    "nyctanassa-violacea": {
+      "common_name": "Yellow-crowned Night Heron",
+      "seed": 3276361055,
+      "dark": false,
+      "measure": {
+        "iou": 0.365,
+        "dE_mean": 48.5,
+        "dE_p95": 64.7,
+        "dL": -47.5,
+        "dC": 6.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f391bc1c2e99b78e7e15b6ee21b0c6de962eb594a460bb4dc65cc11909aaea9a",
+      "photos": [
+        547285731
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 2411789681,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 8.2,
+        "dE_p95": 16.8,
+        "dL": -4.0,
+        "dC": 3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "765918de077c94b5309b089e86290a0d772b8861c69871c7c0398a089fde754f",
+      "photos": [
+        698756558
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is red, stitched in red thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        4173843943
+      ],
+      "why": "the eye came out black; it is red"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "seed": 1623793953,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 14.2,
+        "dE_p95": 22.5,
+        "dL": -6.8,
+        "dC": 6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d5b6986898940290229987e8b508e4079720ce99a47db7a827c7092def5b8e3f",
+      "photos": [
+        595401610
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 4112069228,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 11.9,
+        "dE_p95": 21.5,
+        "dL": 7.3,
+        "dC": 2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "7b1f7a143dd81c16541dae7fca66d7030619d01e7558d02660c48365ed1f99af",
+      "photos": [
+        684882650
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird stands upright on top of a thick branch; the branch passes directly under its feet and both feet grip it, with the wingtips and tail hanging down below the branch behind it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2183004925
+      ],
+      "why": "maintainer: bird not on branch"
+    },
+    "parkesia-noveboracensis": {
+      "common_name": "Northern Waterthrush",
+      "seed": 634125261,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 10.5,
+        "dE_p95": 17.4,
+        "dL": -8.5,
+        "dC": 4.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "404213b222e4919115f57d17fb311588dac5238b3885425eddde38afa4178db4",
+      "photos": [
+        541522345
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1389153115
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 625444432,
+      "dark": false,
+      "measure": {
+        "iou": 0.521,
+        "dE_mean": 17.0,
+        "dE_p95": 40.6,
+        "dL": -7.9,
+        "dC": 7.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3de2237cf4568d2db332027bd7518a047daeb9ab8f7e6081eb45b0a5e24f725d",
+      "photos": [
+        736969048
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 3824868071,
+      "dark": false,
+      "measure": {
+        "iou": 0.969,
+        "dE_mean": 14.3,
+        "dE_p95": 22.6,
+        "dL": -13.3,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "73aeb5e2f11a2db723b370de51e3703fe2309999bd8a4e24511a5cf3de85b72b",
+      "photos": [
+        488071498
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        2499668593
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "passerella-iliaca": {
+      "common_name": "Red Fox Sparrow",
+      "seed": 758849243,
+      "dark": false,
+      "measure": {
+        "iou": 0.961,
+        "dE_mean": 6.2,
+        "dE_p95": 11.5,
+        "dL": 1.3,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f0173242b1e36175de56b72df5db7668311fb7b94300ad3d879cab808552acb0",
+      "photos": [
+        555165497
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved",
+      "rejected_seeds": [
+        1513893453
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "passerina-cyanea": {
+      "common_name": "Indigo Bunting",
+      "seed": 1019624308,
+      "dark": false,
+      "measure": {
+        "iou": 0.96,
+        "dE_mean": 9.3,
+        "dE_p95": 14.3,
+        "dL": -1.6,
+        "dC": -5.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c2a61bc4c57c97c99d07c030425e8dea13dd3bb9d5d7eff26649bda93d88d207",
+      "photos": [
+        701213034
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        1270942690
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "pheucticus-ludovicianus": {
+      "common_name": "Rose-breasted Grosbeak",
+      "seed": 2139574151,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 14.3,
+        "dE_p95": 41.2,
+        "dL": -6.9,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cb80b65059049db17e1c0f25fe6d27cee700e69dc51d90657226527db080c84a",
+      "photos": [
+        196176391
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pipilo-erythrophthalmus": {
+      "common_name": "Eastern Towhee",
+      "seed": 1580787582,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 11.7,
+        "dE_p95": 27.4,
+        "dL": -8.7,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "15eb5beb7c0ccf619c8155a7203a83c5f0cc6002c3a523080faed640b5b59f67",
+      "photos": [
+        549002716
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, throat, breast, back and tail are black; the sides are rufous orange and the belly white; there is a white patch on the folded wing. The eye is red, stitched in red thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        692049896
+      ],
+      "why": "the eye came out black; the adult's eye is red"
+    },
+    "piranga-olivacea": {
+      "common_name": "Scarlet Tanager",
+      "seed": 1556174996,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 30.3,
+        "dE_p95": 46.3,
+        "dL": -23.1,
+        "dC": -8.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "59d6f86529b51afb4874204d7d91d9ae3eef0ace17655fe0d45a973190a40e46",
+      "photos": [
+        507250570
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body and head are bright scarlet red; the folded wings and the tail are plain jet black, not blue, navy or grey. The bill is pale grey-horn. Two feet grip the branch.",
+      "review": "approved",
+      "rejected_seeds": [
+        734423042
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "plegadis-falcinellus": {
+      "common_name": "Glossy Ibis",
+      "seed": 2012229502,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 10.5,
+        "dE_p95": 19.1,
+        "dL": 7.2,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0f175f5a175bfc544b891422fbf8c2014e30edf76c709b4f9b2fa0ad259a8d62",
+      "photos": [
+        557373680
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "seed": 214699411,
+      "dark": false,
+      "measure": {
+        "iou": 0.896,
+        "dE_mean": 12.4,
+        "dE_p95": 22.2,
+        "dL": 6.6,
+        "dC": 6.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3d7928855643b09b8f5a214a8f6bb1576a592a37dc58b771b372fcfcf1c8a074",
+      "photos": [
+        131404191
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 434091752,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 9.0,
+        "dE_p95": 17.6,
+        "dL": -6.4,
+        "dC": 4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "98eb5626b7c1f67ca85d5917cb08b596b08146c658cd3b9e3f2e6137a9cf4a76",
+      "photos": [
+        345862900
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "seed": 3764708554,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 12.1,
+        "dE_p95": 17.0,
+        "dL": -4.6,
+        "dC": -3.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "55530385179d773fc04b00ca02a1bfa83cf9a1a3a44fde2b5901443be124f245",
+      "photos": [
+        547286528
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "seed": 2099471301,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 10.0,
+        "dE_p95": 20.8,
+        "dL": -8.8,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "466ff017bc44df824ed7cddfa905963ab4c1beec964d53fb263c3a21013fa992",
+      "photos": [
+        190534787
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The upperparts are blue-grey and the underparts whitish, with a white ring around the eye; the long tail is black with white outer feathers. It perches on the twig, both feet gripping it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2469200617,
+        3827970687
+      ],
+      "why": "the bird floats above the lawn with its feet gripping nothing, and the tail came out all grey"
+    },
+    "quiscalus-major": {
+      "common_name": "Boat-tailed Grackle",
+      "seed": 2493509473,
+      "dark": false,
+      "measure": {
+        "iou": 0.714,
+        "dE_mean": 7.6,
+        "dE_p95": 20.2,
+        "dL": 2.6,
+        "dC": -2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "94dce48b38e40eb9522deb6b743a320dae94f9845237e4e9f434fad51a1d80de",
+      "photos": [
+        351786057
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black with a faint purple-blue gloss, in matte black thread with no white, grey, cream or pale thread anywhere on it: no pale patch, bar, streak or feather edge. The bill and legs are black and the eye is pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3818446839
+      ],
+      "why": "a cream shoulder patch and grey sheen on the breast of a black bird"
+    },
+    "quiscalus-quiscula": {
+      "common_name": "Common Grackle",
+      "seed": 3485661864,
+      "dark": false,
+      "measure": {
+        "iou": 0.827,
+        "dE_mean": 6.4,
+        "dE_p95": 14.6,
+        "dL": -1.9,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "370940742f741dd7ed7a2296cee14fb20517ed1f2bbd358289701a43bd2fc54a",
+      "photos": [
+        665283217
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, with a purple-blue gloss on the head and a bronze sheen on the body, in black and very dark thread. Any sheen on its feathers is stitched in dark thread, never in white, grey, tan or pale thread; there are no pale patches, bars or feather edges on the wing, body or tail. The eye is pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3099970110
+      ],
+      "why": "a tan breast and pale grey wing and tail on a black bird"
+    },
+    "rallus-crepitans": {
+      "common_name": "Clapper Rail",
+      "seed": 2220824602,
+      "dark": false,
+      "measure": {
+        "iou": 0.965,
+        "dE_mean": 5.6,
+        "dE_p95": 12.3,
+        "dL": -2.3,
+        "dC": 3.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9f392efec1079a1c09860f58e6b01ae489b9cdf30b0c816a89233b7b02e8ba02",
+      "photos": [
+        662782800
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "regulus-satrapa": {
+      "common_name": "Golden-crowned Kinglet",
+      "seed": 965885009,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b80912aea914457ee4ca2de89167eb93cd28e3df8ccc2d2f9a303daa6acf8374",
+      "photos": [
+        244728813
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "rynchops-niger": {
+      "common_name": "Black Skimmer",
+      "seed": 4167106578,
+      "dark": true,
+      "measure": {
+        "iou": 0.745,
+        "dE_mean": 10.4,
+        "dE_p95": 22.6,
+        "dL": -4.7,
+        "dC": -3.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9d64eb7a19a881fe85f1aa21a989e3f7710093bb7ee2eeea5735dcfd277b4d74",
+      "photos": [
+        718607624
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "rejected_seeds": [
+        2405838980
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "sayornis-phoebe": {
+      "common_name": "Eastern Phoebe",
+      "seed": 1228254107,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 9.7,
+        "dE_p95": 19.1,
+        "dL": -0.3,
+        "dC": 4.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dd646ac2cf192b8b6c9dcccf210b4f725ff0570dcc65c47d2131d155d74c704c",
+      "photos": [
+        630234306
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head is dark sooty grey-brown, darker than the back; the back, wings and tail are dull grey-brown with no blue or teal; the throat and underparts are off-white; the bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1043503885
+      ],
+      "why": "a dark navy-blue patch on the side of the breast"
+    },
+    "scolopax-minor": {
+      "common_name": "American Woodcock",
+      "seed": 3246752901,
+      "dark": false,
+      "measure": {
+        "iou": 0.934,
+        "dE_mean": 10.9,
+        "dE_p95": 21.0,
+        "dL": -8.8,
+        "dC": 3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3241ac9d8cedfd50ac8d4ed946cc6bea558c81f4b0a4b9ef979dde9ff08719e2",
+      "photos": [
+        86923654
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "seiurus-aurocapilla": {
+      "common_name": "Ovenbird",
+      "seed": 827416380,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 9.9,
+        "dE_p95": 18.1,
+        "dL": -3.4,
+        "dC": 3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6aed163a6384a346e6ad804734ccd438d7b77d2b9a1f47c2ada57c9b59013202",
+      "photos": [
+        657507192
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 2043330741,
+      "dark": false,
+      "measure": {
+        "iou": 0.806,
+        "dE_mean": 18.7,
+        "dE_p95": 36.5,
+        "dL": -9.0,
+        "dC": -12.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b36004194c14b766bf6c9bd08f2fdcb18e5bc63c27908ab53587058aa36c8cde",
+      "photos": [
+        549007769
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, a little more olive on the back and wings, with no grey, tan, ochre or brown. The bird sits on a branch that runs under its whole body; its two legs come straight down from the belly, close together, and both feet are closed around that branch. No leg stretches out behind or in front of the bird.",
+      "review": "approved",
+      "rejected_seeds": [
+        3770913039,
+        2546246041,
+        248377379
+      ],
+      "why": "one leg stretches back and grips nothing; both feet belong on the branch"
+    },
+    "setophaga-americana": {
+      "common_name": "Northern Parula",
+      "seed": 3569690133,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 8.5,
+        "dE_p95": 17.6,
+        "dL": -2.4,
+        "dC": -2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ec0007630fe20c7abe6e6456519ff8887ad369fc2daf72b00ef2444eab405d7d",
+      "photos": [
+        573956302
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-caerulescens": {
+      "common_name": "Black-throated Blue Warbler",
+      "seed": 2052863198,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d593b0f98f3025c653120357986e563c3f48643ef50122bdf3773a15ca1c6f40",
+      "photos": [
+        574075540
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 2916924121,
+      "dark": false,
+      "measure": {
+        "iou": 0.807,
+        "dE_mean": 13.7,
+        "dE_p95": 26.8,
+        "dL": 5.6,
+        "dC": -1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d111b5cd97931b8fa6e1f56af976a1da96be51b8361c77592dfeb706d16e4188",
+      "photos": [
+        653935354
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-magnolia": {
+      "common_name": "Magnolia Warbler",
+      "seed": 4001939006,
+      "dark": false,
+      "measure": {
+        "iou": 0.812,
+        "dE_mean": 18.5,
+        "dE_p95": 31.0,
+        "dL": 6.6,
+        "dC": -4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5a33c0743bff894a25978a163159199a2cd8d118a1586970fc1ef70d12e5a287",
+      "photos": [
+        549007577
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-palmarum": {
+      "common_name": "Palm Warbler",
+      "seed": 1228693111,
+      "dark": false,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 10.3,
+        "dE_p95": 19.2,
+        "dL": 1.8,
+        "dC": -1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a084f06416014c76dc8baec65babbcbce74bd1fcdbb0ec3b4888b6f1b47d13cf",
+      "photos": [
+        637327574
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "setophaga-pensylvanica": {
+      "common_name": "Chestnut-sided Warbler",
+      "seed": 3472049740,
+      "dark": false,
+      "measure": {
+        "iou": 0.732,
+        "dE_mean": 24.6,
+        "dE_p95": 42.7,
+        "dL": -2.0,
+        "dC": -4.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8e1009b17350f57089576c7bdbf26ed343e44e266b4a9248d1be7295e4cae333",
+      "photos": [
+        279857085
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown is bright yellow-green; a black line runs through the eye and down the cheek; the white flanks carry a long chestnut stripe; the back is streaked yellow-green and black and the wing has two pale yellow bars.",
+      "review": "approved",
+      "rejected_seeds": [
+        3119806170
+      ],
+      "why": "the yellow crown came out white"
+    },
+    "setophaga-pinus": {
+      "common_name": "Pine Warbler",
+      "seed": 3554176380,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 7.5,
+        "dE_p95": 17.4,
+        "dL": -3.0,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d900bb540653617d94a03dfac2d6c3cb0dd2a03cb87190dea93227120e05a6a7",
+      "photos": [
+        555165609
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-ruticilla": {
+      "common_name": "American Redstart",
+      "seed": 3137858897,
+      "dark": false,
+      "measure": {
+        "iou": 0.903,
+        "dE_mean": 14.9,
+        "dE_p95": 31.0,
+        "dL": 0.1,
+        "dC": 2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b7381c4e4b41c48b1a24f435c728b73a81d369381361eaceb6ceade12cc829ac",
+      "photos": [
+        691642428
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        1426689149,
+        571391211
+      ],
+      "why": "maintainer: foot just slightly not on branch"
+    },
+    "setophaga-striata": {
+      "common_name": "Blackpoll Warbler",
+      "seed": 2012203317,
+      "dark": false,
+      "measure": {
+        "iou": 0.718,
+        "dE_mean": 19.9,
+        "dE_p95": 40.1,
+        "dL": -10.8,
+        "dC": -3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "918dcccfd4df9ee9d55a6ea807cc2efdc518ef53069cbe96b25c7c29a9d56f29",
+      "photos": [
+        554385145
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The cap is solid black and the cheek pure white; the back is grey streaked black and the white underparts are streaked black along the sides; the wing has two white bars; the bill is dark; there is no orange or red anywhere on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        15268259
+      ],
+      "why": "an invented orange-red streak on the wing and tail and a yellow bill"
+    },
+    "setophaga-tigrina": {
+      "common_name": "Cape May Warbler",
+      "seed": 3302398767,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 15.5,
+        "dE_p95": 29.3,
+        "dL": 3.7,
+        "dC": -3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0a6fd176b4744b85046364ed68b9ed1b01d0430efdb38e84a4a53354252389ed",
+      "photos": [
+        549074934
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3016862649
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "setophaga-virens": {
+      "common_name": "Black-throated Green Warbler",
+      "seed": 1345486022,
+      "dark": false,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 10.1,
+        "dE_p95": 20.4,
+        "dL": 0.8,
+        "dC": -1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6aea25ea30e8de742cf941f14d0d40025788597297687016ff52b04fbc5f0287",
+      "photos": [
+        557486048
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sialia-sialis": {
+      "common_name": "Eastern Bluebird",
+      "seed": 2626146246,
+      "dark": false,
+      "measure": {
+        "iou": 0.809,
+        "dE_mean": 10.9,
+        "dE_p95": 24.1,
+        "dL": 0.8,
+        "dC": -0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8e6959f2432bc9587a1f86f688517223dd1fe1e29b475b4542b489d1635a9425",
+      "photos": [
+        549036246
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-canadensis": {
+      "common_name": "Red-breasted Nuthatch",
+      "seed": 665294887,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 5.4,
+        "dE_p95": 12.9,
+        "dL": -0.7,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "42507e0e1d755581c05dbce8714d388264e793677b7239eb5e2ab5a792a58d72",
+      "photos": [
+        109789953
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "seed": 415638586,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 7.7,
+        "dE_p95": 15.0,
+        "dL": -0.4,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "209c8566d323e690cd6375dd74755725b0460ea0c91bfa12a75d3092cbcf20f1",
+      "photos": [
+        549371465
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1874924716
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "somateria-mollissima": {
+      "common_name": "Common Eider",
+      "seed": 640555416,
+      "dark": false,
+      "measure": {
+        "iou": 0.838,
+        "dE_mean": 11.2,
+        "dE_p95": 22.7,
+        "dL": -7.0,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e5b2ac363d847f5cd630f8e7e1ffec8c05ef05b2c11c77765ab5f0ff00b7582e",
+      "photos": [
+        621382364
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 2899186801,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 9.3,
+        "dE_p95": 18.2,
+        "dL": -4.7,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2d2a3448b9ac2024f955368dfcf2105396e1421d3d860938acd3c4f79c845622",
+      "photos": [
+        601330639
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy dark green with one small bright yellow eye and nothing else on the face; the long spoon-shaped bill is plain black; the breast is white and the sides chestnut. The bird swims, and no legs show.",
+      "review": "approved",
+      "rejected_seeds": [
+        3687392487
+      ],
+      "why": "a second dark eye is stitched below the yellow eye"
+    },
+    "sphyrapicus-varius": {
+      "common_name": "Yellow-bellied Sapsucker",
+      "seed": 4111386176,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 6.0,
+        "dE_p95": 10.9,
+        "dL": 0.8,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4e5e6a5bb2fbbb7972eddbf5fae4279bf37e5dab38269bfe366831d0de1b7820",
+      "photos": [
+        633422181
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2181691094
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "seed": 3235534120,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 19.7,
+        "dE_p95": 35.1,
+        "dL": 13.2,
+        "dC": -3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "df0e74c4ab128dd7726f1e214a826856fdcedb4e7d7ce1382e36fa2fe96fad77",
+      "photos": [
+        693892268
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3084740030
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "seed": 2241427264,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 13.4,
+        "dE_p95": 21.1,
+        "dL": -9.1,
+        "dC": 1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "e9398685b9803f18007aa2b25dbb79dd145c081237003102fa3fb798fd14ae6f",
+      "photos": [
+        570766819
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        4070459306
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "spizella-pusilla": {
+      "common_name": "Field Sparrow",
+      "seed": 424966535,
+      "dark": false,
+      "measure": {
+        "iou": 0.839,
+        "dE_mean": 14.0,
+        "dE_p95": 29.0,
+        "dL": -12.2,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "98faa7418b9ab20137d783811b713222b436edcdb7d914355855fe54c99ab4f4",
+      "photos": [
+        364901947
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 3172164773,
+      "dark": false,
+      "measure": {
+        "iou": 0.87,
+        "dE_mean": 14.5,
+        "dE_p95": 28.9,
+        "dL": -11.3,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2bf592a543f1c7bc31235e5e85756b91e4875a562d534a3b5ace881a4a417044",
+      "photos": [
+        502527946
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "sterna-hirundo": {
+      "common_name": "Common Tern",
+      "seed": 462378614,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5f6286d790fdae337a8487a97436531c02e97381b9ab714df0b66a99b45db416",
+      "photos": [
+        549068744
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "sternula-antillarum": {
+      "common_name": "Least Tern",
+      "seed": 4156860566,
+      "dark": false,
+      "measure": {
+        "iou": 0.794,
+        "dE_mean": 10.6,
+        "dE_p95": 29.6,
+        "dL": 1.4,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8bab24f348caec90524e3cccf8c1710ec41dffe9345c9697e3b1dbdf93fb2e23",
+      "photos": [
+        518296221
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The cap is black with a small white forehead; the bill and legs are bright yellow; the back and folded wings are pale grey and the face, neck and underparts pure white.",
+      "review": "approved",
+      "rejected_seeds": [
+        2160302080
+      ],
+      "why": "the black cap is lost and the body came out grey-brown"
+    },
+    "strix-varia": {
+      "common_name": "Barred Owl",
+      "seed": 4129194168,
+      "dark": false,
+      "measure": {
+        "iou": 0.965,
+        "dE_mean": 9.1,
+        "dE_p95": 14.0,
+        "dL": -1.3,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1c1830b49871e0e9e85233a2d86ea498889c6c1fc1e7c24e246625de70d39a1e",
+      "photos": [
+        101812175
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 2971630547,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 7.5,
+        "dE_p95": 13.8,
+        "dL": -6.3,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f459f09adcba49ce52fc12f00891df072ad8cf8d05986c270da78a3adeb5fc2a",
+      "photos": [
+        665283456
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        3323480901
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "seed": 2516278089,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0f9b2c3fb483f6ca7a384a3ee9f492750f9efcc82d80403ae559dd6d699e5015",
+      "photos": [
+        549004294
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "thryothorus-ludovicianus": {
+      "common_name": "Carolina Wren",
+      "seed": 1056160620,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5098e60eb91ccf85fea871c49b75c55938ba895b7d1419a3be58e1cfa91840c4",
+      "photos": [
+        555706971
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "toxostoma-rufum": {
+      "common_name": "Brown Thrasher",
+      "seed": 1017374187,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 7.6,
+        "dE_p95": 14.6,
+        "dL": -1.2,
+        "dC": 4.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "55e052a15ecffba2383f404b6934742d1d85e7461a0d8cab68bb736e27033ba7",
+      "photos": [
+        525428502
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 3695067986,
+      "dark": false,
+      "measure": {
+        "iou": 0.894,
+        "dE_mean": 11.9,
+        "dE_p95": 21.1,
+        "dL": -10.3,
+        "dC": 3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c88f932f44a5532efcda2326cc18fa6617c8fdfb585756c1e8cd4fe4c33b368a",
+      "photos": [
+        454317530
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The head, neck and breast are finely streaked grey-brown and white, with no blue; the back is grey-brown spotted white; the long legs are bright yellow and it stands on both.",
+      "review": "approved",
+      "rejected_seeds": [
+        2872669124
+      ],
+      "why": "a second cream rim and inner line run inside the cord, and a blue-grey stripe runs down the neck"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 1700355362,
+      "dark": false,
+      "measure": {
+        "iou": 0.82,
+        "dE_mean": 6.3,
+        "dE_p95": 14.6,
+        "dL": -3.7,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "63e61a6434dbb6265e4654ad5d3dca03004b1ecec8c52afbcd763941548efc2a",
+      "photos": [
+        128810767
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "tringa-solitaria": {
+      "common_name": "Solitary Sandpiper",
+      "seed": 332436366,
+      "dark": false,
+      "measure": {
+        "iou": 0.682,
+        "dE_mean": 11.3,
+        "dE_p95": 27.2,
+        "dL": -8.6,
+        "dC": 4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0032,
+      "attempts": 2,
+      "sha256": "f1a52f069981b18f2854b577924dfd749fc693f04eff860d827ab64052249ef1",
+      "photos": [
+        160326777
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "troglodytes-aedon": {
+      "common_name": "Northern House Wren",
+      "seed": 203272472,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 6.3,
+        "dE_p95": 12.9,
+        "dL": -3.4,
+        "dC": 4.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d2bec677e7d9621da54ffd82e7717d8b5538a7afbadf64027c7a38bd62727f10",
+      "photos": [
+        507932065
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "troglodytes-hiemalis": {
+      "common_name": "Winter Wren",
+      "seed": 1519650558,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 11.8,
+        "dE_p95": 24.2,
+        "dL": -5.3,
+        "dC": 6.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "834de8e1d1e98a77b9684f087e5801fd3dc324bce2f027f368d078511979962d",
+      "photos": [
+        162992369
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 1123031815,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 13.7,
+        "dE_p95": 22.2,
+        "dL": -12.5,
+        "dC": -0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4493325097923f8a7e4421c8d6e4d0da2bf5da0a49def6bf48c76dd00f4e1cdc",
+      "photos": [
+        687843549
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tyrannus-tyrannus": {
+      "common_name": "Eastern Kingbird",
+      "seed": 560848451,
+      "dark": false,
+      "measure": {
+        "iou": 0.902,
+        "dE_mean": 17.2,
+        "dE_p95": 36.0,
+        "dL": -9.8,
+        "dC": -5.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a539ba0b397fb91dca47a9d3b1fa2408430f316e9fa57cb3720c74749f85b234",
+      "photos": [
+        541522170
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and back are slate black, darkest on the head; the throat and underparts are pure white; the black tail has a clean white band across its tip. There is no brown on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        1449848533
+      ],
+      "why": "the back and wings came out brown and the white band on the tail is lost"
+    },
+    "vireo-gilvus": {
+      "common_name": "Warbling Vireo",
+      "seed": 3702770160,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 15.5,
+        "dE_p95": 21.7,
+        "dL": 7.9,
+        "dC": 2.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "98392b2c4b56acb6d3e7c8cad9dc7786390f7c5711e7802a7e3293c10a476f6a",
+      "photos": [
+        129527898
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-griseus": {
+      "common_name": "White-eyed Vireo",
+      "seed": 4165247041,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 18.7,
+        "dE_p95": 28.0,
+        "dL": 6.1,
+        "dC": -10.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "67da45ddbc3fc428405b05f5bde0d03ed6ede526c45d23c6e2a2c1b5b6a2f5f9",
+      "photos": [
+        390816984
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2403569879
+      ],
+      "why": "reference bird had a colour cast (cut-out fitted against another build's mask); redo from a clean cut-out"
+    },
+    "vireo-olivaceus": {
+      "common_name": "Red-eyed Vireo",
+      "seed": 245704825,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 9.1,
+        "dE_p95": 17.3,
+        "dL": -5.4,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fc996f33dd583be0757cb3478dd1375c8380b54849e79ffff72c7d46c0d91303",
+      "photos": [
+        573032142
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-solitarius": {
+      "common_name": "Blue-headed Vireo",
+      "seed": 1248092432,
+      "dark": false,
+      "measure": {
+        "iou": 0.969,
+        "dE_mean": 6.9,
+        "dE_p95": 12.3,
+        "dL": -5.5,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "13ff907f92424202d89907d241b86135dd2aff60503a2e298bd0301c058c1fbd",
+      "photos": [
+        549053676
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 3453879814,
+      "dark": false,
+      "measure": {
+        "iou": 0.875,
+        "dE_mean": 11.8,
+        "dE_p95": 21.2,
+        "dL": 2.1,
+        "dC": 7.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5f72b41b15e233cb439960970f3a344b47c54fd022dcf94f9c3f953f6b455d78",
+      "photos": [
+        664620686
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "zonotrichia-albicollis": {
+      "common_name": "White-throated Sparrow",
+      "seed": 3507560227,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 13.8,
+        "dE_p95": 22.3,
+        "dL": -11.8,
+        "dC": 0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "61ca0d4a29d3ee647221617c9fbb0529e7063345c47909db9cfa2af7899e5da7",
+      "photos": [
+        645306286
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a square with generously rounded corners",
+        "cord": "brick-red",
+        "twill": "warm cream cotton twill",
+        "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    }
+  }
+}

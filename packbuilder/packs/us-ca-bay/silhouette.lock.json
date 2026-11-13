@@ -1,0 +1,2860 @@
+{
+  "comment": "True silhouettes (#150), written by `packbuilder silhouettes` and `packbuilder silhouette-review`; review on the contact sheets in build/pack-art/<pack id>/silhouettes/. Per species: the reference photo and isolation seed, the recipe's version, the picture's SHA-256 (its file in <cache>/art/silhouettes/), its size, what the recipe noticed (the bird's size in the isolated picture, holes filled, sides the frame cuts) and the review: pending, approved (in the pack), rejected (it stays out until art.silhouette.reference in overrides.json gives another bird) or gap (no silhouette; the app keeps its glyph; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "photos": [
+        714079965
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "7545dc8e275af678165cfcce828c51b157b1afa7d6e3e47405151ce4dd966b12",
+      "width": 180,
+      "height": 122,
+      "bytes": 1733,
+      "measure": {
+        "bird_pixels": 463,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aechmophorus-clarkii": {
+      "common_name": "Clark's Grebe",
+      "photos": [
+        628672312
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "e2806dab57834dbab32b94b1787398a29d984f356ef8390fbfaf09210e1b059c",
+      "width": 180,
+      "height": 86,
+      "bytes": 1097,
+      "measure": {
+        "bird_pixels": 729,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "photos": [
+        664473000
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "f77de9a3e1890d246cffdae873d4d7c8da402f30f2915c3e056f3bb9f92942da",
+      "width": 180,
+      "height": 94,
+      "bytes": 1049,
+      "measure": {
+        "bird_pixels": 695,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "photos": [
+        658043289
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a27e08cf2f7fdff23ca8cfe4f1a2c3ad5f3b457bec7eb635567cc076df19b386",
+      "width": 180,
+      "height": 161,
+      "bytes": 1929,
+      "measure": {
+        "bird_pixels": 835,
+        "holes_filled": 21,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "photos": [
+        729997611
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "752307b1cf15e9c06db16643325ac0159bc0a773071fb1a2ba26bda48a48e970",
+      "width": 180,
+      "height": 96,
+      "bytes": 1481,
+      "measure": {
+        "bird_pixels": 669,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "anarhynchus-nivosus": {
+      "common_name": "Snowy Plover",
+      "photos": [
+        613801870
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "ec82d27d9ef7691b6a242c1d05251ebd78c4410b10ad3aaa7d3a46e45671e4ab",
+      "width": 180,
+      "height": 148,
+      "bytes": 2071,
+      "measure": {
+        "bird_pixels": 651,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "photos": [
+        350807738
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "621cee87a1f45e390b90078266f7954043091ca8a0dc2d8b965d4f17e0d1651b",
+      "width": 180,
+      "height": 56,
+      "bytes": 1057,
+      "measure": {
+        "bird_pixels": 674,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "photos": [
+        613736625
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "77aa79292ba833906808996cced6c47d938231672831f382716af43617bb1730",
+      "width": 180,
+      "height": 150,
+      "bytes": 1768,
+      "measure": {
+        "bird_pixels": 509,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "photos": [
+        682334173
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "e8277108699703788854c6da4028e88687a1fed09267c88fb0ee864072f923ad",
+      "width": 180,
+      "height": 78,
+      "bytes": 1238,
+      "measure": {
+        "bird_pixels": 1130,
+        "holes_filled": 0,
+        "cut": [
+          "right"
+        ]
+      },
+      "review": "approved"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "photos": [
+        739934872
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "59becc7f45b35f7b4f6320f5556e8b8cc811e4c1683db9a0233bde1c2b61a873",
+      "width": 180,
+      "height": 125,
+      "bytes": 1616,
+      "measure": {
+        "bird_pixels": 698,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "photos": [
+        723940438
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "395b293eba238a897ec302d43b385058062d0ad438345fb2290756dd64a7254e",
+      "width": 180,
+      "height": 176,
+      "bytes": 2239,
+      "measure": {
+        "bird_pixels": 661,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "photos": [
+        723396314
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d90ec7e18ecece637f09b3af23fe6d9b8ce764ef25942452c43dec6f4871d2a2",
+      "width": 180,
+      "height": 99,
+      "bytes": 1516,
+      "measure": {
+        "bird_pixels": 691,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "arenaria-melanocephala": {
+      "common_name": "Black Turnstone",
+      "photos": [
+        716270074
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "280cc5da9f1c4eeb88f7fe0a62b7b5f399b604f928bfa92bdb06778e28cfc803",
+      "width": 180,
+      "height": 135,
+      "bytes": 2038,
+      "measure": {
+        "bird_pixels": 660,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "photos": [
+        698224284
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "7b8a3b4ebbbe886c43a6b684e3ad80a9f702930ae06871ed81e5c8c05bfd2541",
+      "width": 108,
+      "height": 180,
+      "bytes": 1630,
+      "measure": {
+        "bird_pixels": 658,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "athene-cunicularia": {
+      "common_name": "Burrowing Owl",
+      "photos": [
+        611567214
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "c8ba36e4f2c7e8d4ca4e685ecf86c1c26fee9315313dd1081ba8ed05632d6781",
+      "width": 110,
+      "height": 180,
+      "bytes": 1970,
+      "measure": {
+        "bird_pixels": 943,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "photos": [
+        481017562
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "236eb0548a0a2c3727567f89c8739a2fc86b37830633034f45f8ecf553d13ffd",
+      "width": 180,
+      "height": 86,
+      "bytes": 1194,
+      "measure": {
+        "bird_pixels": 723,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "photos": [
+        613072013
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "e3a2fb2d117fe466f74d6d2b9353f8c2ba11894983b15796dc11e1f425948b96",
+      "width": 180,
+      "height": 106,
+      "bytes": 1449,
+      "measure": {
+        "bird_pixels": 686,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aythya-marila": {
+      "common_name": "Greater Scaup",
+      "photos": [
+        639417711
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "06baa57d7ce842cb05efc58e252a00e16a4c64336ad6f09ac465512d0ba7a223",
+      "width": 180,
+      "height": 74,
+      "bytes": 1075,
+      "measure": {
+        "bird_pixels": 700,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "aythya-valisineria": {
+      "common_name": "Canvasback",
+      "photos": [
+        613736607
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "fbdca7ddca681e9a75bf3261057e5fd591aa55d06c3ab52e99f253484e335c15",
+      "width": 164,
+      "height": 180,
+      "bytes": 2243,
+      "measure": {
+        "bird_pixels": 636,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "photos": [
+        683563432
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f0f7539c525e9da256ac3d2532708eebabe2366ac069e38019e643d3046dbfb5",
+      "width": 180,
+      "height": 109,
+      "bytes": 1644,
+      "measure": {
+        "bird_pixels": 599,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "photos": [
+        645694644
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "e2eaa76c4fa0beb14471d8fa0614d14a4d7432f7df02116a3328a76ab16d8819",
+      "width": 142,
+      "height": 180,
+      "bytes": 2018,
+      "measure": {
+        "bird_pixels": 738,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "photos": [
+        703214007
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b70b1f45c3b773af37ae56a81dacc31824417927ba8cdf5bdd7e3a2d47fa22bd",
+      "width": 180,
+      "height": 87,
+      "bytes": 1450,
+      "measure": {
+        "bird_pixels": 670,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "photos": [
+        712224249
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "be315fbf84449be58035fe212c0e4a8537ba752e86412d8eb668d691e769185b",
+      "width": 108,
+      "height": 180,
+      "bytes": 1574,
+      "measure": {
+        "bird_pixels": 672,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "photos": [
+        624251508
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "cb549311b717ac549fa2edb1790a0c4488df7d07a32389f8dd3a0559a3b3e60c",
+      "width": 180,
+      "height": 102,
+      "bytes": 1300,
+      "measure": {
+        "bird_pixels": 577,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "bucephala-clangula": {
+      "common_name": "Common Goldeneye",
+      "photos": [
+        615650112
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "7989bb12fc6cf7f35123eb99da21273ec0c0abaeeae117870dabd2d7655b7c69",
+      "width": 180,
+      "height": 74,
+      "bytes": 1129,
+      "measure": {
+        "bird_pixels": 726,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "photos": [
+        740257016
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "086903f69d7fe6049c674553b77c644172322f5446287f4d92232a722ba317c2",
+      "width": 180,
+      "height": 130,
+      "bytes": 1858,
+      "measure": {
+        "bird_pixels": 692,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "photos": [
+        738548593
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "253bc44518d100296980eb0fe591a44d71232acd5843f8b1227bcda665a2cd5a",
+      "width": 80,
+      "height": 180,
+      "bytes": 1518,
+      "measure": {
+        "bird_pixels": 792,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "photos": [
+        689870882
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a6eadfb1bb69b717f62a4043b0abd5b65a62a6b444a2fe136e7665c9aef0e138",
+      "width": 159,
+      "height": 180,
+      "bytes": 2228,
+      "measure": {
+        "bird_pixels": 474,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "photos": [
+        593456961
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "81ea43e88c60fdcad0780c80c91c87f974ec3f6b1438b5442f464ce63bdaf06d",
+      "width": 180,
+      "height": 140,
+      "bytes": 2085,
+      "measure": {
+        "bird_pixels": 694,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "calidris-alpina": {
+      "common_name": "Dunlin",
+      "photos": [
+        671042374
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1f15bc367c4633f77d8f59ea4a79ad0236f2f47646460b08b3594d4289aba8b5",
+      "width": 180,
+      "height": 107,
+      "bytes": 1695,
+      "measure": {
+        "bird_pixels": 656,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "photos": [
+        640560482
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "471b25e0d8dcc8c7e464fc3aaf2cff78f0ceab346c317d1f76b016eba8095826",
+      "width": 180,
+      "height": 98,
+      "bytes": 1473,
+      "measure": {
+        "bird_pixels": 627,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "photos": [
+        726941065
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b9f28e81c71e9d05cd61dfbcdea8160e23e56a2ddaadd9ea1a836442e8b88c6b",
+      "width": 180,
+      "height": 178,
+      "bytes": 2250,
+      "measure": {
+        "bird_pixels": 633,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "photos": [
+        715583890
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2e1114cad7824c2393e1567275cdb2606215627787619a6c0216b3bc78e0a195",
+      "width": 152,
+      "height": 180,
+      "bytes": 2058,
+      "measure": {
+        "bird_pixels": 807,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "photos": [
+        736770528
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "9fc84abc0e05bcca064ac84086965a048f16dad4f985bc2a44e6d1c2b3b0b082",
+      "width": 96,
+      "height": 180,
+      "bytes": 1489,
+      "measure": {
+        "bird_pixels": 535,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "photos": [
+        730680175
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "7506357dfc0c3e142ebcb74d13844259538b6337828ad4e0cec406e24d39c957",
+      "width": 180,
+      "height": 104,
+      "bytes": 1619,
+      "measure": {
+        "bird_pixels": 661,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "photos": [
+        716270417
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5ae44bca468b6af633ee29ae16ecc9c31f82f5c0bb03e637b66213008b31af3a",
+      "width": 180,
+      "height": 178,
+      "bytes": 2314,
+      "measure": {
+        "bird_pixels": 692,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "photos": [
+        599932048
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f76dff42fbc676a021b2b733229b07384649287453f347d8ef6217ebea591b9f",
+      "width": 155,
+      "height": 180,
+      "bytes": 2115,
+      "measure": {
+        "bird_pixels": 882,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "photos": [
+        201383637
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "fde698e842116ebbae52e208ffa5c07b235414f3ffa1350409b47ba92821adb3",
+      "width": 180,
+      "height": 148,
+      "bytes": 1868,
+      "measure": {
+        "bird_pixels": 501,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "certhia-americana": {
+      "common_name": "Brown Creeper",
+      "photos": [
+        629795093
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a0373a0950fb771a51069994c4db3029585874aa769268566a6e4a80e0abf7d2",
+      "width": 59,
+      "height": 180,
+      "bytes": 1301,
+      "measure": {
+        "bird_pixels": 901,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "chamaea-fasciata": {
+      "common_name": "Wrentit",
+      "photos": [
+        593910525
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "8c9eed30aa26c8ee9e7890376e0736c1fa4bfb4ca1009d988b4a0bf74fa73423",
+      "width": 131,
+      "height": 180,
+      "bytes": 2170,
+      "measure": {
+        "bird_pixels": 787,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "charadrius-semipalmatus": {
+      "common_name": "Semipalmated Plover",
+      "photos": [
+        726941143
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "368d8d53775e8ab412d47d29b02250153b62457414f84bfbaf269fc7dba195c2",
+      "width": 180,
+      "height": 140,
+      "bytes": 1872,
+      "measure": {
+        "bird_pixels": 575,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "photos": [
+        714399879
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "db1b075d844645f0cbddf9109f3ca904a0e8f5aa9ee3ba6608b7b48710022a30",
+      "width": 180,
+      "height": 134,
+      "bytes": 1731,
+      "measure": {
+        "bird_pixels": 746,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "photos": [
+        488927020
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "70b96de00c3fa8377346cc37cf4a93f1d35cecbd42b0b0ce9a3ccc928d603618",
+      "width": 180,
+      "height": 135,
+      "bytes": 1833,
+      "measure": {
+        "bird_pixels": 676,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "photos": [
+        671997724
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b93624720235db0c575b8e2754f8b9a65799df397a087201e9f023d8337b31d2",
+      "width": 153,
+      "height": 180,
+      "bytes": 2151,
+      "measure": {
+        "bird_pixels": 608,
+        "holes_filled": 3,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "photos": [
+        617083516
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "7957928568ca01acf7626dfa3d90bd4bdcc0a668a95f35913beb10b7f0f80614",
+      "width": 117,
+      "height": 180,
+      "bytes": 1727,
+      "measure": {
+        "bird_pixels": 461,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "photos": [
+        726050066
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d91b7defd49dd59fe661a3244a34c684ff349918eb333fc3eb794730d3d6f3ad",
+      "width": 180,
+      "height": 146,
+      "bytes": 1859,
+      "measure": {
+        "bird_pixels": 868,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "photos": [
+        609521160
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "b031b0c96a98c1014ea954a069aac20568507ffd19f2428807ee132f824ee5e3",
+      "width": 180,
+      "height": 116,
+      "bytes": 1738,
+      "measure": {
+        "bird_pixels": 658,
+        "holes_filled": 407,
+        "cut": []
+      },
+      "review": "approved",
+      "fill_holes": true
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "photos": [
+        684435364
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "4edbc79e020901c01342f92fafe10a123eb1cc91e429757f94ac5feb390feb5f",
+      "width": 159,
+      "height": 180,
+      "bytes": 2354,
+      "measure": {
+        "bird_pixels": 761,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "photos": [
+        722292466
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f8cfccde13cc2e299cde81e10de57e2b4c4b7f972930f7b7a34d42423bc06572",
+      "width": 180,
+      "height": 151,
+      "bytes": 2211,
+      "measure": {
+        "bird_pixels": 792,
+        "holes_filled": 3,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "cyanocitta-stelleri": {
+      "common_name": "Steller's Jay",
+      "photos": [
+        678791095
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a3bd67c65cf707224b99f718627988869a23fbf3d532b15fe9f136f343a89864",
+      "width": 152,
+      "height": 180,
+      "bytes": 2101,
+      "measure": {
+        "bird_pixels": 756,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "cygnus-olor": {
+      "common_name": "Mute Swan",
+      "photos": [
+        494862013
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1d084321ac7f420501e58e257f1ac17f0af1ccab886b3ada0c947b0ba60406e3",
+      "width": 180,
+      "height": 98,
+      "bytes": 1504,
+      "measure": {
+        "bird_pixels": 671,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "dryobates-nuttallii": {
+      "common_name": "Nuttall's Woodpecker",
+      "photos": [
+        705473299
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "88e70eebded49bd425c1f4cc1c1ba1e5972788ebbe8e33adb58478939ef5ce98",
+      "width": 85,
+      "height": 180,
+      "bytes": 1466,
+      "measure": {
+        "bird_pixels": 934,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "photos": [
+        603690071
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1ffc15c50b291b53e589b0a3d90515097957df970880203eb1397e1ba67b1ef2",
+      "width": 86,
+      "height": 180,
+      "bytes": 1364,
+      "measure": {
+        "bird_pixels": 919,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "dryobates-villosus": {
+      "common_name": "Hairy Woodpecker",
+      "photos": [
+        647392981
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5be203e30851b333a937c86bd607022c00c5381356a6ed80e223612b2aa3e747",
+      "width": 180,
+      "height": 172,
+      "bytes": 2036,
+      "measure": {
+        "bird_pixels": 392,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "photos": [
+        727155060
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "06dfab40acafbf81f05309197589ce2f345ec0715f7dd5a787174094c8cb597d",
+      "width": 180,
+      "height": 153,
+      "bytes": 1871,
+      "measure": {
+        "bird_pixels": 726,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "elanus-leucurus": {
+      "common_name": "White-tailed Kite",
+      "photos": [
+        653375362
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "dbb94807c241afd87e9817d441eef9e99ed51cb7d383744a379d2bacec6b0546",
+      "width": 144,
+      "height": 180,
+      "bytes": 1895,
+      "measure": {
+        "bird_pixels": 778,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "photos": [
+        697629960
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "76b94cbfb5d18601cf6a242684ba410844e14cf6e5f706e188911a4f7339fc9c",
+      "width": 153,
+      "height": 180,
+      "bytes": 2251,
+      "measure": {
+        "bird_pixels": 916,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "photos": [
+        661111283
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "4a1cf51f1623140419ac152b52115155d5d715de8bf78d111d6680e26e1695f3",
+      "width": 180,
+      "height": 138,
+      "bytes": 2049,
+      "measure": {
+        "bird_pixels": 586,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "photos": [
+        630580480
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "7055adf0325ffeb29d5e5da78032ea56bf727f8aa8a838ad0a48a130c50c51eb",
+      "width": 136,
+      "height": 180,
+      "bytes": 1861,
+      "measure": {
+        "bird_pixels": 388,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "photos": [
+        653375462
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "80ebdaafb5c00bb6f5ee2a47dda5b549ba3170066de2129027594d0cfdceed07",
+      "width": 178,
+      "height": 180,
+      "bytes": 2155,
+      "measure": {
+        "bird_pixels": 338,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "photos": [
+        729303531
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "0f15101b86ef3c1893f2413f062f801bbe3955bbe4744f35a3a4c25fc1d840f2",
+      "width": 180,
+      "height": 139,
+      "bytes": 1607,
+      "measure": {
+        "bird_pixels": 496,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "photos": [
+        647488991
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5873a67c17ec0032adf199d5008cccf012434fa126119704ccabc2b352d59983",
+      "width": 180,
+      "height": 98,
+      "bytes": 1383,
+      "measure": {
+        "bird_pixels": 734,
+        "holes_filled": 46,
+        "cut": []
+      },
+      "review": "approved",
+      "fill_holes": true
+    },
+    "gavia-immer": {
+      "common_name": "Common Loon",
+      "photos": [
+        672554080
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "9145fded4db822f9de63f260aa20a54522bc64872f3cff489918607a11647038",
+      "width": 180,
+      "height": 49,
+      "bytes": 909,
+      "measure": {
+        "bird_pixels": 685,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "photos": [
+        671997720
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "305cf32e3f44c5d7740f2507480574d05e1d4699b183060ae0b77e48515ada8c",
+      "width": 180,
+      "height": 179,
+      "bytes": 1989,
+      "measure": {
+        "bird_pixels": 271,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "glaucidium-gnoma": {
+      "common_name": "Mountain Pygmy Owl",
+      "photos": [
+        86246
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "2eb853294d2cdb67ef69ddace54fb911954a995122b0bc337a4c3a7e8f37c3c5",
+      "width": 99,
+      "height": 180,
+      "bytes": 1452,
+      "measure": {
+        "bird_pixels": 912,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "haematopus-bachmani": {
+      "common_name": "Black Oystercatcher",
+      "photos": [
+        621320222
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "37f8c465ebc03a55e829ec778ebbd552563e519209048e3405a5f47507d5b471",
+      "width": 174,
+      "height": 180,
+      "bytes": 2026,
+      "measure": {
+        "bird_pixels": 773,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "photos": [
+        728953938
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "99863d70aee2fff3aaf1a3d3dfe5117cdabb1408b3467a422e54cf96a70bc78a",
+      "width": 104,
+      "height": 180,
+      "bytes": 1640,
+      "measure": {
+        "bird_pixels": 563,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "haemorhous-purpureus": {
+      "common_name": "Purple Finch",
+      "photos": [
+        668736579
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "feeb7528a3dec08538504a7eebca3b77e8e21188d874ad660393ca7f8eb3aca4",
+      "width": 180,
+      "height": 146,
+      "bytes": 1810,
+      "measure": {
+        "bird_pixels": 605,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "photos": [
+        270268563
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "9db938396e0b1381c554d4e2a189e29369829c48763ea9d9b8391ddabc77d889",
+      "width": 180,
+      "height": 109,
+      "bytes": 1875,
+      "measure": {
+        "bird_pixels": 690,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "photos": [
+        709920788
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "dbaa03517058de4cd1918c870f2260e7a0832a1f6b671268163de612b1543d35",
+      "width": 177,
+      "height": 180,
+      "bytes": 2268,
+      "measure": {
+        "bird_pixels": 671,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "photos": [
+        704481360
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "92acbd70a7faa53ed848159564f1af5dab29da172c59c5724939b5f97935635c",
+      "width": 180,
+      "height": 140,
+      "bytes": 1735,
+      "measure": {
+        "bird_pixels": 601,
+        "holes_filled": 4,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "photos": [
+        719063226
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "255c85863358435975fd38ae0dc5cafabdeda9752f02497670c1621231cc05df",
+      "width": 180,
+      "height": 106,
+      "bytes": 1483,
+      "measure": {
+        "bird_pixels": 692,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "photos": [
+        689485752
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "732486540777d8797c778c9b342bde9edf28b0145d503c0580273da7b5f61e5e",
+      "width": 180,
+      "height": 74,
+      "bytes": 1150,
+      "measure": {
+        "bird_pixels": 937,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "ixoreus-naevius": {
+      "common_name": "Varied Thrush",
+      "photos": [
+        257540592
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d2174e9f4ded13e0e1a2d13bc1a47c2e6ac0eb01176e4fb84aa80c18b5f7a17f",
+      "width": 166,
+      "height": 180,
+      "bytes": 2204,
+      "measure": {
+        "bird_pixels": 697,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "photos": [
+        724506572
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2887f626d3704499fcfc76bc1afc93a268e6a3a88e46b80b5691a69f2ba279c2",
+      "width": 180,
+      "height": 150,
+      "bytes": 2073,
+      "measure": {
+        "bird_pixels": 787,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "larus-brachyrhynchus": {
+      "common_name": "Short-billed Gull",
+      "photos": [
+        621842769
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b7c27a14f302d7f752265da0a6e4e7c79ecbeaed006b3bcdbfcf35cf1f22b71a",
+      "width": 180,
+      "height": 74,
+      "bytes": 1212,
+      "measure": {
+        "bird_pixels": 1000,
+        "holes_filled": 0,
+        "cut": [
+          "left"
+        ]
+      },
+      "review": "approved"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "photos": [
+        705671994
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "81f4a0d2b41d65a975f6cd15a019b3862c7ffadaa6d066582e46d18b6503c448",
+      "width": 180,
+      "height": 124,
+      "bytes": 1679,
+      "measure": {
+        "bird_pixels": 707,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "photos": [
+        727156110
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f31b3c457134d5411ed8d4273eeec89da6f9652a29c2a7ded930d85e385dc259",
+      "width": 180,
+      "height": 150,
+      "bytes": 1902,
+      "measure": {
+        "bird_pixels": 679,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "larus-glaucescens": {
+      "common_name": "Glaucous-winged Gull",
+      "photos": [
+        475325348
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "11205775dcabf7228a6a4b83ecf014c83acf218640c26bd4156ef319d09cc4c8",
+      "width": 180,
+      "height": 139,
+      "bytes": 1775,
+      "measure": {
+        "bird_pixels": 642,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "larus-heermanni": {
+      "common_name": "Heermann's Gull",
+      "photos": [
+        739608318
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "3368a744c62c516cdec6d5e3d9cfcf3169db9d64217c0e0ed758c9f9012f54b0",
+      "width": 180,
+      "height": 174,
+      "bytes": 2035,
+      "measure": {
+        "bird_pixels": 385,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "larus-occidentalis": {
+      "common_name": "Western Gull",
+      "photos": [
+        730111176
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d78d53a45eb8b1862d63f7083a6cfa4951445af460f58ac5262db0681eeb0103",
+      "width": 144,
+      "height": 180,
+      "bytes": 2091,
+      "measure": {
+        "bird_pixels": 851,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "photos": [
+        597125855
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "6cc3a3f07d85f38b81ee05f47ad0cd76a8ddaea833dd695d833662fa2d99b4f4",
+      "width": 180,
+      "height": 102,
+      "bytes": 1434,
+      "measure": {
+        "bird_pixels": 615,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "photos": [
+        623108844
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "74593189164e8737c832060b7facc05ab1dbca8d8f279fc4c00bee99b0d99aaa",
+      "width": 180,
+      "height": 128,
+      "bytes": 2073,
+      "measure": {
+        "bird_pixels": 587,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "photos": [
+        673155793
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "2bf302d4bb6d8721fbfdba7b7595475c161791c8d30210c883adefe46ee8cd03",
+      "width": 180,
+      "height": 104,
+      "bytes": 1347,
+      "measure": {
+        "bird_pixels": 827,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "photos": [
+        613736581
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b2cb20b77cc79f32e2d4f6ba3f8bfdaa27bfbc159c889abb1fbd53896465160a",
+      "width": 180,
+      "height": 94,
+      "bytes": 1263,
+      "measure": {
+        "bird_pixels": 598,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "photos": [
+        741988232
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "6881d2e71a484f10bc6ed4ad058f1a5b99315e1e1f5c730466967a7df4843bec",
+      "width": 180,
+      "height": 73,
+      "bytes": 1061,
+      "measure": {
+        "bird_pixels": 670,
+        "holes_filled": 44,
+        "cut": []
+      },
+      "review": "approved",
+      "fill_holes": true
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "photos": [
+        705671954
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a7551dcd6df5bad78b61bfc3f966e79ad60d3c97dfa5317b15ebacf7f3e1f08b",
+      "width": 163,
+      "height": 180,
+      "bytes": 2171,
+      "measure": {
+        "bird_pixels": 560,
+        "holes_filled": 65,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "megascops-kennicottii": {
+      "common_name": "Western Screech Owl",
+      "photos": [
+        487362699
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "94d4d39de535a7e54033ab940d2d48a500b332ea0ae91f008f2ec1b837b864cf",
+      "width": 158,
+      "height": 180,
+      "bytes": 1935,
+      "measure": {
+        "bird_pixels": 759,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "melanerpes-formicivorus": {
+      "common_name": "Acorn Woodpecker",
+      "photos": [
+        717685620
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "51e5937dc8b4e39f6c75ce0dc517e85590d1af0b0728301e0d2eea7b1c0aa459",
+      "width": 180,
+      "height": 178,
+      "bytes": 2208,
+      "measure": {
+        "bird_pixels": 666,
+        "holes_filled": 4,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "melanitta-perspicillata": {
+      "common_name": "Surf Scoter",
+      "photos": [
+        687327830
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "226c564aad586fba8f639d9ab19ce8203f417cd7e6d4735d09d28cbe6969e53a",
+      "width": 180,
+      "height": 66,
+      "bytes": 1120,
+      "measure": {
+        "bird_pixels": 690,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "photos": [
+        721547162
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "09192bb4b2970cb790983b4b64b2cb008dfde358c366f608d3b31f40099ea697",
+      "width": 148,
+      "height": 180,
+      "bytes": 2399,
+      "measure": {
+        "bird_pixels": 825,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "photos": [
+        716476512
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "18043f93ab585c15d6459d54d2a5e48eac115841299e85b3dbbc1706a4f3a762",
+      "width": 180,
+      "height": 114,
+      "bytes": 1781,
+      "measure": {
+        "bird_pixels": 699,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "photos": [
+        714775993
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5f440a5d43e3e976aab526272081ba3805e7009c79f46b88722184625bb4aae7",
+      "width": 180,
+      "height": 103,
+      "bytes": 1645,
+      "measure": {
+        "bird_pixels": 660,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "mergus-merganser": {
+      "common_name": "Common Merganser",
+      "photos": [
+        652606348
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "09b1f9e934230344264a91f79f4c7b7ee7d2692599c3857ccef57e350c3a682c",
+      "width": 180,
+      "height": 70,
+      "bytes": 1130,
+      "measure": {
+        "bird_pixels": 642,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "photos": [
+        671625297
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "996de9cf28790142f8f198a3305dd0e7e1831c631d6779c3f9a77ac93c47e296",
+      "width": 180,
+      "height": 148,
+      "bytes": 2205,
+      "measure": {
+        "bird_pixels": 657,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "photos": [
+        670224719
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a68b485c6ef55a8f6a9e5fb39d1bbe0811c4e3d627c4f423dd8bf698774b87d4",
+      "width": 180,
+      "height": 127,
+      "bytes": 1774,
+      "measure": {
+        "bird_pixels": 1009,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "photos": [
+        538853690
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "14ba951dd816e197c94a771cbf0adf9893ed95ba67a665cf069923922805a79f",
+      "width": 180,
+      "height": 151,
+      "bytes": 1910,
+      "measure": {
+        "bird_pixels": 703,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "photos": [
+        710521409
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f058f5d9179da16cb97f136048ce45ceaa50066c2acaeecb234d7fd78d2b0552",
+      "width": 154,
+      "height": 180,
+      "bytes": 2134,
+      "measure": {
+        "bird_pixels": 799,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "numenius-americanus": {
+      "common_name": "Long-billed Curlew",
+      "photos": [
+        636648692
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "59a9339d52942f648914da605fb7a3b7300b5b17e35e79da27202499609a6d73",
+      "width": 180,
+      "height": 164,
+      "bytes": 2032,
+      "measure": {
+        "bird_pixels": 660,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "numenius-hudsonicus": {
+      "common_name": "Hudsonian Whimbrel",
+      "photos": [
+        642244896
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f27f7718a3c3aa8bdf40426d18713307e6d46c5cf8841c6b2621dc48ca099692",
+      "width": 139,
+      "height": 180,
+      "bytes": 1925,
+      "measure": {
+        "bird_pixels": 900,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "photos": [
+        694294709
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "2e1ef0a66ff672ae288585003c4e387c408a7e58bede2aea7d9155ce1c790983",
+      "width": 180,
+      "height": 175,
+      "bytes": 2458,
+      "measure": {
+        "bird_pixels": 617,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "photos": [
+        628672240
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "56d16b5d7eff0740153c539dcf2852579ab06dd1017dc99467fb31558e512e06",
+      "width": 180,
+      "height": 81,
+      "bytes": 1176,
+      "measure": {
+        "bird_pixels": 725,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "photos": [
+        694616436
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2a401e547a162252d6c7a79f0482141be04c523bbb8a6c3434a50aca169e6adc",
+      "width": 180,
+      "height": 180,
+      "bytes": 2268,
+      "measure": {
+        "bird_pixels": 631,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "photos": [
+        723472342
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "0c0d9dbe235338a1b8e824df2b8082052d1d0f1fda3fe32e2f281a2261b36646",
+      "width": 180,
+      "height": 155,
+      "bytes": 1966,
+      "measure": {
+        "bird_pixels": 428,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "photos": [
+        623708032
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "093cda5967fb5bb2d408af7f54599317c54b824db4c1b9141378171c31e50b24",
+      "width": 180,
+      "height": 151,
+      "bytes": 1871,
+      "measure": {
+        "bird_pixels": 671,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "passerella-iliaca": {
+      "common_name": "Red Fox Sparrow",
+      "photos": [
+        574948743
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d4fffb1b867876045cd2e98ef3afc9ecf7365cabf2fbc6ba26f13e0c6eb56ab8",
+      "width": 180,
+      "height": 112,
+      "bytes": 1726,
+      "measure": {
+        "bird_pixels": 727,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "patagioenas-fasciata": {
+      "common_name": "Band-tailed Pigeon",
+      "photos": [
+        711326192
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b1e5af539dfc9dbc00b4fd4c52b0fd7026d1f1bc7986026239b9d5727040833f",
+      "width": 106,
+      "height": 180,
+      "bytes": 1743,
+      "measure": {
+        "bird_pixels": 939,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "photos": [
+        726452917
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1a5a6fcf25c1857e86ac74e84c62106f81d7bf6afa51a0fdd4f83a296f9b1323",
+      "width": 180,
+      "height": 94,
+      "bytes": 1572,
+      "measure": {
+        "bird_pixels": 926,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "photos": [
+        741493820
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "dbf6fc8a32079caecfa3eea5d50de189deba77ab74988d11676c9f6cacb3ba51",
+      "width": 180,
+      "height": 144,
+      "bytes": 2058,
+      "measure": {
+        "bird_pixels": 664,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "photos": [
+        707642123
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "3683d93055d6d1b93af0bda9d396d938c25545e6adfb2648e0edbbc7f182750a",
+      "width": 180,
+      "height": 156,
+      "bytes": 2067,
+      "measure": {
+        "bird_pixels": 517,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "photos": [
+        710027553
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "87bc856edea2ac39d0252b54e3d78b2cf955f0b669b9c5a0b7422ff407558e3a",
+      "width": 180,
+      "height": 140,
+      "bytes": 2021,
+      "measure": {
+        "bird_pixels": 650,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "photos": [
+        683823781
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "aaf61f83bb4ce96d560c9645f85eb6a939b613d7b2a5279e1a770b6656eaaa00",
+      "width": 180,
+      "height": 174,
+      "bytes": 2426,
+      "measure": {
+        "bird_pixels": 755,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "photos": [
+        643177750
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "92ff5299b1c79f31a20baf003930cd8cabc9b737a176b701a5cdcaf50968613b",
+      "width": 180,
+      "height": 179,
+      "bytes": 2028,
+      "measure": {
+        "bird_pixels": 799,
+        "holes_filled": 5,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "photos": [
+        628549899
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5fcf1b1190a920ac6757d7e9e6dda56c041ef9d5b6d4c65add462f3ea6aa48c2",
+      "width": 180,
+      "height": 148,
+      "bytes": 1906,
+      "measure": {
+        "bird_pixels": 1037,
+        "holes_filled": 0,
+        "cut": [
+          "left"
+        ]
+      },
+      "review": "approved"
+    },
+    "podiceps-auritus": {
+      "common_name": "Horned Grebe",
+      "photos": [
+        609754428
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1e203fbcbdeca6387818de2dde36a9993b2b2c9dbcd6efe88d3061929cc87ceb",
+      "width": 180,
+      "height": 64,
+      "bytes": 1046,
+      "measure": {
+        "bird_pixels": 609,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "photos": [
+        608482176
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2714a7edce2b01800a8400fce8cc84049883edf07810a568c44b4a77cd928d9c",
+      "width": 180,
+      "height": 127,
+      "bytes": 1614,
+      "measure": {
+        "bird_pixels": 691,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "photos": [
+        692540104
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "125f0ae2b0f2458b4fb4258bfac7ef3fc41ed283d515da3c938bc7eff443694c",
+      "width": 180,
+      "height": 94,
+      "bytes": 1167,
+      "measure": {
+        "bird_pixels": 905,
+        "holes_filled": 0,
+        "cut": [
+          "right"
+        ]
+      },
+      "review": "approved"
+    },
+    "poecile-rufescens": {
+      "common_name": "Chestnut-backed Chickadee",
+      "photos": [
+        729978475
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "3893f54e682c8c9d4682559bdadeca27e0ff43cf0e8a17ec896bdaed2866517c",
+      "width": 180,
+      "height": 118,
+      "bytes": 1599,
+      "measure": {
+        "bird_pixels": 417,
+        "holes_filled": 182,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "porzana-carolina": {
+      "common_name": "Sora",
+      "photos": [
+        621661016
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "e48c9d590569462630311a348dc599826f24e676f1ad5b719e1466d076bcad16",
+      "width": 180,
+      "height": 154,
+      "bytes": 2016,
+      "measure": {
+        "bird_pixels": 894,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "photos": [
+        681873638
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f3323a1308aef9fae89ad576f78a40a018e8244c9d4b804428bb0acd8bcc51da",
+      "width": 180,
+      "height": 132,
+      "bytes": 1790,
+      "measure": {
+        "bird_pixels": 652,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "photos": [
+        578593820
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5eb20e3090c322f7b754d8fde8778611808471d211c9c8b721d80192593981a5",
+      "width": 180,
+      "height": 148,
+      "bytes": 1960,
+      "measure": {
+        "bird_pixels": 694,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "photos": [
+        174592420
+      ],
+      "isolate_seed": 50,
+      "workflow": "silhouette@1",
+      "sha256": "ec2e4f07df452efcfd782829e04dc28e0b4d261dfbfae67375104737a0eb7274",
+      "width": 180,
+      "height": 170,
+      "bytes": 1988,
+      "measure": {
+        "bird_pixels": 813,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "photos": [
+        648850172
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "36a75877dbbd6fa6deb974e4737b9997574f10dfeb9312ec3e9ec437d4a0876b",
+      "width": 180,
+      "height": 167,
+      "bytes": 2091,
+      "measure": {
+        "bird_pixels": 757,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "regulus-satrapa": {
+      "common_name": "Golden-crowned Kinglet",
+      "photos": [
+        443439137
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "b1927081b19b941bbdc10bcce902980c6ff3d620ee17be89d84e5e082ea11611",
+      "width": 180,
+      "height": 178,
+      "bytes": 1964,
+      "measure": {
+        "bird_pixels": 632,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "photos": [
+        720898138
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "95effadb59a988289fe364670461dd2e2bd28d9566eb7a4e1ebf19b3d8c9e81d",
+      "width": 141,
+      "height": 180,
+      "bytes": 1924,
+      "measure": {
+        "bird_pixels": 597,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "photos": [
+        651109446
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "38fa11ea8e677651696d48c7caba7f1fe5b368fcef364439e65d3358c8adfb77",
+      "width": 180,
+      "height": 154,
+      "bytes": 1848,
+      "measure": {
+        "bird_pixels": 696,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "selasphorus-sasin": {
+      "common_name": "Allen's Hummingbird",
+      "photos": [
+        535145029
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "96df45e6a3d443addaf628061880d6d82275cdb6ea0c7d5fc6ff2e9bdbb11e47",
+      "width": 180,
+      "height": 162,
+      "bytes": 2103,
+      "measure": {
+        "bird_pixels": 885,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "photos": [
+        739664730
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "364f8c9eb22074ac3aa78f47187748b8cb25084fe4732d0b2f47031757cd956a",
+      "width": 180,
+      "height": 136,
+      "bytes": 1875,
+      "measure": {
+        "bird_pixels": 682,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "photos": [
+        620016696
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "3545b8da06035bcce3dbd69d48fc267ba94501da22d32266b80696ae160d7e1e",
+      "width": 180,
+      "height": 152,
+      "bytes": 1898,
+      "measure": {
+        "bird_pixels": 701,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "photos": [
+        606292539
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "c848ce319dc9de1e5fb8097a5e6a922982305aa82e68328f3228fa8431da3186",
+      "width": 180,
+      "height": 94,
+      "bytes": 1369,
+      "measure": {
+        "bird_pixels": 728,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "photos": [
+        713621046
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b5dd1dd7e775022b8d87b929de95c6adb415e6bd6433099fb1361fbb326aac23",
+      "width": 137,
+      "height": 180,
+      "bytes": 2055,
+      "measure": {
+        "bird_pixels": 419,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "photos": [
+        692070197
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "ebbbca07add6bcd922399f337ea7f6e87f7b89d9e7a95e312d322da3ffbb5122",
+      "width": 180,
+      "height": 136,
+      "bytes": 1802,
+      "measure": {
+        "bird_pixels": 713,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sitta-pygmaea": {
+      "common_name": "Pygmy Nuthatch",
+      "photos": [
+        640337457
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f6da71b960066c6dfd3bc2056e2716b084ba41b5ae8fe1d31e5c779a818a5e13",
+      "width": 125,
+      "height": 180,
+      "bytes": 1888,
+      "measure": {
+        "bird_pixels": 529,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "photos": [
+        637293198
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "57c955f0bf63a89e3c18790d099e690ee7eaef237984774464a0b285da0f2ead",
+      "width": 180,
+      "height": 126,
+      "bytes": 1592,
+      "measure": {
+        "bird_pixels": 933,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "photos": [
+        625905541
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "46bc4397a95d7b9c56b5b08310e4cb6301cb695ce523e39c3b5bc05f335a61a4",
+      "width": 174,
+      "height": 180,
+      "bytes": 2174,
+      "measure": {
+        "bird_pixels": 745,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "photos": [
+        714859462
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "43e71846447e30a1718441fb604adcb6138cc03fa0c77cfc88106cfdb3ef21cc",
+      "width": 180,
+      "height": 123,
+      "bytes": 1727,
+      "measure": {
+        "bird_pixels": 711,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "photos": [
+        627080185
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "35a6046123e0fa1a4dc750c65483e5baba87582aa9cba9d0efdbf02f8302a71b",
+      "width": 134,
+      "height": 180,
+      "bytes": 1904,
+      "measure": {
+        "bird_pixels": 657,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "photos": [
+        725621719
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d359a4f1fbb40069be8ac1d31a9ff384758c91872cbade06e8e8d4a4d1679586",
+      "width": 180,
+      "height": 168,
+      "bytes": 2691,
+      "measure": {
+        "bird_pixels": 652,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "photos": [
+        629385504
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2265e6b4aca723c3182ca45fcc20beba8edf7c1f174831127dece1172383c021",
+      "width": 180,
+      "height": 102,
+      "bytes": 1565,
+      "measure": {
+        "bird_pixels": 621,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "photos": [
+        629872325
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "be27d836d6dbafa22087969785b25248801f6f436074c960467c4a6b5eb8989a",
+      "width": 146,
+      "height": 180,
+      "bytes": 2245,
+      "measure": {
+        "bird_pixels": 813,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "photos": [
+        710513983
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "2b00b5f3c168b54e790a8acdaf8bb1fa84e87722074cebafcbb8a9cf04102596",
+      "width": 176,
+      "height": 180,
+      "bytes": 2077,
+      "measure": {
+        "bird_pixels": 697,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "photos": [
+        651196006
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "9eaacec502cdcd53168cdb67efe1d1e5a68eee2d2398cee5acb7c48b35baf28b",
+      "width": 169,
+      "height": 180,
+      "bytes": 2131,
+      "measure": {
+        "bird_pixels": 442,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "tachycineta-thalassina": {
+      "common_name": "Violet-green Swallow",
+      "photos": [
+        677396766
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d5740322eb0ff0ec6573bd6c016d934c48843c89600c96e43b42c6f29ab30196",
+      "width": 180,
+      "height": 144,
+      "bytes": 1934,
+      "measure": {
+        "bird_pixels": 638,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "thalasseus-elegans": {
+      "common_name": "Elegant Tern",
+      "photos": [
+        722613777
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "c13731e1e6809864682d49dc60ce3c26a77c70641738283b8153ad804c42c3fe",
+      "width": 180,
+      "height": 80,
+      "bytes": 1269,
+      "measure": {
+        "bird_pixels": 678,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "photos": [
+        677422609
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "709a6a0ca06c107d9c5dca65f51b7d8b6c0f317e879816dda852c08a46616fc4",
+      "width": 180,
+      "height": 164,
+      "bytes": 2143,
+      "measure": {
+        "bird_pixels": 554,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "photos": [
+        470878091
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f7e4939384f2dddbd3c56c7edb171437d146bee1fa49f0d89812c5ac3b361749",
+      "width": 180,
+      "height": 158,
+      "bytes": 1987,
+      "measure": {
+        "bird_pixels": 640,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "photos": [
+        696982075
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "ab0784f38a94c1534424cc34b56eeb38608ebc308ff62d1ffefb170b5c54a6ca",
+      "width": 180,
+      "height": 145,
+      "bytes": 1884,
+      "measure": {
+        "bird_pixels": 656,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "photos": [
+        703791124
+      ],
+      "isolate_seed": 51,
+      "workflow": "silhouette@1",
+      "sha256": "46c0fc0fa5a81f195ac21ad0553c826dd68ea64e6a143b98fda0518de1518ff0",
+      "width": 163,
+      "height": 180,
+      "bytes": 2315,
+      "measure": {
+        "bird_pixels": 752,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "troglodytes-pacificus": {
+      "common_name": "Pacific Wren",
+      "photos": [
+        392605123
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "27f9e0455577fbdb6ca4e32426f381cdcb7c921a774f855f3496db037c7c73e2",
+      "width": 180,
+      "height": 173,
+      "bytes": 2119,
+      "measure": {
+        "bird_pixels": 571,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "photos": [
+        675754527
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "1d0b081db867e0e359702bd1fd3de625e737983d00ba0987bffee52b953b5fb7",
+      "width": 180,
+      "height": 147,
+      "bytes": 1850,
+      "measure": {
+        "bird_pixels": 647,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "tyto-furcata": {
+      "common_name": "American Barn Owl",
+      "photos": [
+        740257326
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "4535379bb2f26154787e9cb49848fb5732bedb0477d8708db229bb54f860acd4",
+      "width": 180,
+      "height": 137,
+      "bytes": 1909,
+      "measure": {
+        "bird_pixels": 686,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "uria-aalge": {
+      "common_name": "Common Murre",
+      "photos": [
+        528460331
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "d7c493ca1f267af1ea0cd359cf84aaa5d9ddcc3c5a5042162fd678a181c86121",
+      "width": 180,
+      "height": 95,
+      "bytes": 1290,
+      "measure": {
+        "bird_pixels": 661,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "urile-pelagicus": {
+      "common_name": "Pelagic Cormorant",
+      "photos": [
+        579142990
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "0a40a9b5f50362936e5130bb763083badc0ff426447384c00dee919ed5defa78",
+      "width": 94,
+      "height": 180,
+      "bytes": 1779,
+      "measure": {
+        "bird_pixels": 1061,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "urile-penicillatus": {
+      "common_name": "Brandt's Cormorant",
+      "photos": [
+        645815726
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "3aa3b4759e829f44b0d30c8441bcd0892ededcece9ba99d9fef3163e6c754f73",
+      "width": 180,
+      "height": 84,
+      "bytes": 1237,
+      "measure": {
+        "bird_pixels": 885,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "vireo-huttoni": {
+      "common_name": "Hutton's Vireo",
+      "photos": [
+        456424367
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "5a982697778907053ebfc5d3c48ecae2234e23e13c12c9511272807dd9facf02",
+      "width": 180,
+      "height": 126,
+      "bytes": 1635,
+      "measure": {
+        "bird_pixels": 650,
+        "holes_filled": 2,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "photos": [
+        710518333
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "17e6a7b6118de2d6c382194c6a426c7739e30d889db4332524d0078667bf667f",
+      "width": 180,
+      "height": 151,
+      "bytes": 1961,
+      "measure": {
+        "bird_pixels": 869,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "zonotrichia-atricapilla": {
+      "common_name": "Golden-crowned Sparrow",
+      "photos": [
+        640560683
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f285957f55a0f9172c52c632141bbaeeff5ec954c5eda118b71a768cd55a048a",
+      "width": 180,
+      "height": 120,
+      "bytes": 1794,
+      "measure": {
+        "bird_pixels": 682,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "photos": [
+        731245856
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "67708a704052da83b127aeb63dd56b3c8d615f7b56b74bd55f5c16b3734d5761",
+      "width": 180,
+      "height": 77,
+      "bytes": 1185,
+      "measure": {
+        "bird_pixels": 577,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "approved"
+    }
+  }
+}

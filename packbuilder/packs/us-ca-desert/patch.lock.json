@@ -1,0 +1,4986 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 3954466250,
+      "dark": false,
+      "measure": {
+        "iou": 0.881,
+        "dE_mean": 17.7,
+        "dE_p95": 24.7,
+        "dL": 9.0,
+        "dC": 12.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "adaa08697849e042f113395393dfb3790e38adf0705da53357fc6bafc56973ed",
+      "photos": [
+        647590336
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "seed": 705207716,
+      "dark": false,
+      "measure": {
+        "iou": 0.481,
+        "dE_mean": 19.5,
+        "dE_p95": 38.5,
+        "dL": -9.8,
+        "dC": 3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d1773a73671e5e0c0bf23960a9990ebef4170399a7a2c53b1111a0f8099d9b58",
+      "photos": [
+        641722648
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "aeronautes-saxatalis": {
+      "common_name": "White-throated Swift",
+      "seed": 1510746613,
+      "dark": false,
+      "measure": {
+        "iou": 0.451,
+        "dE_mean": 17.7,
+        "dE_p95": 41.6,
+        "dL": 6.1,
+        "dC": 2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4f6492531a6628f2702868b5ae519fbcf873ee2f3da52073e072fec5cf0fdf43",
+      "photos": [
+        115074091
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The bird flies toward the right: its head, with a white throat, black face and one small eye, is at the right end; the left end is the dark notched tail, with no eye. The underparts are black with a white stripe down the belly and white patches on the flanks.",
+      "review": "approved",
+      "rejected_seeds": [
+        755702115
+      ],
+      "why": "an eye stitched on the tail end; the head is at the other end"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 1565086899,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 6.7,
+        "dE_p95": 18.0,
+        "dL": -0.1,
+        "dC": -3.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ffd46950c2aeac5a72a1eeb5182661b45742a6b3a7c1e687c4d59b0e76a6f4f1",
+      "photos": [
+        386047840
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy black, with no white, grey or pale thread on the head, body, wings or tail; the only colour is a bright red shoulder patch on the folded wing, edged below with a yellow band; the bill, legs and eye are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        709780517
+      ],
+      "why": "the body came out white; the bird is black all over with a red shoulder patch"
+    },
+    "amphispiza-bilineata": {
+      "common_name": "Black-throated Sparrow",
+      "seed": 1811970523,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 8.2,
+        "dE_p95": 13.5,
+        "dL": -4.8,
+        "dC": 4.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "70d4ab2f0a3626283231eb1b2babb0859c166f661b7f27953a6fea580d22b1fc",
+      "photos": [
+        621978329
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "seed": 1181100726,
+      "dark": false,
+      "measure": {
+        "iou": 0.818,
+        "dE_mean": 15.2,
+        "dE_p95": 31.6,
+        "dL": -7.4,
+        "dC": 6.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3d0fea7126ae620f263162e443bec0d2b6d5fa9e6a1611a36eb412329ca09328",
+      "photos": [
+        61419084
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "seed": 1746349006,
+      "dark": false,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 9.5,
+        "dE_p95": 18.6,
+        "dL": 2.0,
+        "dC": 5.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8553ef2fed4661b694953c1b20d14cd9f23e996b25f45015db9ae75ab2f8748f",
+      "photos": [
+        263434570
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 1309091918,
+      "dark": false,
+      "measure": {
+        "iou": 0.896,
+        "dE_mean": 11.2,
+        "dE_p95": 25.0,
+        "dL": -7.2,
+        "dC": 4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "40b844538bf381adf27b0fe5d448d056bfc355b6b22a1e2e05ce5876cdc9bf17",
+      "photos": [
+        372522714
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy green with one small dark eye and a yellow bill; a thin white ring circles the neck; the breast is chestnut and the body pale grey; the tail end is black with two small upcurled black feathers and white outer tail feathers, with no spots or eyes on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        956307672
+      ],
+      "why": "two white spots on the black tail end read as a second pair of eyes"
+    },
+    "anser-caerulescens": {
+      "common_name": "Snow Goose",
+      "seed": 2613437321,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 12.7,
+        "dE_p95": 26.5,
+        "dL": -10.3,
+        "dC": 6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a44de0d98c1cda248d107320a0fc363559c2e21692c4d616b71bbc9bbfe8a2b5",
+      "photos": [
+        622159415
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is pure white, with no cream, beige, rust or brown anywhere; only the wingtips are black; the bill is pink with a black edge along the gape; the legs and feet are pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        3972191007
+      ],
+      "why": "stitched cream with rusty wing patches; the bird is pure white with black wingtips"
+    },
+    "anser-rossii": {
+      "common_name": "Ross's Goose",
+      "seed": 3211814424,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 7.2,
+        "dE_p95": 15.1,
+        "dL": -4.4,
+        "dC": -0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "be17f74c853cbf2428e8bd361303cc75baba10ec2d65677c4363176131e52052",
+      "photos": [
+        335680768
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure white, with no cream or beige anywhere; only the wingtips are black; the small stubby bill is pink; the legs are pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        3363264142
+      ],
+      "why": "stitched cream; the bird is pure white"
+    },
+    "anthus-rubescens": {
+      "common_name": "American Pipit",
+      "seed": 4177866562,
+      "dark": false,
+      "measure": {
+        "iou": 0.831,
+        "dE_mean": 28.2,
+        "dE_p95": 49.8,
+        "dL": 17.6,
+        "dC": 2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "284b3a34ddf7f45eaf3dc1ee280baa951c146df3b71672ef23ee78f3c40da7e4",
+      "photos": [
+        249847112
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The upperparts are plain grey-brown; the underparts are buff with fine dark brown streaks on the breast; there is no rufous or red anywhere; the legs are dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        2382503892
+      ],
+      "why": "invented rufous streaks; the streaks are dark brown on buff"
+    },
+    "antigone-canadensis": {
+      "common_name": "Sandhill Crane",
+      "seed": 3027372373,
+      "dark": false,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 5.6,
+        "dE_p95": 13.5,
+        "dL": -3.8,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "775dce5530a34221d5559fb0de967047ebd4aa47ffd94e78bdf2a6371c45f5f4",
+      "photos": [
+        244324138
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The body, neck and wings are plain soft grey, with no brown, beige or cream; the crown is bare red, the cheeks pale grey-white; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3279239619
+      ],
+      "why": "the body came out beige-brown; the bird is grey"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "seed": 2297659308,
+      "dark": false,
+      "measure": {
+        "iou": 0.884,
+        "dE_mean": 22.7,
+        "dE_p95": 33.0,
+        "dL": -4.8,
+        "dC": -6.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "935faa64406fa8cbac073e9d50517602473c03b315c4c185c53cbe71c06c77b5",
+      "photos": [
+        230709118
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 2909813585,
+      "dark": false,
+      "measure": {
+        "iou": 0.839,
+        "dE_mean": 22.7,
+        "dE_p95": 35.9,
+        "dL": 13.0,
+        "dC": -2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8077980df075cf584977afd35ec4194266d69ce9071f37245e8ae2cb18884179",
+      "photos": [
+        345767166
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure white, with no grey, blue, cream or beige thread anywhere; the long dagger bill is yellow; the legs and feet are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3665234887
+      ],
+      "why": "stitched grey-blue; the bird is pure white"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 253733611,
+      "dark": false,
+      "measure": {
+        "iou": 0.488,
+        "dE_mean": 8.0,
+        "dE_p95": 17.2,
+        "dL": -1.4,
+        "dC": 3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8a4c9a58b21e06e43fe12d167918000a16f8e19860eaca0b363a65357795299f",
+      "photos": [
+        119715830
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "ardea-ibis": {
+      "common_name": "Western Cattle Egret",
+      "seed": 2826146839,
+      "dark": false,
+      "measure": {
+        "iou": 0.82,
+        "dE_mean": 17.1,
+        "dE_p95": 24.8,
+        "dL": -9.9,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f5fcc1cf483e92e3c572305db5fe6209217520eaf7ec99f0e9624c53afd8a240",
+      "photos": [
+        61008242
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure white, with no grey, cream or beige anywhere; the short thick bill is yellow; the legs are dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        3748963457
+      ],
+      "why": "stitched grey and beige; the bird is pure white"
+    },
+    "asio-otus": {
+      "common_name": "Long-eared Owl",
+      "seed": 3618022674,
+      "dark": false,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 5.1,
+        "dE_p95": 12.9,
+        "dL": -1.1,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "50ca8859a6df05558056f894966d8e2a48c856f582f18d964188e8bf02424272",
+      "photos": [
+        108869943
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 2386684712,
+      "dark": false,
+      "measure": {
+        "iou": 0.94,
+        "dE_mean": 8.6,
+        "dE_p95": 14.9,
+        "dL": 0.6,
+        "dC": 6.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "89dda75141d5006bc7bcec7b2e0358c7643c7648b6ea1f07ff36f91825c47364",
+      "photos": [
+        586804008
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "athene-cunicularia": {
+      "common_name": "Burrowing Owl",
+      "seed": 1310070718,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 9.6,
+        "dE_p95": 17.7,
+        "dL": 1.1,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "04b7d954820c8aa3989d4cd63e6da658c01eabd081939f40f66286028853e986",
+      "photos": [
+        463563495
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "auriparus-flaviceps": {
+      "common_name": "Verdin",
+      "seed": 452257329,
+      "dark": false,
+      "measure": {
+        "iou": 0.74,
+        "dE_mean": 13.1,
+        "dE_p95": 24.1,
+        "dL": 6.3,
+        "dC": 4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2d946c8bf49b7104b4dc0192a5ae2cf0e30b48174ab36e4c833ab4057b7da16b",
+      "photos": [
+        637407608
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 1063689948,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 13.2,
+        "dE_p95": 28.7,
+        "dL": -5.6,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cf1ef79e7bc9cd2c67829c19a25a03e7dc80ce4e1debeed880cf8c78419ec22a",
+      "photos": [
+        248146564
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck, breast and back are black, the head with a faint purple gloss; the eye is yellow; the bill is grey with a white ring and a black tip; the flanks are pale grey with a white wedge in front of the wing.",
+      "review": "approved",
+      "rejected_seeds": [
+        1214361162
+      ],
+      "why": "the head came out brown and the eye black; black head, yellow eye"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "seed": 3547530451,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 9.3,
+        "dE_p95": 13.2,
+        "dL": -3.7,
+        "dC": 4.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ab2e369016813cc22bbc00825203307c1325286b2760aee9fb3f543ef82b8206",
+      "photos": [
+        115074227
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 2277188791,
+      "dark": false,
+      "measure": {
+        "iou": 0.77,
+        "dE_mean": 7.0,
+        "dE_p95": 16.7,
+        "dL": -1.1,
+        "dC": -0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "180a338e18aaf56bf82b0293248933a06d8d32f60299452bc62258c7d64d8e3e",
+      "photos": [
+        17267647
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "It stands on two black legs, both feet on the ground. The head and long neck are black with a white chinstrap on the cheek; the back and wings are grey-brown with pale feather edges; the breast is pale buff-grey; the tail is black; there is no purple, pink or blue anywhere.",
+      "review": "approved",
+      "rejected_seeds": [
+        1773487515,
+        515011853
+      ],
+      "why": "stands on one leg"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 1452509163,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 10.2,
+        "dE_p95": 15.2,
+        "dL": -9.1,
+        "dC": -0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0ece2ae2c4ce8e9770733876db6a61488d2b511c9fac235c72c512fddba1ed6c",
+      "photos": [
+        605811155
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 3462587782,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 18.2,
+        "dE_p95": 36.3,
+        "dL": -14.6,
+        "dC": 6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ad1f63b4dd943682466cd389d632546a055586e0d392be3cf58a7c04ea8f7a89",
+      "photos": [
+        473657550
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head is brown, not white. The back and wings are dark brown; the breast is white with a band of dark streaks across the belly; the tail is brick red.",
+      "review": "approved",
+      "rejected_seeds": [
+        3110458640
+      ],
+      "why": "the tail runs into the cord at the right"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 2495101521,
+      "dark": false,
+      "measure": {
+        "iou": 0.972,
+        "dE_mean": 9.8,
+        "dE_p95": 16.6,
+        "dL": -8.2,
+        "dC": -2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "22464a90b68a92f20b68612f5fa35a23d4c1705f3ea3ceca7d8503a9dc651765",
+      "photos": [
+        354825404
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-swainsoni": {
+      "common_name": "Swainson's Hawk",
+      "seed": 1582417327,
+      "dark": false,
+      "measure": {
+        "iou": 0.77,
+        "dE_mean": 16.9,
+        "dE_p95": 34.8,
+        "dL": -7.1,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d08b419e7f15e1f791d4fd2a786e55cae95b3a0d83591190684cad460b699b1a",
+      "photos": [
+        113745791
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "It stands upright on two yellow legs, both feet on the ground; it is dark chocolate brown all over, with a slightly paler, rufous-mottled belly; the bill is dark with a yellow base.",
+      "review": "approved",
+      "rejected_seeds": [
+        693564729
+      ],
+      "why": "mangled legs and a pale grey head; the bird is dark brown on two yellow legs"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 3315400636,
+      "dark": false,
+      "measure": {
+        "iou": 0.715,
+        "dE_mean": 7.9,
+        "dE_p95": 15.5,
+        "dL": -6.1,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "000dd8e862d55e43e39e33cc66cbe57ee921a7ec3480a8b084f3b48c629d8278",
+      "photos": [
+        249743456
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "seed": 1090636051,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 13.3,
+        "dE_p95": 21.1,
+        "dL": -1.4,
+        "dC": 5.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3b2ed92dfbf73fc488ad69937e72ee6080d9bd503e25c3acba96b1e6ee3a9482",
+      "photos": [
+        186874359
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The legs and feet are black; the black bill droops slightly at the tip; the back has rusty and black feathers and the underparts are white with small dark spots on the breast. There is no blue thread anywhere on the bird: the face and neck are pale grey-brown and white.",
+      "review": "approved",
+      "rejected_seeds": [
+        2937038911,
+        3624442025
+      ],
+      "why": "blue thread on the face and neck"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 2160135415,
+      "dark": false,
+      "measure": {
+        "iou": 0.573,
+        "dE_mean": 13.3,
+        "dE_p95": 24.4,
+        "dL": -4.1,
+        "dC": 9.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fe304bb4d56839a56152e82daa837e02db194455360ac34dbe3e387119157fe9",
+      "photos": [
+        244336729
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "seed": 2643412800,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 5.1,
+        "dE_p95": 9.6,
+        "dL": -1.8,
+        "dC": 3.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "22565b970ea5babe4d4e4a0e95772cebc58ade6be53de9a850ef01737392ba68",
+      "photos": [
+        477374185
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "callipepla-gambelii": {
+      "common_name": "Gambel's Quail",
+      "seed": 1007844609,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 8.3,
+        "dE_p95": 14.1,
+        "dL": 2.4,
+        "dC": -1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c30d1e0c2156c7e9ffcaa35ddbe4dcc2c08bf9f077d59a1f361bc7db204be0a0",
+      "photos": [
+        363532575
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "seed": 4091292816,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 24.2,
+        "dE_p95": 44.5,
+        "dL": 16.1,
+        "dC": 10.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "db95535f37fd86bc19e392d21492568dde199aded9c060293068e1447804d5e4",
+      "photos": [
+        607234498
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown and throat are iridescent rose-magenta, the throat patch flaring at the sides of the neck, not black; the back and flanks are bronze-green; the underparts are plain grey; the straight bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2228952070
+      ],
+      "why": "the throat came out black and the belly a grey blotch: the crown and throat are rose-magenta"
+    },
+    "calypte-costae": {
+      "common_name": "Costa's Hummingbird",
+      "seed": 2610863324,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 20.2,
+        "dE_p95": 30.3,
+        "dL": -15.9,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3b546eb50b1616da3dba6c996e0ec816a785b9575d102ab224871907da260007",
+      "photos": [
+        611069283
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "campylorhynchus-brunneicapillus": {
+      "common_name": "Cactus Wren",
+      "seed": 3217810778,
+      "dark": false,
+      "measure": {
+        "iou": 0.836,
+        "dE_mean": 6.9,
+        "dE_p95": 15.2,
+        "dL": -2.8,
+        "dC": 2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0026,
+      "attempts": 1,
+      "sha256": "5f3dc259b1aa93c1a2698a458440b533fff4055e0a7650cf85525b422ac05801",
+      "photos": [
+        461310492
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "seed": 3135477710,
+      "dark": false,
+      "measure": {
+        "iou": 0.902,
+        "dE_mean": 19.2,
+        "dE_p95": 27.3,
+        "dL": -11.3,
+        "dC": -10.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e772bbec8e9a28e662ce04d98eecce81393d4b1118ae33853360c3cec91c78ec",
+      "photos": [
+        646680799
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 4158378951,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 9.9,
+        "dE_p95": 17.5,
+        "dL": -1.9,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d3cae2d91433726516ba6aa87c5f58dd0de0e26307efe47e45c557159937f875",
+      "photos": [
+        694546094
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body and folded wings are brownish black, with no white, cream, grey or pale patches anywhere on them; the small bare head is red; the bill is pale ivory; the legs are pale pinkish.",
+      "review": "approved",
+      "rejected_seeds": [
+        2161959761
+      ],
+      "why": "cream and pale mottling on the wings; the body is brownish black"
+    },
+    "catherpes-mexicanus": {
+      "common_name": "Canyon Wren",
+      "seed": 2892469483,
+      "dark": false,
+      "measure": {
+        "iou": 0.94,
+        "dE_mean": 8.2,
+        "dE_p95": 17.4,
+        "dL": -2.9,
+        "dC": 5.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bd8aaf119c52d97e889eeac29d238bd5d52ff38185965662dab3b9ae7475490f",
+      "photos": [
+        2993364
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 1013276549,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 8.9,
+        "dE_p95": 16.1,
+        "dL": 1.6,
+        "dC": 5.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bb11ca4d42aedd6fe9643fdc541a2f55850d848098c4e11cf92ff88e3bc732b2",
+      "photos": [
+        59764930
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "chlidonias-niger": {
+      "common_name": "Black Tern",
+      "seed": 151253392,
+      "dark": false,
+      "measure": {
+        "iou": 0.613,
+        "dE_mean": 10.6,
+        "dE_p95": 26.4,
+        "dL": -3.9,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e396451caf521e88dcd6e6ca5de5e5eb6f96596e743cfd0ceaed0cffb2ed3e34",
+      "photos": [
+        2728591
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The bird flies with its wings raised and nothing under its feet; the head, neck and body are black; the back, wings and tail are slate grey; only the area under the tail is white; the bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2114240774
+      ],
+      "why": "the body came out tan and the flying bird sits on a twig"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "seed": 1208907099,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 7.3,
+        "dE_p95": 14.0,
+        "dL": 4.3,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2aaf322052895bf7ea38ba715f8aa54ee7f39509036609114d5966d079acbe6e",
+      "photos": [
+        63243622
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "chordeiles-acutipennis": {
+      "common_name": "Lesser Nighthawk",
+      "seed": 1482650247,
+      "dark": false,
+      "measure": {
+        "iou": 0.876,
+        "dE_mean": 8.2,
+        "dE_p95": 19.3,
+        "dL": 2.1,
+        "dC": 3.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "381af1ede0074437caf586c924eb76c73f41210d335e6cba03b32c5716ae9e73",
+      "photos": [
+        486569455
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The bird rests low and flat on the ground, its very short legs hidden under the body; it is mottled grey-brown and buff all over, with long pointed wings reaching past the tail.",
+      "review": "approved",
+      "rejected_seeds": [
+        794313233
+      ],
+      "why": "painted standing on long legs; the bird rests flat on the ground"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 1193793128,
+      "dark": false,
+      "measure": {
+        "iou": 0.583,
+        "dE_mean": 30.9,
+        "dE_p95": 46.0,
+        "dL": 21.4,
+        "dC": 16.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1b73014a41203fa9709dbd7ce815a655dc656c649bf51e233cf853bcec5e32ab",
+      "photos": [
+        335827416
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The bird is warm brown above and buff below, streaked brown on the breast, with a white band across the rump and a long barred tail; it has no black-and-white plumage and no white wings.",
+      "review": "approved",
+      "rejected_seeds": [
+        2838083396,
+        3727591378
+      ],
+      "why": "the bird is a shapeless bundle of wings"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 4132881515,
+      "dark": false,
+      "measure": {
+        "iou": 0.882,
+        "dE_mean": 11.0,
+        "dE_p95": 17.7,
+        "dL": -6.0,
+        "dC": 6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a7f28dbcbb7971c35b82b3f6c46e2d4e473d3d2df4565c240b28ff57b43f7a57",
+      "photos": [
+        258351774
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 1344412789,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 10.2,
+        "dE_p95": 21.1,
+        "dL": -7.4,
+        "dC": 5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "70d36bab5629f19d7c6b0db5f0eac65479ea5daa946c48741340c011b1bf6833",
+      "photos": [
+        61838985
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "columbina-inca": {
+      "common_name": "Inca Dove",
+      "seed": 3969924175,
+      "dark": false,
+      "measure": {
+        "iou": 0.676,
+        "dE_mean": 8.7,
+        "dE_p95": 22.8,
+        "dL": -6.1,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7f5cc1780069c17735ba2f52e4fd4fe120e7550cf9af7674299b4c2f5c5717ad",
+      "photos": [
+        158290396
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is small and red; the bird is pale grey-buff, scaled all over with dark feather edges; the tail is long.",
+      "review": "approved",
+      "rejected_seeds": [
+        2611416281
+      ],
+      "why": "the eye is black; it is small and red"
+    },
+    "columbina-passerina": {
+      "common_name": "Common Ground Dove",
+      "seed": 3462889994,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 9.4,
+        "dE_p95": 23.3,
+        "dL": 1.3,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "7d87a2836297a2406223267cdb5fa3b15988a7d616061ade6bd976a2798fe8f6",
+      "photos": [
+        208986590
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "contopus-sordidulus": {
+      "common_name": "Western Wood Pewee",
+      "seed": 2513471685,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 8.8,
+        "dE_p95": 17.6,
+        "dL": 1.2,
+        "dC": 4.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f71b2c870edc2160a625f3866479e48a880ad76eaa968a64aad19d2c50d3318a",
+      "photos": [
+        274319698
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 1445379324,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 8.9,
+        "dE_p95": 17.1,
+        "dL": -2.4,
+        "dC": 3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c1201241ccd0c88c02fc39e8c325ee7c2419906c82ec966ab04e4168f4915e78",
+      "photos": [
+        595294877
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 3572685753,
+      "dark": false,
+      "measure": {
+        "iou": 0.774,
+        "dE_mean": 8.0,
+        "dE_p95": 12.9,
+        "dL": 2.5,
+        "dC": -5.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0026,
+      "attempts": 1,
+      "sha256": "e273d6acb38e94a1b48dc535dc9ae8eec21b2020a7e700a97fd97ba0793ce3fd",
+      "photos": [
+        258351767
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white, grey or blue anywhere, and the folded wing has no pale patch or bar.",
+      "review": "approved",
+      "rejected_seeds": [
+        2750802735
+      ],
+      "why": "white patches on the wings; the bird is black all over"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "seed": 3554759723,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 6.8,
+        "dE_p95": 15.2,
+        "dL": 2.1,
+        "dC": -2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a90e0a5e2d7f6e4733bdb0831461dcced956899d0d4c9094970dcf6c72a68d4f",
+      "photos": [
+        618988894
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in matte black thread; there is no white, grey, silver or pale thread anywhere on it: no pale panel, feather edge or streak on the neck, wing or belly.",
+      "review": "approved"
+    },
+    "dryobates-scalaris": {
+      "common_name": "Ladder-backed Woodpecker",
+      "seed": 3090877864,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 8.8,
+        "dE_p95": 15.7,
+        "dL": 4.8,
+        "dC": 2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b996d43ee59f3325b2ba855731e8e446ae0cbcb72e6df5184f0143b291a40d46",
+      "photos": [
+        458468743
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved",
+      "rejected_seeds": [
+        3476831550
+      ],
+      "why": "a woodpecker painted on a twig; the reference clings upright, so it goes on bark"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 2228972600,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 16.5,
+        "dE_p95": 24.7,
+        "dL": -14.0,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cd66cf860d981e68325733889d7157f5f4ed94841fd9cec029ccde6c7452086a",
+      "photos": [
+        601591390
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure white, with no cream, beige, grey or blue anywhere; the slender bill is black with yellow skin in front of the eye; the legs are black and the feet bright yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        4091305134
+      ],
+      "why": "stitched beige with a blue wing edge and black feet; the bird is pure white with yellow feet"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "seed": 3465518642,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 7.9,
+        "dE_p95": 11.6,
+        "dL": 0.3,
+        "dC": 4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "aabe4c818d439a2ab820a3f38c605d68a7d2ac61a95ac93b2ce292b1964d609f",
+      "photos": [
+        276123074
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "eremophila-alpestris": {
+      "common_name": "Horned Lark",
+      "seed": 22388174,
+      "dark": false,
+      "measure": {
+        "iou": 0.973,
+        "dE_mean": 5.2,
+        "dE_p95": 10.3,
+        "dL": -0.1,
+        "dC": 3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9082fd7ff30c82d13865dc20cee24f2e5a4a48d15d740c7540ba27d8e25f5bfc",
+      "photos": [
+        115074103
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "seed": 1416217640,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 8.4,
+        "dE_p95": 19.6,
+        "dL": 1.2,
+        "dC": -1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3babafd98a75c7cd8a6e996b66a5701e99c2e2b42a2d93c22677ebb91cb73687",
+      "photos": [
+        65427759
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with no white, grey, teal or pale thread anywhere; the eye is pale yellow; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        594474174
+      ],
+      "why": "teal patches on the wing and a brown head; the bird is black all over with a pale yellow eye"
+    },
+    "falco-columbarius": {
+      "common_name": "Merlin",
+      "seed": 1782520345,
+      "dark": false,
+      "measure": {
+        "iou": 0.762,
+        "dE_mean": 6.3,
+        "dE_p95": 12.3,
+        "dL": -0.5,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cad65f625fe2283cd7f153d4063e60e89ce9f2d4f99ab7d71cb25e871b780c27",
+      "photos": [
+        335239672
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "falco-mexicanus": {
+      "common_name": "Prairie Falcon",
+      "seed": 4039906599,
+      "dark": false,
+      "measure": {
+        "iou": 0.786,
+        "dE_mean": 14.9,
+        "dE_p95": 32.0,
+        "dL": 9.5,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fab32f00801d9e0164d65cd698f094590329cc0fff20eb8e50cf623d60ac748d",
+      "photos": [
+        35082227
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back and wings are pale sandy grey-brown, not black; the underparts are white with brown spots; a thin dark moustache stripe runs down from the eye; the eye is small and dark brown, with no wide yellow or orange ring around it; the feet are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        516060171,
+        1774535837
+      ],
+      "why": "a large yellow-ringed eye"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 266699816,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 7.2,
+        "dE_p95": 14.7,
+        "dL": -2.2,
+        "dC": 3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "135c4f0cb030c796db948645ec2feeab289255abbd602f4893df8c4eaa6203a3",
+      "photos": [
+        355162138
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird stands upright on top of a thick branch; the branch passes directly under its feet and both yellow feet grip it, with the tail hanging down below the branch behind it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2028123326
+      ],
+      "why": "maintainer: add a branch for the feet"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 1082249071,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 10.9,
+        "dE_p95": 18.1,
+        "dL": 8.3,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "80874661b200e6812c0ac338a346eb2e29d7a7785d036e11375d5b11e4b20135",
+      "photos": [
+        689937856
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 1864704736,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 8.1,
+        "dE_p95": 15.9,
+        "dL": -7.1,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f0a867fc8bc9237d494daf079559580fb15b716144d2f0ab1aa1fe9c4f01152d",
+      "photos": [
+        92001051
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "seed": 3155246519,
+      "dark": true,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 7.2,
+        "dE_p95": 19.4,
+        "dL": 1.7,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "04367bcae65336ac97c1507f747b62ca1c3a2fc93a9b79f8b9cac71b932bf92f",
+      "photos": [
+        119897434
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "gelochelidon-nilotica": {
+      "common_name": "Gull-billed Tern",
+      "seed": 3792200242,
+      "dark": false,
+      "measure": {
+        "iou": 0.7,
+        "dE_mean": 14.7,
+        "dE_p95": 27.2,
+        "dL": -8.4,
+        "dC": 0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d5da64577465cc96cd4041e0ea02b3bae143795b3ea08b860ef318de183776eb",
+      "photos": [
+        119934029
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "geococcyx-californianus": {
+      "common_name": "Greater Roadrunner",
+      "seed": 1151618813,
+      "dark": false,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 12.9,
+        "dE_p95": 21.1,
+        "dL": -11.5,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "634ebf64aff7080d61669f37479198975af484af0150807da904f87115352ff2",
+      "photos": [
+        588873226
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The long tail is cocked steeply upward behind the body, rising as high as the head: a tall fan of dark feathers with white tips, in full view behind the bird.",
+      "review": "approved",
+      "rejected_seeds": [
+        866352747
+      ],
+      "why": "maintainer: the tail doesn't match the reference"
+    },
+    "gymnorhinus-cyanocephalus": {
+      "common_name": "Pinyon Jay",
+      "seed": 907831421,
+      "dark": false,
+      "measure": {
+        "iou": 0.559,
+        "dE_mean": 17.8,
+        "dE_p95": 37.0,
+        "dL": -6.3,
+        "dC": 2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0457160190165dd3de2b165a79d044582ca3aa61193c2b56bc106f8a27f696c6",
+      "photos": [
+        331327094
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is dull powder blue, deepest on the head, with a pale streaked throat; there is no grey, white or beige on the body; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1092311276
+      ],
+      "why": "the body came out grey-white; the bird is blue all over"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 2184478307,
+      "dark": false,
+      "measure": {
+        "iou": 0.601,
+        "dE_mean": 17.3,
+        "dE_p95": 31.1,
+        "dL": 5.9,
+        "dC": -6.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cf4177fe71302281b65b2a0bea0b6854d1147dfb45bcb3c065a192db61d89d7d",
+      "photos": [
+        611271711
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The forehead, eyebrow, throat and breast are rosy red; the back and wings are streaky brown with pale buff wing bars; the belly is whitish with brown streaks; there is no blue, purple, lilac or grey-blue thread anywhere.",
+      "review": "approved",
+      "rejected_seeds": [
+        4113780469
+      ],
+      "why": "the wings came out lilac and purple; they are brown"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "seed": 2628461186,
+      "dark": false,
+      "measure": {
+        "iou": 0.732,
+        "dE_mean": 11.0,
+        "dE_p95": 21.9,
+        "dL": -0.2,
+        "dC": 4.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "09f779da4493f98a4ead534178b76381495662312b7750c84c05aa726047c7b0",
+      "photos": [
+        92022415
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 227856310,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 13.0,
+        "dE_p95": 28.2,
+        "dL": -9.5,
+        "dC": -1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.004,
+      "attempts": 1,
+      "sha256": "4e73836026b891ab353aabd84e1c1f8f32648ea128847ee4cecbc74e71ad261f",
+      "photos": [
+        5504275
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The bill is thick, heavy and bright red with a dark tip; the cap is black; the back and wings are pale silver-grey; the face, neck and underparts are pure white; the legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2056519456
+      ],
+      "why": "a slim orange bill and blue-grey body; the bill is heavy and red"
+    },
+    "icterus-bullockii": {
+      "common_name": "Bullock's Oriole",
+      "seed": 2898797208,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 11.0,
+        "dE_p95": 20.9,
+        "dL": 2.9,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "47079e66ba0595ee70fc00393f495e25c1ce8091aac899a3fcddcc03eb76ede9",
+      "photos": [
+        119897525
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "seed": 1089160171,
+      "dark": false,
+      "measure": {
+        "iou": 0.811,
+        "dE_mean": 17.5,
+        "dE_p95": 35.2,
+        "dL": 5.9,
+        "dC": 6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3de1ad90b84f9a70cb2b4f04ce897e74c6eb91da464fd29414b9f5de6c00aebe",
+      "photos": [
+        494646449
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, rump and underparts are bright orange-yellow, not tan or buff; the face and throat are black; the back, wings and tail are black, with two white wing bars.",
+      "review": "approved",
+      "rejected_seeds": [
+        938242941
+      ],
+      "why": "stitched dull tan; the bird is bright orange-yellow and black"
+    },
+    "icterus-parisorum": {
+      "common_name": "Scott's Oriole",
+      "seed": 1434669074,
+      "dark": false,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 14.8,
+        "dE_p95": 29.3,
+        "dL": 0.1,
+        "dC": -7.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9b4924f5dfd1d04078cc01685d72bafe5fe71932c057e6a4de4cc4c9c5d15f7b",
+      "photos": [
+        653715329
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "seed": 3653433393,
+      "dark": false,
+      "measure": {
+        "iou": 0.974,
+        "dE_mean": 7.6,
+        "dE_p95": 14.5,
+        "dL": 1.7,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "47caa2a29ea22643e9ad84810206b5543ac312a0d048efb8718a784c84e5062d",
+      "photos": [
+        478515915
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "lanius-ludovicianus": {
+      "common_name": "Loggerhead Shrike",
+      "seed": 3595406293,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 19.5,
+        "dE_p95": 36.6,
+        "dL": 17.6,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e63c018e016c04b8037b7dfe2ae43274838a4086d56f1f2924a38502a64c97c5",
+      "photos": [
+        457114302
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown and back are pale grey, not beige or tan; the throat and underparts are white. A broad black mask runs through the eye. The wings are black with a white patch and the tail is black with white edges. The short hooked bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2706029380
+      ],
+      "why": "beige body and a brown bill; the bird is grey, black and white"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "seed": 3905753299,
+      "dark": false,
+      "measure": {
+        "iou": 0.817,
+        "dE_mean": 8.5,
+        "dE_p95": 20.4,
+        "dL": 2.1,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0eda7b9dc0e3e2365a12b88b4b0c40d79dcd08ff9cc0442643b02d8af03fc154",
+      "photos": [
+        92004079
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The back and wings are medium grey, not dark slate; the head and underparts are pure white; the wingtips are black with white spots; the eye is dark; the bill is yellow with a red and a black spot near the tip; the legs are yellow-green.",
+      "review": "approved",
+      "rejected_seeds": [
+        2680823877
+      ],
+      "why": "the back came out dark slate; it is medium grey"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 2918307797,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 9.8,
+        "dE_p95": 17.6,
+        "dL": 2.4,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "afca0ae46583968d945438bf0df4b574f95b62ee5decb96c779020568dad34fa",
+      "photos": [
+        251735932
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, neck, tail and underparts are pure white, with no cream or beige; the back and wings are pale silver-grey; the wingtips are black with small white spots; the yellow bill has a black ring near the tip; the eye is small and pale yellow; the legs are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3673614147
+      ],
+      "why": "the body came out cream and the eye black; white bird, pale yellow eye"
+    },
+    "larus-livens": {
+      "common_name": "Yellow-footed Gull",
+      "seed": 2904240690,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 7.7,
+        "dE_p95": 20.6,
+        "dL": 1.5,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "38914e36d60f6d15f60d7d3a1c7aab9c863afd6ac959aca9531b47572848843e",
+      "photos": [
+        2735398
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The eye is small and pale yellow; the head and underparts are pure white; the back and wings are dark slate grey; the bill is yellow with a red spot; the legs and feet are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3659268772
+      ],
+      "why": "the eye is black; it is pale yellow"
+    },
+    "larus-smithsonianus": {
+      "common_name": "American Herring Gull",
+      "seed": 2692966360,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 11.3,
+        "dE_p95": 17.2,
+        "dL": -3.2,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b32d1f97b274ae43172b6f78ced84fa99da0020cfa8a14b4273ec8c658057554",
+      "photos": [
+        5922370
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The bird lies resting on the ground with its legs hidden under the body; the head is white with fine grey streaks; the eye is pale yellow; the back and wings are pale silver-grey, not blue; the wingtips are black with white spots; the bill is yellow with a red spot.",
+      "review": "approved",
+      "rejected_seeds": [
+        3615774542
+      ],
+      "why": "crouched with tangled legs, a black eye and a bluish back"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "seed": 326618494,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 11.4,
+        "dE_p95": 18.2,
+        "dL": 6.1,
+        "dC": 4.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1280dfed32469f0b3198f3c7e7ba46c5413e2aa2311b239acc49297a2fc24b43",
+      "photos": [
+        477376315
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "leiothlypis-ruficapilla": {
+      "common_name": "Nashville Warbler",
+      "seed": 3316574568,
+      "dark": false,
+      "measure": {
+        "iou": 0.682,
+        "dE_mean": 11.1,
+        "dE_p95": 22.3,
+        "dL": 4.8,
+        "dC": -2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b221d8ed79edd9e88f6b0ea569ac97c367c0bbbb5a3d058f7d44faa3a89cf91a",
+      "photos": [
+        265190175
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bill is short, thin, straight, pointed and dark, and it is closed: not long, curved or orange. The head is grey with a white ring around the eye; the back is olive green; the throat and underparts are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2997475839
+      ],
+      "why": "a long curved orange bill"
+    },
+    "limnodromus-scolopaceus": {
+      "common_name": "Long-billed Dowitcher",
+      "seed": 2842422182,
+      "dark": false,
+      "measure": {
+        "iou": 0.962,
+        "dE_mean": 4.7,
+        "dE_p95": 9.9,
+        "dL": -0.3,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a9dceb234ed70577513843a1ec4e954fc9963c0d7003c45fbc2ad6d221141ad9",
+      "photos": [
+        2715035
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "seed": 616997660,
+      "dark": false,
+      "measure": {
+        "iou": 0.842,
+        "dE_mean": 8.9,
+        "dE_p95": 18.0,
+        "dL": 0.8,
+        "dC": 5.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "71ea3e1b543c72aaab57d0b046052f81cdfaaeeec0435dd625bcb429a0cd681f",
+      "photos": [
+        724720601
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 1064652688,
+      "dark": false,
+      "measure": {
+        "iou": 0.609,
+        "dE_mean": 26.9,
+        "dE_p95": 44.6,
+        "dL": 16.8,
+        "dC": 3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "536ca7b38a5d1b7197e9459ccd0bd655bc36ad773a2e8e922b98a1f4308b83af",
+      "photos": [
+        595553611
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The crown is white, a broad glossy green band runs from the eye back to the nape, and the rest of the head is pale grey speckled with black; the breast and flanks are pinkish brown; a white patch sits on the rear flank before the black tail end; the bill is pale blue-grey with a black tip.",
+      "review": "approved",
+      "rejected_seeds": [
+        1215463174
+      ],
+      "why": "the head came out plain brown with no green band or white crown"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 2138422005,
+      "dark": false,
+      "measure": {
+        "iou": 0.888,
+        "dE_mean": 9.2,
+        "dE_p95": 20.6,
+        "dL": -8.2,
+        "dC": -0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0dd031f70475d42680cc323a26ea4121c4f9b18128a5dd8b288c485dadca24db",
+      "photos": [
+        614895245
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird stands on top of a thick branch or post that passes directly under its feet; both feet rest on it.",
+      "review": "approved"
+    },
+    "melanerpes-uropygialis": {
+      "common_name": "Gila Woodpecker",
+      "seed": 66657942,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 9.5,
+        "dE_p95": 21.8,
+        "dL": 3.4,
+        "dC": 5.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "371ce11c01f4d94fb7d0c351b216432ce269ecd91bf0dcb71590509377d7a6db",
+      "photos": [
+        92004899
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "melospiza-lincolnii": {
+      "common_name": "Lincoln's Sparrow",
+      "seed": 4165346172,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 6.7,
+        "dE_p95": 12.6,
+        "dL": 2.3,
+        "dC": -0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9ef3bb3731db8f1d1a5ad42b4507928a5e7fd27ae99b04877341902fb7351760",
+      "photos": [
+        260142249
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "seed": 1664295004,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 8.4,
+        "dE_p95": 15.7,
+        "dL": -6.9,
+        "dC": 3.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "557a1151286bc73ae7f1c3947b38c985cdbf6b0d17d651bdb0687204abb4c568",
+      "photos": [
+        4637903
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melozone-aberti": {
+      "common_name": "Abert's Towhee",
+      "seed": 3134671413,
+      "dark": false,
+      "measure": {
+        "iou": 0.677,
+        "dE_mean": 11.8,
+        "dE_p95": 23.7,
+        "dL": 7.7,
+        "dC": 1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "17bfe191603b2063bf2b55b9b348a234ebc4d8f39927e4dce92f9c23ef7629f1",
+      "photos": [
+        358954100
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is plain warm grey-brown, cinnamon under the tail, with a black patch around the base of the bill; there is no eye ring and no pale collar.",
+      "review": "approved",
+      "rejected_seeds": [
+        3452992163
+      ],
+      "why": "an invented white eye ring and pale collar"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "seed": 2880304147,
+      "dark": false,
+      "measure": {
+        "iou": 0.749,
+        "dE_mean": 14.2,
+        "dE_p95": 21.3,
+        "dL": 11.3,
+        "dC": 6.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "335e6b5e8a619a8c05cd9fbbce600b3691bcaf6e1066c83776c38e179cc81181",
+      "photos": [
+        297610261
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 2972130979,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 7.4,
+        "dE_p95": 18.2,
+        "dL": 3.7,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "12bb987189bdd96a7572d224f31e5d896a947cf4d9d69ff89e8df45513e5a498",
+      "photos": [
+        603830740
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back and wings are plain mid-grey and the underparts pale grey-white, with no brown, buff or tan; the wings are blackish with two white wing bars and a white patch; the long tail is black with white outer feathers; the eye is pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3323997748
+      ],
+      "why": "stitched warm buff-brown; the bird is grey and white"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 3568226469,
+      "dark": false,
+      "measure": {
+        "iou": 0.843,
+        "dE_mean": 7.5,
+        "dE_p95": 20.2,
+        "dL": -3.0,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "220d4b626eebf2a2721d20e7c41020f51cb11af15ecfe8718d396dee6c4b7795",
+      "photos": [
+        647580776
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and neck are dull chocolate brown; the rest of the bird is matte black, in black thread only: no white, grey, silver or pale band, panel or feather edge anywhere on the wing or body; the short conical bill and the legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        983609737,
+        1302823199
+      ],
+      "why": "grey bands across the wing"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "seed": 1811315486,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 12.6,
+        "dE_p95": 24.1,
+        "dL": -7.8,
+        "dC": -5.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "593c83ad0703ce585ab100381552d235a3707f79d7dab0af2b5175cac72fb6c4",
+      "photos": [
+        621302842
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 460613932,
+      "dark": false,
+      "measure": {
+        "iou": 0.814,
+        "dE_mean": 11.1,
+        "dE_p95": 23.9,
+        "dL": -5.0,
+        "dC": -2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "127c5e7d01a8199e810493097332541a6aff6e9ffaf6d6869e0a5058adf9e183",
+      "photos": [
+        338606505
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The whole bird is black from head to tail, with no white, grey or pale thread anywhere on the head, neck, breast or wings; only the bare skin at the base of the bill is orange-yellow, and the eye is green.",
+      "review": "approved",
+      "rejected_seeds": [
+        1819498938
+      ],
+      "why": "pale scaly head and neck; the bird is black all over"
+    },
+    "nannopterum-brasilianum": {
+      "common_name": "Neotropic Cormorant",
+      "seed": 1141932175,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 6.6,
+        "dE_p95": 19.4,
+        "dL": -1.1,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1e5bb71b48e8f245e546b4a03fcad1032fa0ee6879a3aaaee5b8278f2d8aae09",
+      "photos": [
+        369851131
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from head to tail, with no white, grey or pale thread on the breast, belly or wings; only a small patch of dull yellow skin at the base of the bill, edged with a thin white line, is pale; the eye is green; the legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        857190425
+      ],
+      "why": "a white breast and belly; the bird is black all over"
+    },
+    "numenius-americanus": {
+      "common_name": "Long-billed Curlew",
+      "seed": 264166718,
+      "dark": false,
+      "measure": {
+        "iou": 0.716,
+        "dE_mean": 7.7,
+        "dE_p95": 16.6,
+        "dL": 0.4,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "870e44a967b23ccc1b0e62ff7b7acc701f418dcd4b1553126486b56f0d29bb4e",
+      "photos": [
+        92003922
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "Both legs are plain blue-grey with no rings or bands; the bird is cinnamon-buff, finely mottled brown above; the very long bill curves down.",
+      "review": "approved",
+      "rejected_seeds": [
+        2025450920
+      ],
+      "why": "a dark band on one leg; the legs are plain"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 292959442,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 7.9,
+        "dE_p95": 17.6,
+        "dL": -4.0,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "897d803d598585dc7191f4e9a9b0d4531de00b2875998f8396ba48fee775357e",
+      "photos": [
+        641728962
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The eye is red; the crown and back are glossy black, the wings pale grey, the face and underparts white; the legs are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        1718682692
+      ],
+      "why": "the eye is black; it is red"
+    },
+    "oreoscoptes-montanus": {
+      "common_name": "Sage Thrasher",
+      "seed": 395465731,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 7.2,
+        "dE_p95": 13.9,
+        "dL": -5.4,
+        "dC": 3.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2432b7d375d7cf34724b3ab810e599800712e5fd174b5d66a0fa0e9e0c61f434",
+      "photos": [
+        259105527
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "seed": 993213712,
+      "dark": false,
+      "measure": {
+        "iou": 0.965,
+        "dE_mean": 5.3,
+        "dE_p95": 10.5,
+        "dL": 1.1,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "203f62705361301e4782bbe7fd1690e479628505e761848108ce56112dc1fc7e",
+      "photos": [
+        92001807
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 2796301890,
+      "dark": false,
+      "measure": {
+        "iou": 0.976,
+        "dE_mean": 9.4,
+        "dE_p95": 14.7,
+        "dL": -2.9,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "40baab6fea746634ccd4fe18c38d89d26b908fdac7c7aecf3b76ee22e0c03d10",
+      "photos": [
+        577296858
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 32877295,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 18.1,
+        "dE_p95": 36.5,
+        "dL": 6.0,
+        "dC": 2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.003,
+      "attempts": 1,
+      "sha256": "954d035137b9da8eba4cead62ab6436425853ae3848a4c6d57c1237b2d825e27",
+      "photos": [
+        121613835
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 4034217514,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 8.5,
+        "dE_p95": 16.6,
+        "dL": -6.4,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "416b25a1b1deb35861193758565124a4a975317165887206c118e49a1896aba7",
+      "photos": [
+        263770044
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 606989903,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 6.0,
+        "dE_p95": 13.9,
+        "dL": -2.2,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1f524b7a29a8e94786d163d135fd093dbea854910db16c194d2d593a7fdf653a",
+      "photos": [
+        603212991
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "approved"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "seed": 599717321,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 7.5,
+        "dE_p95": 16.1,
+        "dL": -3.2,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1bdfe8304bd17345282e6310dddb0d247388814cb91995f8d162767d658751a8",
+      "photos": [
+        647595485
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "seed": 896002832,
+      "dark": false,
+      "measure": {
+        "iou": 0.834,
+        "dE_mean": 12.3,
+        "dE_p95": 26.0,
+        "dL": 3.9,
+        "dC": 5.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "84edaff610f149a1c3118c2f94829f1f86f9d5dfb5a5aeefb7537cfa48bb05ba",
+      "photos": [
+        706232785
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The wings are folded along the body. The bird sits on a branch that passes directly under its body; both feet are closed around that branch.",
+      "review": "approved",
+      "rejected_seeds": [
+        3681126972,
+        2892937899
+      ],
+      "why": "maintainer: needs a better reference photo; confusing how the wing fits on the bird"
+    },
+    "phainopepla-nitens": {
+      "common_name": "Phainopepla",
+      "seed": 2847026295,
+      "dark": false,
+      "measure": {
+        "iou": 0.853,
+        "dE_mean": 7.8,
+        "dE_p95": 15.0,
+        "dL": -1.0,
+        "dC": -4.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2043e630ee736bd5d6b9aa76e546474624936c7cea2551ff58b1b861f2516eca",
+      "photos": [
+        653712969
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy black from crest to tail, with no white, grey or pale thread anywhere on the body or the folded wings; the eye is red; a thin ragged crest stands up from the crown; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3736411361
+      ],
+      "why": "invented white patches on the body and a black eye: the bird is black all over with a red eye"
+    },
+    "phalaenoptilus-nuttallii": {
+      "common_name": "Common Poorwill",
+      "seed": 1332444306,
+      "dark": false,
+      "measure": {
+        "iou": 0.974,
+        "dE_mean": 4.7,
+        "dE_p95": 10.4,
+        "dL": -3.3,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4d24ff42dd6fb66292f29db25c37ec947f28af3765c466ec9b5bcc114a45000c",
+      "photos": [
+        270418156
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The bird crouches flat on the ground with its belly resting on the ground, as nightjars sit; no legs and no feet show under it.",
+      "review": "approved",
+      "rejected_seeds": [
+        946621444
+      ],
+      "why": "the bird stands on legs; it crouches flat on the ground"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "seed": 2632438767,
+      "dark": false,
+      "measure": {
+        "iou": 0.847,
+        "dE_mean": 14.8,
+        "dE_p95": 31.7,
+        "dL": 2.2,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "79fec6cd3aac9cea4586d4206df2a05d3b01dec56688bcbbb413a437b6b5be0c",
+      "photos": [
+        649948895
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "seed": 906886146,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 10.2,
+        "dE_p95": 19.1,
+        "dL": 3.4,
+        "dC": 2.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "3c951212ccce3a97a0fee2fe82adb1151d4f6acb875cfdc067abe4e4b21cddd3",
+      "photos": [
+        2342130
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "seed": 2453228704,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 19.4,
+        "dE_p95": 33.8,
+        "dL": 8.2,
+        "dC": 9.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c452f47e8fa156084f5d68b026ccd7723dbdc2dfaef686d568bc20ed35d0aa25",
+      "photos": [
+        646984573
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body, rump and underparts are bright lemon yellow, not olive; the head is red-orange; the back, wings and tail are black, with one yellow and one white wing bar.",
+      "review": "approved",
+      "rejected_seeds": [
+        3846077494
+      ],
+      "why": "the body came out olive; it is bright yellow"
+    },
+    "plegadis-chihi": {
+      "common_name": "White-faced Ibis",
+      "seed": 3832674758,
+      "dark": false,
+      "measure": {
+        "iou": 0.892,
+        "dE_mean": 8.2,
+        "dE_p95": 15.4,
+        "dL": 1.8,
+        "dC": 5.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c28c13fb9c76791326d653933cccca94d4777e1d999c7427324e4e8be0843ead",
+      "photos": [
+        92003785
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "seed": 1487413924,
+      "dark": false,
+      "measure": {
+        "iou": 0.804,
+        "dE_mean": 16.4,
+        "dE_p95": 39.2,
+        "dL": -1.3,
+        "dC": 3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "228adb5298fc9024a301a8fa077d2d2d92db4f296ba8729940deb472e9c09d04",
+      "photos": [
+        2732065
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright red; the head, neck and back are black, with a fan of golden plumes behind the eye; the flanks are chestnut.",
+      "review": "approved",
+      "rejected_seeds": [
+        800002610
+      ],
+      "why": "the eye is black and the flanks grey; red eye, chestnut flanks"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 1213877441,
+      "dark": false,
+      "measure": {
+        "iou": 0.846,
+        "dE_mean": 13.5,
+        "dE_p95": 24.7,
+        "dL": -7.5,
+        "dC": 3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "49d3ecd7ab9df1c7dc878c0ca3febdc4db9b99d75cc453a8fc1d8316eec2d07f",
+      "photos": [
+        347508702
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "poecile-gambeli": {
+      "common_name": "Mountain Chickadee",
+      "seed": 365809920,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 12.7,
+        "dE_p95": 20.3,
+        "dL": 3.6,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d3dffcd88164da99abb2a1d65650a24e4465cfac7181fe7cedc003872a3b48b6",
+      "photos": [
+        718774856
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "seed": 3265853647,
+      "dark": false,
+      "measure": {
+        "iou": 0.752,
+        "dE_mean": 14.2,
+        "dE_p95": 34.0,
+        "dL": -5.2,
+        "dC": 5.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5d07cbd85bf35eb4854e0df767d5c3b6688c3fb0e1e5bdf8a8fd29041681c0d0",
+      "photos": [
+        335067807
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "polioptila-melanura": {
+      "common_name": "Black-tailed Gnatcatcher",
+      "seed": 56848369,
+      "dark": false,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 11.4,
+        "dE_p95": 16.4,
+        "dL": -1.7,
+        "dC": -2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "04150df09c348a2d7553a9abdce788999bd2ff4b687b018cd7d08bff77e1634a",
+      "photos": [
+        607241678
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "seed": 432013659,
+      "dark": false,
+      "measure": {
+        "iou": 0.906,
+        "dE_mean": 13.3,
+        "dE_p95": 20.9,
+        "dL": 0.0,
+        "dC": 10.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dc9261083b44cda20221b76d8d6bbf02efc0e55c65611c2a143e33e51a2af50b",
+      "photos": [
+        362723149
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "seed": 387674675,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 10.3,
+        "dE_p95": 24.5,
+        "dL": 0.8,
+        "dC": -2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d4773ff644080de641cf68e56ede459e4f93ee4e3d1e3c7e43abb583254ce882",
+      "photos": [
+        586803985
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "seed": 3044798456,
+      "dark": false,
+      "measure": {
+        "iou": 0.709,
+        "dE_mean": 6.4,
+        "dE_p95": 16.8,
+        "dL": 0.4,
+        "dC": -3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "67f1d5d18ca3ba38f87cd227cb433ba7183aaf14b12799a5caa16bd3450c031a",
+      "photos": [
+        547761132
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to its long keel-shaped tail, with no white, grey, cream or pale thread anywhere; the only pale part is the eye, which is pale yellow; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3262963566
+      ],
+      "why": "stitched like a magpie, with a white head and breast: the bird is black all over with a pale eye"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "seed": 1428783465,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 8.8,
+        "dE_p95": 18.2,
+        "dL": -7.1,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e3a718764fe0b75686ffcefad7e86b324482fcb2d15f77664ce68196cd53add4",
+      "photos": [
+        385020264
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "rallus-obsoletus": {
+      "common_name": "Ridgway's Rail",
+      "seed": 3788573358,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 10.5,
+        "dE_p95": 16.9,
+        "dL": -9.1,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "de93a4135559b5e3fa6bf0909892fa1cb8127a887ec50f41d4d84b379963405e",
+      "photos": [
+        355602649
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "seed": 2090044690,
+      "dark": false,
+      "measure": {
+        "iou": 0.779,
+        "dE_mean": 9.2,
+        "dE_p95": 20.7,
+        "dL": -5.0,
+        "dC": 3.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4237ff320742a9c3cf716d12b4e3e69f1586b0283a2463f34475f07460c769c3",
+      "photos": [
+        261332227
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "salpinctes-obsoletus": {
+      "common_name": "Rock Wren",
+      "seed": 724609735,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 8.7,
+        "dE_p95": 15.6,
+        "dL": -2.8,
+        "dC": 5.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ed2679c82a1e1a688fc53c4190f2ea826847a610f25a95325ada8cf18b77a90a",
+      "photos": [
+        461168653
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "seed": 913374537,
+      "dark": true,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 8.0,
+        "dE_p95": 21.8,
+        "dL": -2.9,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "afbd1bcd1e10b8c01a13b6655a754b0683f35edf983f9e87e7470d00038576ba",
+      "photos": [
+        637329547
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
+      "review": "approved"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "seed": 4017895518,
+      "dark": false,
+      "measure": {
+        "iou": 0.961,
+        "dE_mean": 10.5,
+        "dE_p95": 18.7,
+        "dL": -9.1,
+        "dC": 2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d49890f4f96d22adb34b4c0bc941cdbda5ad2735eb8adece78a4f06b3ff3de81",
+      "photos": [
+        610892783
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 3010891046,
+      "dark": false,
+      "measure": {
+        "iou": 0.884,
+        "dE_mean": 17.4,
+        "dE_p95": 29.6,
+        "dL": -2.1,
+        "dC": -12.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5bc5907761a450d6858e96f43231a5bcdd32aa3009429db2022e7ce29276505e",
+      "photos": [
+        647572179
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, not mustard or olive, with yellow-edged olive wings and a plain yellow face with a black eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        3295788464
+      ],
+      "why": "stitched dull mustard; the bird is bright lemon yellow"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 4129728232,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 13.2,
+        "dE_p95": 19.1,
+        "dL": -2.1,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "25ce0bb1fd7ae5244be29be3ba9e95bd398af6699780529024680b91feaf68ac",
+      "photos": [
+        601660331
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-nigrescens": {
+      "common_name": "Black-throated Grey Warbler",
+      "seed": 462862112,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 9.2,
+        "dE_p95": 15.1,
+        "dL": -8.4,
+        "dC": 2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "574fe3b325d7b4be1e1c80ae2506339a976113b24af693276ac23cbb8a3523d4",
+      "photos": [
+        188669375
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1821476790
+      ],
+      "why": "the tail crosses the cord at the right and leaves the patch"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "seed": 1991623220,
+      "dark": false,
+      "measure": {
+        "iou": 0.557,
+        "dE_mean": 15.2,
+        "dE_p95": 40.9,
+        "dL": 0.7,
+        "dC": -0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "40ddf997fd3d242e3c4b1748dedadcd4c653ae202bfa79a9b0d249592ce27a9b",
+      "photos": [
+        491385309
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sialia-currucoides": {
+      "common_name": "Mountain Bluebird",
+      "seed": 378418617,
+      "dark": false,
+      "measure": {
+        "iou": 0.781,
+        "dE_mean": 12.3,
+        "dE_p95": 21.0,
+        "dL": 0.6,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "63ba7809f03f2833d0ba9c72955d62a9163e396d40973f4e355dbe5d878c116a",
+      "photos": [
+        257076389
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is clear sky blue, brightest on the back, wings and tail and paler powder blue on the breast, fading to white under the tail; there is no grey, slate or brown thread; the bill and legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1636369711
+      ],
+      "why": "stitched dull slate-blue; the bird is sky blue"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "seed": 2926371710,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 12.2,
+        "dE_p95": 19.0,
+        "dL": -10.7,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8a26522eead6a5f833674b145a727d2b109df6e5c3507f753a3d778921c6019e",
+      "photos": [
+        336238201
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird's feet grip the branch: both feet curl around it, toes wrapped over the top. The head, throat, wings and tail are blue; the breast and a patch on the upper back are rusty orange; the belly is pale grey-white.",
+      "review": "approved",
+      "rejected_seeds": [
+        3647722472
+      ],
+      "why": "the feet float beside the branch instead of gripping it"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "seed": 1128019979,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 10.6,
+        "dE_p95": 17.9,
+        "dL": 0.9,
+        "dC": 0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e079e02065b185f724d6871a2c3fc30a446a3de0aff1f54096095c8a905198c4",
+      "photos": [
+        741875687
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        876284061
+      ],
+      "why": "backwards: the trunk is behind the bird's back and its feet reach into the air"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 2856390018,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 10.6,
+        "dE_p95": 21.4,
+        "dL": -1.3,
+        "dC": 2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7fcea0cf80498a717ec5c3d44ab1771a520a91bb74b5a1471a444cbf764b7b04",
+      "photos": [
+        348539299
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is dark glossy green, not blue; the eye is yellow; the breast is white; the flanks are chestnut; the large spoon-shaped bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3712367892
+      ],
+      "why": "the head came out blue; it is green"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "seed": 746532008,
+      "dark": false,
+      "measure": {
+        "iou": 0.731,
+        "dE_mean": 28.1,
+        "dE_p95": 65.0,
+        "dL": 7.5,
+        "dC": -7.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "26f92eeac81a469df5913309bf66586d6cb258b2ee12c22c002923e1a35ec0a1",
+      "photos": [
+        535612047
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck and body are deep cinnamon red, with no white, black-and-white or brown-and-white pattern; the eye is red; the bill is black; the back is darker brown.",
+      "review": "approved",
+      "rejected_seeds": [
+        1534598206
+      ],
+      "why": "stitched in a brown-and-white pattern; the bird is cinnamon red with a red eye"
+    },
+    "spinus-lawrencei": {
+      "common_name": "Lawrence's Goldfinch",
+      "seed": 1631634222,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 12.9,
+        "dE_p95": 26.6,
+        "dL": 7.9,
+        "dC": 4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "01d5fecaa1224cbe27549ee114f2556d542c0376fed17623f7898885c9a19efb",
+      "photos": [
+        115074290
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "seed": 1661343694,
+      "dark": false,
+      "measure": {
+        "iou": 0.833,
+        "dE_mean": 27.4,
+        "dE_p95": 44.8,
+        "dL": -12.7,
+        "dC": -15.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "deff311fc8d619a4d8e96a27037798bb94e247f2672b590126f5418f36e753dd",
+      "photos": [
+        475665411
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spizella-breweri": {
+      "common_name": "Brewer's Sparrow",
+      "seed": 1855659077,
+      "dark": false,
+      "measure": {
+        "iou": 0.835,
+        "dE_mean": 12.8,
+        "dE_p95": 21.1,
+        "dL": -10.6,
+        "dC": 6.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5b12d0982efdebc74bfa93ba9ede450823dc860fcf97902a27234893b53c854f",
+      "photos": [
+        335039338
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "seed": 2841926552,
+      "dark": false,
+      "measure": {
+        "iou": 0.89,
+        "dE_mean": 8.7,
+        "dE_p95": 16.6,
+        "dL": -2.2,
+        "dC": 3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cbc0357ea304707039ac31156a60608d2145db42d4e112a114d217e3a2687d2f",
+      "photos": [
+        490663025
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "stelgidopteryx-serripennis": {
+      "common_name": "Northern Rough-winged Swallow",
+      "seed": 3711229659,
+      "dark": false,
+      "measure": {
+        "iou": 0.878,
+        "dE_mean": 12.5,
+        "dE_p95": 24.0,
+        "dL": 7.3,
+        "dC": 6.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1540e993cb565947439a16870b9351514d451e844d48ba2887b77e537adbd12c",
+      "photos": [
+        683068349
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 1790044620,
+      "dark": false,
+      "measure": {
+        "iou": 0.741,
+        "dE_mean": 15.6,
+        "dE_p95": 43.1,
+        "dL": -5.6,
+        "dC": 2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b1fe6444cfbce4ecfc2ae329945bfe56daf489d02b8cc8e498f70599bf1083dc",
+      "photos": [
+        652069202
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "It stands on both legs: two orange-red legs and feet show. The back and wings are pale silver-grey, the underparts pure white, with a black patch through the eye; the bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2227144928,
+        4088969334
+      ],
+      "why": "stands on one leg"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "seed": 1807721095,
+      "dark": false,
+      "measure": {
+        "iou": 0.864,
+        "dE_mean": 18.8,
+        "dE_p95": 35.1,
+        "dL": -0.4,
+        "dC": 7.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "60a6581535511e9bc84659f10c6ee7439d564a0cee1530d1d3c01a27b5ee648c",
+      "photos": [
+        364234000
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is plain pale grey-buff, with no scales, bars or rufous; a thin black half-collar edged with white crosses the back of the neck; the eye is small and dark red; the legs are pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        481858065
+      ],
+      "why": "the head came out rufous and the back scaly; the bird is plain pale grey-buff"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "seed": 3747069035,
+      "dark": false,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 8.8,
+        "dE_p95": 15.5,
+        "dL": -6.4,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d0d7e7624a890e84fa76b97406b598cc9abc405d0629c35119905cebb3caf3c5",
+      "photos": [
+        59765954
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 3231142582,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 6.4,
+        "dE_p95": 14.2,
+        "dL": -3.5,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2d6b53613654837a8ae765c41223d7fb595214ccb27d26f129220a8145e7b878",
+      "photos": [
+        67983238
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "seed": 2893777783,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 13.6,
+        "dE_p95": 19.4,
+        "dL": -11.9,
+        "dC": 6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0f8a7e8ab01645e7e23ee1fcb128ac0a249d9116f5957cd0501472ff923c5bbf",
+      "photos": [
+        653719136
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "toxostoma-crissale": {
+      "common_name": "Crissal Thrasher",
+      "seed": 2854942895,
+      "dark": false,
+      "measure": {
+        "iou": 0.747,
+        "dE_mean": 19.8,
+        "dE_p95": 40.2,
+        "dL": 14.6,
+        "dC": 4.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1084716d12c2b7b4a2ccd35ca601ba7d8c61f58b4e3d5872b86921cbfa3c242a",
+      "photos": [
+        119987772
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is plain dusky grey-brown, with a deep chestnut patch under the tail; a thin dark whisker stripe runs beside a paler throat; the eye is pale; the long bill curves down; there is no black body and no white or cream patches.",
+      "review": "approved",
+      "rejected_seeds": [
+        3710765113
+      ],
+      "why": "stitched black and white; the bird is plain dusky grey-brown"
+    },
+    "toxostoma-lecontei": {
+      "common_name": "LeConte's Thrasher",
+      "seed": 3295029058,
+      "dark": false,
+      "measure": {
+        "iou": 0.751,
+        "dE_mean": 9.2,
+        "dE_p95": 18.1,
+        "dL": -6.8,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b35ed4048302607adc4d727c879b713fc099ed639f22d18bbdb520eeace8c07f",
+      "photos": [
+        263642635
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "seed": 3739954215,
+      "dark": false,
+      "measure": {
+        "iou": 0.748,
+        "dE_mean": 11.2,
+        "dE_p95": 21.1,
+        "dL": 7.3,
+        "dC": 4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "599dbf6089234e76145799abe672b07b92214869209db5f4c13575f1fdb92666",
+      "photos": [
+        110840875
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 4039340021,
+      "dark": false,
+      "measure": {
+        "iou": 0.876,
+        "dE_mean": 7.1,
+        "dE_p95": 13.3,
+        "dL": -3.5,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "febaf818e70899f7a36ed1c6c3d1590326c6d5c70c728ea77573d57289183ee9",
+      "photos": [
+        92001914
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 1050886419,
+      "dark": false,
+      "measure": {
+        "iou": 0.694,
+        "dE_mean": 10.6,
+        "dE_p95": 21.8,
+        "dL": 0.8,
+        "dC": -3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "433062bd765a12fb12a42aca00b094b95a05926f210adb5520a701551b8b41a5",
+      "photos": [
+        92023084
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 420087606,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 9.8,
+        "dE_p95": 15.7,
+        "dL": -3.3,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9f299215899856898ce0f7ecf6d23bf8bd06c375a49306e762419c05e91741e7",
+      "photos": [
+        620298651
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tyrannus-verticalis": {
+      "common_name": "Western Kingbird",
+      "seed": 2699545849,
+      "dark": false,
+      "measure": {
+        "iou": 0.798,
+        "dE_mean": 15.4,
+        "dE_p95": 24.8,
+        "dL": 9.8,
+        "dC": 3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7ee064a642b4a95b8fa556073d03ff37766abf581d22f176bad2432608d3d9af",
+      "photos": [
+        119895616
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tyto-furcata": {
+      "common_name": "American Barn Owl",
+      "seed": 2802600293,
+      "dark": false,
+      "measure": {
+        "iou": 0.94,
+        "dE_mean": 11.6,
+        "dE_p95": 17.6,
+        "dL": 0.1,
+        "dC": 5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5d3adec9eab052341b057c86a19e95b3649dbc897f517f513d292cbd5e1b91db",
+      "photos": [
+        163185333
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-gilvus": {
+      "common_name": "Warbling Vireo",
+      "seed": 1161449287,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 8.2,
+        "dE_p95": 13.7,
+        "dL": -1.9,
+        "dC": 6.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "190fd57259855ae8955390cbd57e11ab78271d314e56f4a410dddccdbcaf68e3",
+      "photos": [
+        652447297
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "xanthocephalus-xanthocephalus": {
+      "common_name": "Yellow-headed Blackbird",
+      "seed": 4285116355,
+      "dark": true,
+      "measure": {
+        "iou": 0.849,
+        "dE_mean": 12.7,
+        "dE_p95": 40.5,
+        "dL": 9.5,
+        "dC": 3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b733e5d4a4ad3eebed94296b5854bb3b154401963d1359dbc402407ffdb2d102",
+      "photos": [
+        65701717
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and breast are rich golden yellow, with a black patch around the eye and bill; the rest of the body, wings and tail are black, with only a small white patch at the bend of the wing; there are no other white or pale marks.",
+      "review": "approved",
+      "rejected_seeds": [
+        2288951126
+      ],
+      "why": "the head came out pale tan with white streaks on the body; the head is golden yellow"
+    },
+    "zenaida-asiatica": {
+      "common_name": "White-winged Dove",
+      "seed": 403625623,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 18.6,
+        "dE_p95": 33.5,
+        "dL": 13.4,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1743d964b8e981dc926a3991b42db66c779630337d18ae0720af2642792f6ac6",
+      "photos": [
+        354656637
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is small and orange-red, set in a patch of bare blue skin, with a short black mark below it; the bird is soft grey-brown with a white band along the edge of the folded wing; the legs are pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        1862919681
+      ],
+      "why": "a big black eye with a white ring; the eye is small and orange-red in blue skin"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 3159764836,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 10.3,
+        "dE_p95": 17.8,
+        "dL": 0.2,
+        "dC": 6.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "2c6c6413864c45ea18b085dc1e21330a447d31c63b69048fcac81ddba95fb9cd",
+      "photos": [
+        671977204
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is small and dark, in a thin ring of pale blue skin; the bird is soft buff-brown, paler on the breast, with a few black spots on the folded wing and a small black mark below the eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        3411091445
+      ],
+      "why": "the eye is far too big for a dove"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "seed": 2090676769,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 12.4,
+        "dE_p95": 21.0,
+        "dL": -1.4,
+        "dC": 3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "46dae04d5d70824144b319ceefb3c47a26f15b00c31f153965ca3e7e9d0b959b",
+      "photos": [
+        618204478
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an arch, rounded at the top with straight sides and a flat bottom",
+        "cord": "terracotta-rose",
+        "twill": "warm sand-coloured cotton twill",
+        "motif": "a Joshua tree, a fan palm and a rose-gold dusk sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    }
+  }
+}

@@ -204,7 +204,7 @@ struct RunSnapshotTests {
                 #expect(hex(GlanceInk.rule(scheme, contrast), style, traitContrast) == hex(.rule, style, traitContrast))
             }
             #expect(hex(GlanceInk.page(scheme), style, .normal) == hex(.paper, style, .normal))
-            for setID in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
+            for setID in EditionTintTests.setIDs {
                 #expect(hex(GlanceInk.tint(setID: setID, scheme, .standard), style, .normal) == hex(PatchEdition.tint(setID: setID), style, .normal), "\(setID)")
             }
         }

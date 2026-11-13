@@ -1,0 +1,4913 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 3602078788,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 7.5,
+        "dE_p95": 15.5,
+        "dL": 4.2,
+        "dC": 2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "df3fed8ad9bb0fe3947deb326dd79c257f9b475c1e381c6d9f84959c75e4f4b8",
+      "photos": [
+        621081489
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "seed": 2300322754,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 9.5,
+        "dE_p95": 20.4,
+        "dL": -6.3,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d1c709fa87eac98c56d3be0da54ee358bd219f0ca381bfb618b2c41aeebd77b6",
+      "photos": [
+        611368715
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 1467284885,
+      "dark": true,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6d4d37a1dd0f5f47e8c663fb1c016ce6da094de9207fb1ae3a93bfee29398049",
+      "photos": [
+        647464709
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black from bill to tail, in black thread, with no white, cream or grey anywhere on its head, breast, belly or wings; the only colour is one scarlet red patch on the shoulder of the folded wing, with a narrow yellow lower edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        544460035
+      ],
+      "why": "maintainer: completely wrong colour; needs to be a black bird with a red patch on the wing"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 721765843,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 11.3,
+        "dE_p95": 20.8,
+        "dL": -9.4,
+        "dC": -0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "15768d62ebb9c3a920d70d102b379f7c0ebe57e4608415a33e297ca33caafe67",
+      "photos": [
+        605189875
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "amphispiza-bilineata": {
+      "common_name": "Black-throated Sparrow",
+      "seed": 3372282137,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 6.0,
+        "dE_p95": 11.7,
+        "dL": -2.0,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dfb916033d06f11a7a1e07a6f41e2c14fa3c264e5d4e6a5cae892a4a5a152281",
+      "photos": [
+        621978329
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it. Two thin dark legs show under the belly, and no leaf or twig lies across the bird's body.",
+      "review": "approved",
+      "rejected_seeds": [
+        3188179343
+      ],
+      "why": "maintainer: looks to be missing a leg; part of its body is the branch's leaf; look at the branch"
+    },
+    "anarhynchus-nivosus": {
+      "common_name": "Snowy Plover",
+      "seed": 1013172072,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 6.5,
+        "dE_p95": 14.1,
+        "dL": -4.3,
+        "dC": 2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6a0acd19bb261c4fe17c25ab7bc2db439447cddb9befc862112d534c1b9b0995",
+      "photos": [
+        532164286
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "seed": 3575802008,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 7.4,
+        "dE_p95": 15.1,
+        "dL": 6.0,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fdcf56d30fa98f91684a768c325ba5e26e2632a1febc9f972f71ff7a73ca1bea",
+      "photos": [
+        602847078
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "seed": 3025297987,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 8.2,
+        "dE_p95": 15.7,
+        "dL": 5.5,
+        "dC": 3.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b21fac28402b39f00c0eadbd84a728c821593df08149fa3d0e7f30f9e26abe7b",
+      "photos": [
+        474050267
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 67574102,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 16.8,
+        "dE_p95": 31.5,
+        "dL": -10.7,
+        "dC": -1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8b692de55f9425c79da99dd90a12ec6c4a117eaf2b90f8d10717964ab66c1bdd",
+      "photos": [
+        660370139
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anthus-rubescens": {
+      "common_name": "American Pipit",
+      "seed": 2058664313,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 5.7,
+        "dE_p95": 13.0,
+        "dL": -2.1,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "669b63252f428bc15b07d2fdd81ee6c55fdab5b53a4f0c42bf37ae9b84916c0d",
+      "photos": [
+        469787586
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "seed": 2476609093,
+      "dark": false,
+      "measure": {
+        "iou": 0.831,
+        "dE_mean": 13.8,
+        "dE_p95": 22.6,
+        "dL": -2.0,
+        "dC": -11.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4f560715f639b8cc36f904c03bc4362d28b52652989e5d1bd60d2e2d14b7116f",
+      "photos": [
+        660369730
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 1043626368,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 9.0,
+        "dE_p95": 17.2,
+        "dL": -6.3,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "d173515a70957ec9ad9cb568e2001638ba6c73ac69f61ed92f45aab815cd3a27",
+      "photos": [
+        610901764
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill is yellow and the legs and feet black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1228098025
+      ],
+      "why": "the body came out cream and beige with grey-blue plume streaks; the bird is pure white"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 3254739895,
+      "dark": false,
+      "measure": {
+        "iou": 0.852,
+        "dE_mean": 11.0,
+        "dE_p95": 19.8,
+        "dL": -10.0,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "74fa200ea481cbe6c8c486bc382c487bef93f5941b60332dcffbe34721304ec2",
+      "photos": [
+        709378286
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "arenaria-melanocephala": {
+      "common_name": "Black Turnstone",
+      "seed": 2738525771,
+      "dark": false,
+      "measure": {
+        "iou": 0.802,
+        "dE_mean": 9.6,
+        "dE_p95": 22.0,
+        "dL": -4.8,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e39ba681242dc4a48e652a72ec478a0bb9d188359482eb086658646600454f40",
+      "photos": [
+        603475166
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 933630690,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 10.4,
+        "dE_p95": 20.0,
+        "dL": 3.2,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ae172d1361b133e9e9521ac142829f13037b158e3bce2373c3cbf323678f226f",
+      "photos": [
+        708062321
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1084301942
+      ],
+      "why": "the card peeled into the cut at the lower right (card at edge)"
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "seed": 2315783353,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ba1c3dc2d5985558aa2fbc0cabca299a3d704d9e167e2d90fad88acb5108b4ee",
+      "photos": [
+        461488926
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        4245634095
+      ],
+      "why": "maintainer: needs a yellow eye"
+    },
+    "aythya-americana": {
+      "common_name": "Redhead",
+      "seed": 1710461696,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f38c9ab4e8933da2dd3bf02189dd1de834c38a479ac3da7046e7a1d2351a766e",
+      "photos": [
+        467229832
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        318022550
+      ],
+      "why": "maintainer: needs a yellow eye"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 712135516,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 5.3,
+        "dE_p95": 11.2,
+        "dL": 0.1,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "191f9591cd63e49eff6288a04d1c5cd959e4324dff24e62d0845dce8b39b93c4",
+      "photos": [
+        590620382
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "seed": 24427655,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 7.9,
+        "dE_p95": 15.1,
+        "dL": 0.1,
+        "dC": -3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9a9cb18f605d01c66d431963f5837d0651ba392454c5744f22de7594884f45f0",
+      "photos": [
+        456001729
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 1858393066,
+      "dark": false,
+      "measure": {
+        "iou": 0.858,
+        "dE_mean": 16.1,
+        "dE_p95": 30.2,
+        "dL": -14.2,
+        "dC": -0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9f559235cb9a6636e3e0eed2c674f1a0e135e3c2f16dbdcdef76bf0f5ffdc61f",
+      "photos": [
+        351699034
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "branta-bernicla": {
+      "common_name": "Brant Goose",
+      "seed": 916472065,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 10.6,
+        "dE_p95": 22.5,
+        "dL": -2.8,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ced8d3682a67634d4dc7259e7174e0d03378e5939f9fa2a2ca1ec5864c3ec839",
+      "photos": [
+        611146846
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 3055623422,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 5.9,
+        "dE_p95": 12.7,
+        "dL": -0.5,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c7cf3c31ce4b450e2e944c11641f6b7c7fe7f9e4ec6678bbca4651f009786654",
+      "photos": [
+        647460270
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 2720342343,
+      "dark": false,
+      "measure": {
+        "iou": 0.984,
+        "dE_mean": 9.6,
+        "dE_p95": 12.8,
+        "dL": 0.7,
+        "dC": -3.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "75a4bc05d994abfd377a04e3dfb0a545a41fc229bae1440dd21474d1d6c5b20f",
+      "photos": [
+        475664112
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "seed": 524859069,
+      "dark": false,
+      "measure": {
+        "iou": 0.608,
+        "dE_mean": 39.0,
+        "dE_p95": 77.3,
+        "dL": 5.4,
+        "dC": 6.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7800ba020f05ba0a4d6865afcfd9d6a2a7e0474bd806c47b49734cf3268b2b77",
+      "photos": [
+        590857166
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 1727106165,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 6.9,
+        "dE_p95": 12.6,
+        "dL": 1.5,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "01267227cc668d81bd42d19118780d9bc416b28cd48f67e1b936a6ad469decb7",
+      "photos": [
+        725547102
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 1515778829,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 11.4,
+        "dE_p95": 18.0,
+        "dL": 8.6,
+        "dC": 5.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5bdbde329018cd543041aa34d5c321a3a7917d767bc2d29dfb3a43cad4eabd5c",
+      "photos": [
+        706785692
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 3483457178,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 6.8,
+        "dE_p95": 13.5,
+        "dL": -5.5,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "57fa428d344dc90dc2ac6c908387a7ae8eeded043b0e4e828e687437d29c4f48",
+      "photos": [
+        666231369
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "seed": 3837830232,
+      "dark": false,
+      "measure": {
+        "iou": 0.885,
+        "dE_mean": 10.2,
+        "dE_p95": 21.4,
+        "dL": 5.9,
+        "dC": -2.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cc7f0ce3429463d90a9b4ed0fd398aa450d82b89f84ed0568bfc615c91bf50c3",
+      "photos": [
+        736182284
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "seed": 1643077987,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 8.5,
+        "dE_p95": 14.9,
+        "dL": 2.0,
+        "dC": 4.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d285e2c386edd9234e8509dee9cc5b62f791cc74f8193bead30724f89c2dd886",
+      "photos": [
+        459144350
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 3401661935,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1f796019d7ccfecaf650c51ba666d2b7c365e62be97422cd5bdd9f17bff90d8f",
+      "photos": [
+        469787889
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The legs are yellowish green; it stands on both, and each foot has three slim toes pointing forward.",
+      "review": "approved",
+      "rejected_seeds": [
+        3183873401
+      ],
+      "why": "maintainer: left foot is mangled; should match the right foot more closely"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "seed": 2262972073,
+      "dark": false,
+      "measure": {
+        "iou": 0.888,
+        "dE_mean": 6.1,
+        "dE_p95": 12.5,
+        "dL": -4.8,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8dd97f41ae3045590731eaf1fabefa8d9abf8d153ebf38f34bb0f1d13da54459",
+      "photos": [
+        651685993
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "seed": 386836178,
+      "dark": true,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 9.4,
+        "dE_p95": 24.3,
+        "dL": 3.4,
+        "dC": -1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "57a944188dffa672f2be39379d16dc5c5021a8cf22126417e2f4c7f4db7ee625",
+      "photos": [
+        693700315
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "calypte-costae": {
+      "common_name": "Costa's Hummingbird",
+      "seed": 1434342784,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 8.2,
+        "dE_p95": 14.4,
+        "dL": -5.8,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3c2e6cb38acf108eae4dbeb9c300398450737ec44676365fbb8e56996dbc3345",
+      "photos": [
+        622214788
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "campylorhynchus-brunneicapillus": {
+      "common_name": "Cactus Wren",
+      "seed": 3184765967,
+      "dark": false,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 7.6,
+        "dE_p95": 15.8,
+        "dL": -0.6,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "738658f154b04d182e18a9167d5baddb30a8799965602f6501569267450b1eba",
+      "photos": [
+        461310492
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3402931353
+      ],
+      "why": "the cut failed: a small oval left on a large white card"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "seed": 2279904832,
+      "dark": false,
+      "measure": {
+        "iou": 0.582,
+        "dE_mean": 40.6,
+        "dE_p95": 72.5,
+        "dL": -5.3,
+        "dC": -31.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a7c19c015c95f329c51bee8e61c955fffc206d5d33c5f4e4c1cea65b4ca328df",
+      "photos": [
+        735719853
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 1312565773,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 6.6,
+        "dE_p95": 12.2,
+        "dL": 3.3,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7fbfdd29b639501455ac48d6466d2673193965a6947a3417dc8b577dd744f1f1",
+      "photos": [
+        621979697
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "seed": 149354559,
+      "dark": false,
+      "measure": {
+        "iou": 0.493,
+        "dE_mean": 16.0,
+        "dE_p95": 37.1,
+        "dL": -0.1,
+        "dC": 2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "8bf1b207d661ed1659baca43fd2b193eed927e874004d28bc5e52040cfd690ae",
+      "photos": [
+        461977777
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "seed": 1858549939,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 5.2,
+        "dE_p95": 11.5,
+        "dL": 1.2,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "bae58590e1498b3c8434b2a8b825632e3c9672da0ea6ea321887ef97acf64cf3",
+      "photos": [
+        197325841
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "catherpes-mexicanus": {
+      "common_name": "Canyon Wren",
+      "seed": 2790931917,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 6.1,
+        "dE_p95": 13.9,
+        "dL": -4.5,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e1fd69f33e8bfba220c0659b5fa93090f4d736eef777e260f4d916a3b4bbc145",
+      "photos": [
+        144261922
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "chamaea-fasciata": {
+      "common_name": "Wrentit",
+      "seed": 530894702,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 3.3,
+        "dE_p95": 7.6,
+        "dL": -1.5,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cc629dab601e4ecc22cdbee8175f02371797cb680ebed8ad94dd9bde28bb3de7",
+      "photos": [
+        591042051
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "charadrius-semipalmatus": {
+      "common_name": "Semipalmated Plover",
+      "seed": 1721225216,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 9.9,
+        "dE_p95": 24.3,
+        "dL": 1.6,
+        "dC": 4.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5c54451f51ef95d26771e988c6cde561ea55ba7bb0476a9b1566390707ce0ead",
+      "photos": [
+        608701480
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 3999459281,
+      "dark": false,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 7.4,
+        "dE_p95": 15.0,
+        "dL": -0.1,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "877a2ebdb46916bdc5304f7a12e80c223c5e64da3934e35f4fd9f2b65132bd28",
+      "photos": [
+        582260344
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "seed": 2584333583,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 10.1,
+        "dE_p95": 24.1,
+        "dL": -7.2,
+        "dC": 1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dc1fda81677acf73f7bf7e167ee77c91d98d47a841e4cdb4e4b652fc343cea1d",
+      "photos": [
+        591041633
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 1570705896,
+      "dark": false,
+      "measure": {
+        "iou": 0.725,
+        "dE_mean": 8.3,
+        "dE_p95": 19.2,
+        "dL": 0.8,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9500bfa30acd083e5e10c5d519c521a6fb53c83c97a10d784c22418dfdcf1652",
+      "photos": [
+        617843049
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 48259784,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 6.2,
+        "dE_p95": 10.6,
+        "dL": 3.0,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "4de3c8af9d289fe1cb868c696fd5e86e6356f38f89108c0bcba28a64182e442a",
+      "photos": [
+        353749185
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 3507478274,
+      "dark": false,
+      "measure": {
+        "iou": 0.894,
+        "dE_mean": 7.8,
+        "dE_p95": 17.1,
+        "dL": -3.2,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4d65542454c92eefaf7e0a184a068c7ad2aa88aba0f809065e0e3f2fc8d3632c",
+      "photos": [
+        677786425
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "contopus-sordidulus": {
+      "common_name": "Western Wood Pewee",
+      "seed": 2683118051,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 10.2,
+        "dE_p95": 19.3,
+        "dL": 9.0,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c710e22c9a5668a58ed208d5a582791c5b3070e4c7da276d938d583972189ca8",
+      "photos": [
+        729927077
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 1545278938,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 9.1,
+        "dE_p95": 15.6,
+        "dL": -7.9,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3f4f59881d9371464df65dc25371bd3712ba1661bc3c9c032139402fc9bc83fb",
+      "photos": [
+        608926622
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 1445472448,
+      "dark": true,
+      "measure": {
+        "iou": 0.83,
+        "dE_mean": 8.4,
+        "dE_p95": 20.9,
+        "dL": -0.2,
+        "dC": -2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ff079a4d4dbd4e40a3a4163a9008eaa171c6865f942c0e93dadf48a6a34943a9",
+      "photos": [
+        645836179
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread. Any sheen on its feathers is stitched in dark charcoal thread, never in white, grey, blue or pale thread; the folded wing has no pale patch, bar, streak or feather edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        3475077498,
+        3089517036,
+        556734550
+      ],
+      "why": "first repaint after the maintainer's review still wrong (white marks, a colour-cast reference, or a stray line); painted again"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "seed": 926146153,
+      "dark": true,
+      "measure": {
+        "iou": 0.804,
+        "dE_mean": 7.6,
+        "dE_p95": 20.3,
+        "dL": -3.8,
+        "dC": -2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "fc821e130a85296a988bc97ae54f088e023ba81bbc5c184ec1653c7ccd40634f",
+      "photos": [
+        644330558
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere.",
+      "review": "approved",
+      "rejected_seeds": [
+        1077210879
+      ],
+      "why": "white flecks and streaks invented on the wing and breast of an all-black bird"
+    },
+    "cyanocitta-stelleri": {
+      "common_name": "Steller's Jay",
+      "seed": 2623444359,
+      "dark": false,
+      "measure": {
+        "iou": 0.37,
+        "dE_mean": 81.3,
+        "dE_p95": 91.2,
+        "dL": -79.5,
+        "dC": 13.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "66e97e93c4372c25990785676be6d1854b29c16d17f8aa60372af73e1c74e9c4",
+      "photos": [
+        142023829
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, crest and upper back are sooty black, not brown; the wings, tail and belly are deep blue.",
+      "review": "approved",
+      "rejected_seeds": [
+        3948520721
+      ],
+      "why": "maintainer: the brown in the bird should be more black; poor reference photo"
+    },
+    "dryobates-nuttallii": {
+      "common_name": "Nuttall's Woodpecker",
+      "seed": 1149709817,
+      "dark": true,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 10.1,
+        "dE_p95": 20.2,
+        "dL": 0.8,
+        "dC": -0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e9c6d666b4913025c5d75a08586aac211c8bd66ee675bce093bcb921c9d079ed",
+      "photos": [
+        723725553
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "egretta-caerulea": {
+      "common_name": "Little Blue Heron",
+      "seed": 2921118778,
+      "dark": false,
+      "measure": {
+        "iou": 0.694,
+        "dE_mean": 9.1,
+        "dE_p95": 15.8,
+        "dL": 6.1,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dd7678d7f955200a98eb2eed1b616923cedeae9bcb3d1a8ec6b5876f201fc4ba",
+      "photos": [
+        573086921
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "egretta-rufescens": {
+      "common_name": "Reddish Egret",
+      "seed": 2082978566,
+      "dark": false,
+      "measure": {
+        "iou": 0.882,
+        "dE_mean": 8.3,
+        "dE_p95": 15.8,
+        "dL": -7.7,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6d66811c8a26aa80430aa35e8adc9c3e76a2242ccf046863edd6298bc7704dfc",
+      "photos": [
+        622182931
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 1928437721,
+      "dark": false,
+      "measure": {
+        "iou": 0.722,
+        "dE_mean": 8.2,
+        "dE_p95": 15.7,
+        "dL": 0.1,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "527f0a2306729e65cc62f282b75bbdf79016ffbc43f0695922a714527f0fe477",
+      "photos": [
+        666702680
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "elanus-leucurus": {
+      "common_name": "White-tailed Kite",
+      "seed": 1917804218,
+      "dark": false,
+      "measure": {
+        "iou": 0.844,
+        "dE_mean": 10.2,
+        "dE_p95": 19.9,
+        "dL": 0.4,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "35c18a50e5c10dfabdf23891efcc8f933a70520056aa1c72663d27aecc57e3bc",
+      "photos": [
+        608023114
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "seed": 478684773,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 7.2,
+        "dE_p95": 15.0,
+        "dL": -6.4,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1b1fada75cbb6585a50118cd5a5cf29b26e9fa18da56aed76ea7eadb24b94e86",
+      "photos": [
+        740577995
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "eremophila-alpestris": {
+      "common_name": "Horned Lark",
+      "seed": 3545376154,
+      "dark": false,
+      "measure": {
+        "iou": 0.673,
+        "dE_mean": 9.6,
+        "dE_p95": 29.7,
+        "dL": -5.1,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "62de65060dfdadcb93a26a3577ae8a7106dbdfe6800b4c9bb6a368f8724c9348",
+      "photos": [
+        622710352
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "seed": 939754839,
+      "dark": true,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 9.4,
+        "dE_p95": 20.2,
+        "dL": 2.6,
+        "dC": -2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1beb4418e6caf30278ef4ce7c417880342e292dcc8d19aa39f498e8660376a1c",
+      "photos": [
+        576888407
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 2354319890,
+      "dark": false,
+      "measure": {
+        "iou": 0.864,
+        "dE_mean": 15.5,
+        "dE_p95": 35.8,
+        "dL": 6.2,
+        "dC": -5.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "334b61c915280065db2a43021268236895edd5d6416e737acc550526f7ea12bf",
+      "photos": [
+        595925349
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 3274725719,
+      "dark": false,
+      "measure": {
+        "iou": 0.881,
+        "dE_mean": 9.1,
+        "dE_p95": 20.8,
+        "dL": 0.4,
+        "dC": -3.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "909b99dad3a5f798ec0704c2cb4a536b927f3d010c96c6a845f5af909a7b0e56",
+      "photos": [
+        577885443
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3023530435
+      ],
+      "why": "maintainer: bird floating and not on a branch"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 3969168602,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 4.8,
+        "dE_p95": 9.1,
+        "dL": -3.7,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7ad833660453b26607b11ec8d031874c8a0f0c4fd12e3f802a29a710eacc18c6",
+      "photos": [
+        613998200
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved",
+      "rejected_seeds": [
+        2610136140
+      ],
+      "why": "maintainer: use the new opening photo of the coot in water"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "seed": 1669686482,
+      "dark": false,
+      "measure": {
+        "iou": 0.814,
+        "dE_mean": 7.7,
+        "dE_p95": 18.5,
+        "dL": -2.8,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5fb93aa056f3848168670c28d51c4fa992a2ace673e136f67ae413e0ba8a678e",
+      "photos": [
+        619107919
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "geococcyx-californianus": {
+      "common_name": "Greater Roadrunner",
+      "seed": 2640935248,
+      "dark": false,
+      "measure": {
+        "iou": 0.784,
+        "dE_mean": 7.2,
+        "dE_p95": 14.7,
+        "dL": -6.3,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4db5898ba3d416a221c7aac4815841b2a4617e28d15a2f386c94115699ee77f5",
+      "photos": [
+        696753599
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The bird stands on open ground with both feet flat on the ground under its body and its long tail held out behind it; there is no branch or twig under its feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        3933096390
+      ],
+      "why": "maintainer: the bird's branch is floating"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 18056525,
+      "dark": false,
+      "measure": {
+        "iou": 0.84,
+        "dE_mean": 33.4,
+        "dE_p95": 58.0,
+        "dL": 16.0,
+        "dC": -13.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "69a8433b8ca614bd3082a838536a4e736ef88e5e4403cbaa50f02fd8b4e2cb8c",
+      "photos": [
+        707387250
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haematopus-bachmani": {
+      "common_name": "Black Oystercatcher",
+      "seed": 1030310346,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 15.6,
+        "dE_p95": 25.5,
+        "dL": -14.8,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "61385e5ddda9aee848a4e28bb0788966fe76cea198e5b47ef63f1bc097640a17",
+      "photos": [
+        667475548
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring.",
+      "review": "approved"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 657782433,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 10.0,
+        "dE_p95": 17.8,
+        "dL": -6.2,
+        "dC": -3.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "214dc6a023229edf13938baf08dbd41a7c00501b45aee187de452e008f9f2024",
+      "photos": [
+        667970158
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "seed": 1319934678,
+      "dark": false,
+      "measure": {
+        "iou": 0.83,
+        "dE_mean": 6.4,
+        "dE_p95": 16.7,
+        "dL": -0.1,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a38d56bba0a446e3f7ba8561f411c87f7c466026eee43c17ffc223596486c836",
+      "photos": [
+        539799332
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 3734875924,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 11.6,
+        "dE_p95": 20.5,
+        "dL": -1.0,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5b40cc66e2655d4d50bf6e348017a634a717e5c2eaf4add96a8657688484a856",
+      "photos": [
+        422466919
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The cap is black, the bill thick and red, the back and folded wings pale grey. The neck, breast and belly are one unbroken field of plain white thread: no line, seam, strap, stripe or shadow crosses them. The legs are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1200946862,
+        814992952,
+        2845482882
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): cowbird white shoulder and wing stripe, rail painted blue and pink, dove striped with no white wing band, tern with a line across its breast"
+    },
+    "icterus-bullockii": {
+      "common_name": "Bullock's Oriole",
+      "seed": 1935440882,
+      "dark": false,
+      "measure": {
+        "iou": 0.878,
+        "dE_mean": 12.0,
+        "dE_p95": 23.3,
+        "dL": -4.7,
+        "dC": -6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3a98efba07506fa8f021b4c3ef7464d0d2a5e3836123cd425f62b9e931e7c1a1",
+      "photos": [
+        454461254
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "seed": 183202547,
+      "dark": false,
+      "measure": {
+        "iou": 0.8,
+        "dE_mean": 21.1,
+        "dE_p95": 42.5,
+        "dL": 7.3,
+        "dC": -3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "db6941dffe52f558cdc1c551119f451fa4dab183acdd507cb415c81c37362cd1",
+      "photos": [
+        672356533
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "seed": 388116846,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 18.3,
+        "dE_p95": 30.7,
+        "dL": 14.9,
+        "dC": -1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "ae3848c012efa228c5cd8e51dad90ae92d33e70060b464c8b3ac3d0af277e390",
+      "photos": [
+        653887742
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "seed": 1287864551,
+      "dark": false,
+      "measure": {
+        "iou": 0.871,
+        "dE_mean": 14.4,
+        "dE_p95": 23.5,
+        "dL": -5.3,
+        "dC": -0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "34befd6b9eed55e6bcfe2c87e7cb5c2f908f42d493b68abc4fdd895bd79bfcbb",
+      "photos": [
+        561112965
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The head, neck, breast and belly are white; the back and folded wings are medium grey, not blue, with black wingtips; the bill is yellow with a clear red spot and a small black mark near the tip of the lower half; the legs are greenish yellow and it stands on both feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        2731352523,
+        3586789725
+      ],
+      "why": "first repaint after the maintainer's review still wrong (white marks, a colour-cast reference, or a stray line); painted again"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 2432095835,
+      "dark": false,
+      "measure": {
+        "iou": 0.902,
+        "dE_mean": 15.3,
+        "dE_p95": 42.1,
+        "dL": -0.3,
+        "dC": -7.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "de475aef43a8c1588956b9d5be774632949c928a7ed6fe83530d3e82a25b4991",
+      "photos": [
+        611369741
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The back and folded wings are pale silver grey, the head and body white, the wingtips black with small white spots; the bill is yellow with a black ring near its tip, the eye pale yellow and the legs yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3891390157
+      ],
+      "why": "the wings came out taupe-brown, the bill lost its black ring and the eye came out dark"
+    },
+    "larus-heermanni": {
+      "common_name": "Heermann's Gull",
+      "seed": 780518515,
+      "dark": false,
+      "measure": {
+        "iou": 0.842,
+        "dE_mean": 7.6,
+        "dE_p95": 12.4,
+        "dL": 4.1,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "afe225485e39c512f6de3a58d39da3b54ecbbdcc39914545aa2f5eb1b9c06bba",
+      "photos": [
+        707389333
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "larus-occidentalis": {
+      "common_name": "Western Gull",
+      "seed": 3823810526,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 10.1,
+        "dE_p95": 19.7,
+        "dL": -7.2,
+        "dC": -2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a78b4a83e0824f0a96f937e27e79db4bd5b8d612b39e3e4e4ae57cf6d09316a3",
+      "photos": [
+        699153211
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "seed": 779144432,
+      "dark": false,
+      "measure": {
+        "iou": 0.878,
+        "dE_mean": 7.9,
+        "dE_p95": 14.3,
+        "dL": 4.3,
+        "dC": -2.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "46c0c2f311179a66a9b7fccde8fbf88050313f6e25d5b37be5a0cf7541f2ce71",
+      "photos": [
+        477376315
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "seed": 3071482312,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 6.3,
+        "dE_p95": 10.9,
+        "dL": -4.1,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b341a457e7339331c7959dd2950a6d0084f8db2d45e06c7a60a0d3d8ed370be4",
+      "photos": [
+        611372479
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "lonchura-punctulata": {
+      "common_name": "Scaly-breasted Munia",
+      "seed": 2717007310,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 9.5,
+        "dE_p95": 14.8,
+        "dL": -6.5,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2cd1651c2ba34f65734008d0562ea376b8b7a5b52ddbfe925c1d256acdd54dda",
+      "photos": [
+        730730640
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 3167017386,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 8.6,
+        "dE_p95": 22.9,
+        "dL": -4.7,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1e25f9666e157ac84684a6a76fb41e72648563f61494d84235f2f1561253e97e",
+      "photos": [
+        596798205
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "seed": 2933182385,
+      "dark": false,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 6.5,
+        "dE_p95": 12.1,
+        "dL": -6.0,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "73e244199bbdc85998c03771f2acd27e14c6f8e11525e051ec812c5380502b27",
+      "photos": [
+        607332534
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 2699158416,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 6.6,
+        "dE_p95": 15.2,
+        "dL": -5.2,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1c8ce4b55d9a2f5086e9c70058bb874ed775b013a97917eab4a45b1c299f19e6",
+      "photos": [
+        614895245
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "megascops-kennicottii": {
+      "common_name": "Western Screech Owl",
+      "seed": 1090686462,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 8.0,
+        "dE_p95": 17.8,
+        "dL": -7.1,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "743e268b5f54a5e7cb339470e5f6608a8955df032b718d0912dd979fd268e3cd",
+      "photos": [
+        154442455
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melanerpes-formicivorus": {
+      "common_name": "Acorn Woodpecker",
+      "seed": 1674262999,
+      "dark": true,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 6.3,
+        "dE_p95": 15.2,
+        "dL": 4.1,
+        "dC": 1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f9b5d7bebe92e8adee35b18ce8f4f3d435ec2af3093545a30e8672d3f0825ceb",
+      "photos": [
+        729326268
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "melanitta-perspicillata": {
+      "common_name": "Surf Scoter",
+      "seed": 2561656630,
+      "dark": true,
+      "measure": {
+        "iou": 0.691,
+        "dE_mean": 52.8,
+        "dE_p95": 78.7,
+        "dL": 46.9,
+        "dC": 6.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5f63330ca6c34171735af63ce07c2f54cb3e8e0fd1540048ec0f5ea784f510ef",
+      "photos": [
+        611372674
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole body and wings are black, with no white on the sides or wings; there is a white patch on the forehead and another on the nape, and the bill is orange, white and black.",
+      "review": "approved",
+      "rejected_seeds": [
+        4020828064
+      ],
+      "why": "a white slash invented on the side of an all-black bird"
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "seed": 1133519369,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 5.0,
+        "dE_p95": 12.1,
+        "dL": -0.4,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "148fa11289006ce65318421f74879af8c19a3bc2f704af35bff254732f77df75",
+      "photos": [
+        625558453
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "seed": 3165092153,
+      "dark": false,
+      "measure": {
+        "iou": 0.798,
+        "dE_mean": 6.0,
+        "dE_p95": 14.0,
+        "dL": 2.3,
+        "dC": -0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "badcc15f113db973facd6f1978269db48efd1ea2ade6bd79542c0cb53a0e57a1",
+      "photos": [
+        703483971
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "seed": 2527786399,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 4.3,
+        "dE_p95": 9.3,
+        "dL": -1.0,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "73e8cfb0ee315e060a59aca8d871af347aa6aa58bb5e04e51208f2f8d16aef1d",
+      "photos": [
+        693520703
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "mergus-serrator": {
+      "common_name": "Red-breasted Merganser",
+      "seed": 2824130936,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 6.4,
+        "dE_p95": 11.9,
+        "dL": -2.9,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "16ef364ad5137c8c2aaa6b958f5abdcc682ea7164ccfbb2af2adb393d3450956",
+      "photos": [
+        596764170
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 431257425,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 5.3,
+        "dE_p95": 10.5,
+        "dL": 0.8,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "6484670f408825e7208cc9db1715035c12071fec565cbb00267d4323692cce16",
+      "photos": [
+        740038771
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 4079860941,
+      "dark": false,
+      "measure": {
+        "iou": 0.815,
+        "dE_mean": 20.4,
+        "dE_p95": 42.1,
+        "dL": -6.2,
+        "dC": -7.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "17b91526b4b2ac941502b4b4fd67cfccbee00b01c1eea075fa03878ce4b4ee29",
+      "photos": [
+        642963931
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and neck are chocolate brown. The rest of the bird, its back, shoulder, folded wing, belly and tail, is black, in matte black thread with no white, grey or pale thread anywhere on it: no pale patch, bar, streak or feather edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        4097865941,
+        2202486851,
+        441326073,
+        1833511280
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): cowbird white shoulder and wing stripe, rail painted blue and pink, dove striped with no white wing band, tern with a line across its breast"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "seed": 119728459,
+      "dark": false,
+      "measure": {
+        "iou": 0.825,
+        "dE_mean": 14.5,
+        "dE_p95": 31.2,
+        "dL": 11.2,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2b9affc45f9c6eae78b0641bb0bb3033298dbcf2ebee14588ac3d4d1ac045e99",
+      "photos": [
+        727206693
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 290045962,
+      "dark": true,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 12.9,
+        "dE_p95": 27.5,
+        "dL": 1.4,
+        "dC": -6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0d46ecd44cd3a8520e7deea8869eae1e5aa6675ea664e8cfb885e9fa44644575",
+      "photos": [
+        638268045
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The whole body, wings and tail are black with a faint bronze sheen, with no white or silver on the wings; only the bare skin at the base of the bill is orange.",
+      "review": "approved",
+      "rejected_seeds": [
+        1716449436
+      ],
+      "why": "a large silver-white wing panel invented on an all-black bird"
+    },
+    "numenius-americanus": {
+      "common_name": "Long-billed Curlew",
+      "seed": 1921270926,
+      "dark": false,
+      "measure": {
+        "iou": 0.811,
+        "dE_mean": 9.9,
+        "dE_p95": 15.5,
+        "dL": 9.2,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "41b85ea6910dd7be665ff34ffc49284809f27d46841ece593d86e2dac9d3b19f",
+      "photos": [
+        556638069
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "numenius-hudsonicus": {
+      "common_name": "Hudsonian Whimbrel",
+      "seed": 2476954654,
+      "dark": false,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 5.3,
+        "dE_p95": 11.2,
+        "dL": 1.0,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7eff4ae8d8b42a3867e0c388faa4859c4cbdc4be30d67bf0787b05f217b6c1f6",
+      "photos": [
+        649418525
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "nyctanassa-violacea": {
+      "common_name": "Yellow-crowned Night Heron",
+      "seed": 2565938783,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 9.1,
+        "dE_p95": 13.1,
+        "dL": -5.1,
+        "dC": -5.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9781f2149ad4b9776fca3f837ca4995c5df103569823f1561f69309dc9224555",
+      "photos": [
+        632927072
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 178624017,
+      "dark": false,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 5.7,
+        "dE_p95": 12.5,
+        "dL": -2.4,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "151509afb7ad95828358da882df4d998185820935700719b9d62460fc2fed215",
+      "photos": [
+        665926113
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "seed": 1899170824,
+      "dark": true,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 13.5,
+        "dE_p95": 22.8,
+        "dL": 9.4,
+        "dC": 8.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1ef256fe9b0982de194238c1dd155b14cc69fcc690d580af496e8f38cdc08cf8",
+      "photos": [
+        589232828
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The body is rich chestnut red-brown, the cap black, the cheek bright white and the bill sky blue.",
+      "review": "approved",
+      "rejected_seeds": [
+        104086686
+      ],
+      "why": "the chestnut body came out pale tan"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 2033743655,
+      "dark": false,
+      "measure": {
+        "iou": 0.76,
+        "dE_mean": 21.3,
+        "dE_p95": 43.7,
+        "dL": 2.1,
+        "dC": -1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "d45c1ef6c67eb7ff6f2b1e80c4cdea8c86c0a3b5fcd819b24ff23c0ea3105f57",
+      "photos": [
+        650471638
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 3730961290,
+      "dark": false,
+      "measure": {
+        "iou": 0.841,
+        "dE_mean": 7.0,
+        "dE_p95": 14.3,
+        "dL": -3.1,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2fcee1ba8616baffa4c5559f608dcf1dccbc4846df9a79a7bd8538aa99139bc6",
+      "photos": [
+        679488672
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 1398929486,
+      "dark": false,
+      "measure": {
+        "iou": 0.97,
+        "dE_mean": 9.9,
+        "dE_p95": 19.0,
+        "dL": -7.1,
+        "dC": -0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7b631073b2cc44e7332084d87cdd8271e15ca24f82af52e6a52602f935ab3a79",
+      "photos": [
+        622203845
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 2268680233,
+      "dark": false,
+      "measure": {
+        "iou": 0.851,
+        "dE_mean": 7.4,
+        "dE_p95": 13.9,
+        "dL": 2.3,
+        "dC": -2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1a4468ce17daa2ff2737d81caaf9344cbf4b6b07a1b379d7347f1b86247f7783",
+      "photos": [
+        611142850
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "approved"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "seed": 953386016,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 7.7,
+        "dE_p95": 15.0,
+        "dL": -6.8,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "618694241a054b6024315e4012c8a94d8ba8ed6d6a2cd68e8981005e17f68e7b",
+      "photos": [
+        700282584
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "seed": 1943509086,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 8.4,
+        "dE_p95": 18.4,
+        "dL": -1.4,
+        "dC": 4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ce2747b2e66de510a1e3a1d679a2c85726285ff3f404514686404af5b751c735",
+      "photos": [
+        706232785
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "phainopepla-nitens": {
+      "common_name": "Phainopepla",
+      "seed": 2059095253,
+      "dark": true,
+      "measure": {
+        "iou": 0.83,
+        "dE_mean": 10.8,
+        "dE_p95": 21.3,
+        "dL": 7.6,
+        "dC": -3.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "50649438caea6b204031c5ef0e94c9ad775b6c279e48f3aa783ace425dbb8ad9",
+      "photos": [
+        635304375
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is black, in matte black thread: crest, head, body, folded wing and tail alike. Any sheen on its feathers is stitched in dark charcoal thread, never in white, grey or pale thread; there are no pale streaks, bars, spots or feather edges anywhere. The eye is red.",
+      "review": "approved",
+      "rejected_seeds": [
+        3820100975,
+        2494901753,
+        230456387
+      ],
+      "why": "first repaint after the maintainer's review still wrong (white marks, a colour-cast reference, or a stray line); painted again"
+    },
+    "phalaenoptilus-nuttallii": {
+      "common_name": "Common Poorwill",
+      "seed": 2429705830,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 9.7,
+        "dE_p95": 14.9,
+        "dL": -8.9,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "78d88db28043365068d7ee0c8c78cf6cb1422c2eec18fc962d17257b00a04f16",
+      "photos": [
+        703211590
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "seed": 1072917897,
+      "dark": false,
+      "measure": {
+        "iou": 0.552,
+        "dE_mean": 26.8,
+        "dE_p95": 50.2,
+        "dL": 20.5,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f3bb0829b4a238678f0982ad6af23d7b287800cb62f535657a75202af8041f67",
+      "photos": [
+        660931123
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "seed": 3049024059,
+      "dark": true,
+      "measure": {
+        "iou": 0.854,
+        "dE_mean": 8.6,
+        "dE_p95": 19.2,
+        "dL": -1.4,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a18c151a26d8d0222e3d4ebc07a7b46e6b1612767ae1df76e71eda644ded8c79",
+      "photos": [
+        657778951
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, breast and back are black, the black wings have small white spots, the sides are rich rufous orange and only the belly is white; the eye is red.",
+      "review": "approved",
+      "rejected_seeds": [
+        3267058349
+      ],
+      "why": "the rufous sides were lost; the body came out pale cream"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "seed": 4010005776,
+      "dark": false,
+      "measure": {
+        "iou": 0.612,
+        "dE_mean": 24.3,
+        "dE_p95": 57.2,
+        "dL": -9.1,
+        "dC": -17.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "529cc2109ae25e050f4183b05aa116cd471ab9feacd1bde9d8ee006251b4f1a0",
+      "photos": [
+        659408954
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "plegadis-chihi": {
+      "common_name": "White-faced Ibis",
+      "seed": 714158234,
+      "dark": false,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 12.0,
+        "dE_p95": 22.2,
+        "dL": -9.3,
+        "dC": -3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "b43c70a4c5c8dea550578a0b94936e55bc02c7ec3f4c7e222b2b26215534a74e",
+      "photos": [
+        453054224
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "seed": 211269056,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 8.9,
+        "dE_p95": 13.5,
+        "dL": -8.4,
+        "dC": -0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "606b13d2669a9856431216a7755d3352f9591b9ed1798fbaae407166424dd914",
+      "photos": [
+        469787256
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "seed": 4255689318,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 7.8,
+        "dE_p95": 12.7,
+        "dL": -6.4,
+        "dC": 1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f476c3ef8289dd275a2bcb3915223e475a682c2e25f0be21f8c4d33824a7f340",
+      "photos": [
+        460355294
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 1114105319,
+      "dark": false,
+      "measure": {
+        "iou": 0.832,
+        "dE_mean": 11.1,
+        "dE_p95": 21.9,
+        "dL": -4.9,
+        "dC": -3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "546269970be2b5fb94f54f462fa23b4994cd5535acbe82582020629dfe49b12f",
+      "photos": [
+        673591219
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "poecile-gambeli": {
+      "common_name": "Mountain Chickadee",
+      "seed": 2011048982,
+      "dark": true,
+      "measure": {
+        "iou": 0.841,
+        "dE_mean": 17.9,
+        "dE_p95": 33.3,
+        "dL": 14.7,
+        "dC": 2.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4b1111cb87fcc440b768e81f0462ec7f1d441fa40cf4a35357f47db0017bd27a",
+      "photos": [
+        454458337
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "polioptila-caerulea": {
+      "common_name": "Blue-grey Gnatcatcher",
+      "seed": 3365229033,
+      "dark": false,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 11.1,
+        "dE_p95": 19.9,
+        "dL": -10.6,
+        "dC": 1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "826aa9a8e09df05052c58d78fe15a2e6d1ae8dd2679d84a88d91bcd77519169a",
+      "photos": [
+        470364994
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "polioptila-californica": {
+      "common_name": "California Gnatcatcher",
+      "seed": 1085437013,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 4.9,
+        "dE_p95": 11.5,
+        "dL": -2.2,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "e480f0caab7dcc419a5e85549ed9335c842a5d1560615329fa8197199ce83d48",
+      "photos": [
+        457954497
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "porzana-carolina": {
+      "common_name": "Sora",
+      "seed": 1014739339,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 5.5,
+        "dE_p95": 9.5,
+        "dL": -0.3,
+        "dC": 4.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "17e0e50070f488086a1d268788ee4e1906b8f8f8bce19f975164b5f17e5b9499",
+      "photos": [
+        24531594
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "seed": 3418863887,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 7.6,
+        "dE_p95": 14.0,
+        "dL": -6.4,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "9ea0ac24d9d94087447cb9e80d75067a1137e8a4872b71ed17b70b88f09d717f",
+      "photos": [
+        649632295
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pyrocephalus-rubinus": {
+      "common_name": "Scarlet Flycatcher",
+      "seed": 3306998375,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 15.5,
+        "dE_p95": 20.4,
+        "dL": -7.3,
+        "dC": -10.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "2db07dfd9e94570867a7fb7909d7450a3dc0f9d213222e3556898c3e1723e001",
+      "photos": [
+        345101854
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "seed": 1363683314,
+      "dark": true,
+      "measure": {
+        "iou": 0.737,
+        "dE_mean": 14.8,
+        "dE_p95": 34.5,
+        "dL": -8.3,
+        "dC": -0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a20a64bbcf6cc81217f2536892b2aee3506562bfcdba9c75422aa675c3648b74",
+      "photos": [
+        584086195
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black with a blue-purple gloss, in black and very dark blue thread. Any sheen on its feathers is stitched in dark blue-black thread, never in white, grey or pale thread; there are no pale spots, bars or patches on the wing or body. The eye is pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        3359733320,
+        3209053918,
+        642717540
+      ],
+      "why": "first repaint after the maintainer's review still wrong (white marks, a colour-cast reference, or a stray line); painted again"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "seed": 3644071251,
+      "dark": false,
+      "measure": {
+        "iou": 0.953,
+        "dE_mean": 15.2,
+        "dE_p95": 21.2,
+        "dL": -5.1,
+        "dC": 3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7016e1c5b6d6ab9f1d5b11a0da8dadecee312c7905f0a66518ca9efa18fbb806",
+      "photos": [
+        24596634
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "Its plumage is dull and earthy: the back dark brown with blackish streaks, the breast and neck rusty cinnamon, the cheek grey, the flanks barred blackish and white. There is no blue, pink or purple thread on it. It stands on both of its long dull reddish-brown legs, each foot with long slim toes on the ground.",
+      "review": "approved",
+      "rejected_seeds": [
+        926579839,
+        1077759209
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): cowbird white shoulder and wing stripe, rail painted blue and pink, dove striped with no white wing band, tern with a line across its breast"
+    },
+    "rallus-obsoletus": {
+      "common_name": "Ridgway's Rail",
+      "seed": 359115778,
+      "dark": false,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 8.5,
+        "dE_p95": 14.3,
+        "dL": -7.2,
+        "dC": 3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "aac31f54c8cb0f1e2bbe3139407481025aa4ff604f92fb676cd45cf2142dba82",
+      "photos": [
+        355602649
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "seed": 3529083433,
+      "dark": false,
+      "measure": {
+        "iou": 0.755,
+        "dE_mean": 15.1,
+        "dE_p95": 29.5,
+        "dL": -11.0,
+        "dC": 2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "894afa3d515251d527da81781a4c6fa14af9f87ce9849de7ca0e65d3affb98fb",
+      "photos": [
+        363899623
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The bird wades in shallow water: two long, thin, straight blue-grey legs go down side by side from the belly into the water, which covers both feet; no leg is bent back or raised.",
+      "review": "approved",
+      "rejected_seeds": [
+        2774448831
+      ],
+      "why": "maintainer: legs are wrong; have him stand in water"
+    },
+    "rynchops-niger": {
+      "common_name": "Black Skimmer",
+      "seed": 4007231036,
+      "dark": true,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 20.7,
+        "dE_p95": 54.7,
+        "dL": 19.0,
+        "dC": 1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "afd47cc881c668683e01c2bb7d811108c206a553bfb5d783f392e24ca6110416",
+      "photos": [
+        697333066
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "salpinctes-obsoletus": {
+      "common_name": "Rock Wren",
+      "seed": 4181136019,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 13.1,
+        "dE_p95": 31.6,
+        "dL": 6.3,
+        "dC": 3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ef787ab12fae702e1cb9dd58041d7bb9ce3f101a138a5aa4a0eb85a211a4124c",
+      "photos": [
+        461168653
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "seed": 192412873,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 17.5,
+        "dE_p95": 32.6,
+        "dL": -16.7,
+        "dC": -0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "sha256": "23a31c776c9fc69412a6479aa2a16b2c19f3725968e872c7c3cf50b7c8a1e76e",
+      "photos": [
+        704885867
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
+      "review": "approved"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "seed": 1850866473,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 13.8,
+        "dE_p95": 26.6,
+        "dL": 10.1,
+        "dC": 3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0cc2fba56c4331780b777ecb5ffab6f6df75ff4e2507398ab8aeeb28783eecf8",
+      "photos": [
+        618780085
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "selasphorus-sasin": {
+      "common_name": "Allen's Hummingbird",
+      "seed": 1301733698,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 11.7,
+        "dE_p95": 17.4,
+        "dL": -5.5,
+        "dC": -1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "80a8d3716b6a653199822e149afe01d31456416dd1638aa26cb0a2298aa2c069",
+      "photos": [
+        710719858
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 1826804803,
+      "dark": false,
+      "measure": {
+        "iou": 0.712,
+        "dE_mean": 19.7,
+        "dE_p95": 48.9,
+        "dL": 8.6,
+        "dC": 4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ec724466144f73d783bd0a78e2d0c8f7c8d17eaaafb79336f0616b884b646294",
+      "photos": [
+        670458647
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, with olive-yellow wings and tail edged yellow; there is no tan, grey or brown on it.",
+      "review": "approved",
+      "rejected_seeds": [
+        468051157
+      ],
+      "why": "the bright yellow bird came out dull mustard-tan"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 3407980390,
+      "dark": false,
+      "measure": {
+        "iou": 0.847,
+        "dE_mean": 10.1,
+        "dE_p95": 22.0,
+        "dL": -7.2,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "35bc55879f9deec14e4444c51eb29399034bf93ea6fd9d13abe414e1f0c3356b",
+      "photos": [
+        618780041
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "seed": 2089315090,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 10.9,
+        "dE_p95": 23.1,
+        "dL": -4.5,
+        "dC": -2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f7cda57df6bd067ab281717e9cf1cecd2859bad34d9ffb52f008093bba17e09c",
+      "photos": [
+        740729003
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "seed": 3145215742,
+      "dark": false,
+      "measure": {
+        "iou": 0.863,
+        "dE_mean": 18.8,
+        "dE_p95": 32.0,
+        "dL": 11.5,
+        "dC": -2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "3635e3a54bf809d8b196d9da3044452d24c14c3070d09c88f3f8c387f1cab520",
+      "photos": [
+        667190197
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "seed": 154929427,
+      "dark": false,
+      "measure": {
+        "iou": 0.882,
+        "dE_mean": 4.8,
+        "dE_p95": 9.4,
+        "dL": 3.2,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7ca146792c14ce7b4541cb6a5158e1d3b2a3c4522da883bb0051ce80fad87a54",
+      "photos": [
+        514313131
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 703634360,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 6.9,
+        "dE_p95": 15.7,
+        "dL": 0.0,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c0ded1f5d5f7d6c78cf5383a13a041f3312bef06b20307bb728714936be5e2e3",
+      "photos": [
+        452813956
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "seed": 1719606704,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 7.8,
+        "dE_p95": 17.0,
+        "dL": -2.5,
+        "dC": -2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ecad3484a9908d6d76ba0c3d184ed22b3ce0e639de459bbc3e08710070bf9bf3",
+      "photos": [
+        599618225
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "spatula-discors": {
+      "common_name": "Blue-winged Teal",
+      "seed": 1295409693,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 12.6,
+        "dE_p95": 22.1,
+        "dL": -5.7,
+        "dC": 1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "4f6de75780cd91ef98a805d6c7d23909658873697bde6b6648f91b1053214953",
+      "photos": [
+        355665742
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "spinus-lawrencei": {
+      "common_name": "Lawrence's Goldfinch",
+      "seed": 2515953026,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 17.7,
+        "dE_p95": 35.6,
+        "dL": -13.5,
+        "dC": -2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "7526be6bbfebb82c54810a621fda782f4da4b8437c1c85adde1d1802479e3efc",
+      "photos": [
+        379063759
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "seed": 18213592,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 9.2,
+        "dE_p95": 14.2,
+        "dL": 1.7,
+        "dC": -5.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "dd6a4bf8b0e9a204edceacefc31e5472292082e5153515ee47ab81952e7326a4",
+      "photos": [
+        468743210
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "stelgidopteryx-serripennis": {
+      "common_name": "Northern Rough-winged Swallow",
+      "seed": 239156894,
+      "dark": false,
+      "measure": {
+        "iou": 0.842,
+        "dE_mean": 17.9,
+        "dE_p95": 33.0,
+        "dL": 16.5,
+        "dC": 4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "693a58bcab776fd25320dc39de67cc54d0b4a852ab85186f1ee8af2e89a8673c",
+      "photos": [
+        387653328
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it. The branch runs level under the bird's belly, not below or beside it.",
+      "review": "approved",
+      "rejected_seeds": [
+        2034634248
+      ],
+      "why": "maintainer: branch placement doesn't work; the bird needs to sit on the branch"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 2443920736,
+      "dark": false,
+      "measure": {
+        "iou": 0.563,
+        "dE_mean": 19.0,
+        "dE_p95": 36.2,
+        "dL": -5.2,
+        "dC": 6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "ca44f2b75bcb20af4ebada42fee5952175b083e47f079062a0516ae8412d0157",
+      "photos": [
+        632927210
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved",
+      "rejected_seeds": [
+        3870062070
+      ],
+      "why": "a kelp frond is stitched across the flying bird's body"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "seed": 1886126148,
+      "dark": false,
+      "measure": {
+        "iou": 0.86,
+        "dE_mean": 23.2,
+        "dE_p95": 37.1,
+        "dL": 21.6,
+        "dC": 5.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0d962bd2ea60a088268e2c94c03933066467d886fb8059dd6ab8e69a947b9535",
+      "photos": [
+        474133638
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "seed": 3796942309,
+      "dark": false,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 8.7,
+        "dE_p95": 21.1,
+        "dL": 1.0,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a3fad23e18e94a8e6b6693aa2d69f1a6cbbb870eb0a30d33c1885b8f59e80d0a",
+      "photos": [
+        612650417
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 874640410,
+      "dark": true,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 9.8,
+        "dE_p95": 16.6,
+        "dL": 8.1,
+        "dC": -3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "206985e38b76e24e080d3707966977f031bf3d09c7391ecf05002f6b42b4745e",
+      "photos": [
+        609106526
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "thalasseus-elegans": {
+      "common_name": "Elegant Tern",
+      "seed": 2095647316,
+      "dark": false,
+      "measure": {
+        "iou": 0.813,
+        "dE_mean": 27.1,
+        "dE_p95": 47.0,
+        "dL": -16.6,
+        "dC": 6.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "83676a28e0ba877b921e2b20d2a35228da2155cb84a4c415e22f4c16db06d3bf",
+      "photos": [
+        691003853
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "thalasseus-maximus": {
+      "common_name": "Royal Tern",
+      "seed": 3488725659,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 10.6,
+        "dE_p95": 17.6,
+        "dL": -9.6,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "0738179ef9591ac68e933ac0da151b42eb71b009579501f8e3639056f6c75e08",
+      "photos": [
+        621081166
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "seed": 2789614161,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 7.6,
+        "dE_p95": 14.4,
+        "dL": 0.9,
+        "dC": 4.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "a34036c0728d037f2c08b4f0e684c87a28bf0a4ba4e9f513afb8e57638a52396",
+      "photos": [
+        461977527
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "seed": 3570828545,
+      "dark": false,
+      "measure": {
+        "iou": 0.896,
+        "dE_mean": 7.2,
+        "dE_p95": 11.8,
+        "dL": 3.8,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "c44167b13353ff591f5a55fccffea8f5ecd4f961ded46f6bffc769685463c2e3",
+      "photos": [
+        634906503
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 3452202619,
+      "dark": false,
+      "measure": {
+        "iou": 0.729,
+        "dE_mean": 7.8,
+        "dE_p95": 16.9,
+        "dL": -2.4,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "5484f63a02d2053d62bdd82607dbf321740a4569d5807f2155be31ed4bd3b945",
+      "photos": [
+        469791000
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 61096093,
+      "dark": false,
+      "measure": {
+        "iou": 0.826,
+        "dE_mean": 5.8,
+        "dE_p95": 11.4,
+        "dL": -2.5,
+        "dC": 2.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "13e6f6e364067df43f26a0a683533769f9fb0e8c51201daf5d9bc7986a0a3ec0",
+      "photos": [
+        736189895
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "troglodytes-aedon": {
+      "common_name": "Northern House Wren",
+      "seed": 4147889346,
+      "dark": false,
+      "measure": {
+        "iou": 0.874,
+        "dE_mean": 14.8,
+        "dE_p95": 22.2,
+        "dL": -13.7,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "432f439c485971e08b1a8482ba603268fa64a75b5df272c2af385050c827a551",
+      "photos": [
+        664579165
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 604833464,
+      "dark": false,
+      "measure": {
+        "iou": 0.83,
+        "dE_mean": 11.6,
+        "dE_p95": 24.3,
+        "dL": 4.3,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "aee4673a1bc18ad10a0640b8aa0c213d5e052a1573507f87cd97469c771fcbe5",
+      "photos": [
+        473485931
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tyrannus-verticalis": {
+      "common_name": "Western Kingbird",
+      "seed": 2866439647,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 22.4,
+        "dE_p95": 34.6,
+        "dL": -21.6,
+        "dC": 3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "f3b8c72125fed8443b75a54e0bfcfe0245900805c731008411d38577be06cae1",
+      "photos": [
+        377413994
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tyrannus-vociferans": {
+      "common_name": "Cassin's Kingbird",
+      "seed": 3443726147,
+      "dark": false,
+      "measure": {
+        "iou": 0.87,
+        "dE_mean": 8.1,
+        "dE_p95": 12.8,
+        "dL": -5.4,
+        "dC": 2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "sha256": "77f111c42d75a45312de6a4229b9ca53fb1f85ece27890a70a0da2f08fd38c60",
+      "photos": [
+        708061256
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "urile-penicillatus": {
+      "common_name": "Brandt's Cormorant",
+      "seed": 1992453287,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 7.8,
+        "dE_p95": 15.0,
+        "dL": -4.8,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "133911467e9762f9439cec8f21f68fd3498d86390f297027fd7600d9d082b11f",
+      "photos": [
+        648753539
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "vireo-bellii": {
+      "common_name": "Bell's Vireo",
+      "seed": 1182757825,
+      "dark": false,
+      "measure": {
+        "iou": 0.888,
+        "dE_mean": 12.4,
+        "dE_p95": 19.6,
+        "dL": 11.8,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1ddb8c08fe771d121b51b4d00c65dc1a1ee1031b23d6345512fea27a2ec04ad3",
+      "photos": [
+        696683444
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-huttoni": {
+      "common_name": "Hutton's Vireo",
+      "seed": 797342206,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 8.3,
+        "dE_p95": 15.3,
+        "dL": -4.7,
+        "dC": -5.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1a6004e5149b1a28f2d74005bfe368e879e33e9689a3af373d9152714bef533a",
+      "photos": [
+        734081799
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird is plain olive-grey above and paler greyish olive below, with a broken white ring around the eye and two narrow white bars on the wing; there is no blue, black or bright white elsewhere on it. It perches on both feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        3246921938,
+        3062835268
+      ],
+      "why": "first repaint after the maintainer's review still wrong (white marks, a colour-cast reference, or a stray line); painted again"
+    },
+    "zenaida-asiatica": {
+      "common_name": "White-winged Dove",
+      "seed": 1974542721,
+      "dark": false,
+      "measure": {
+        "iou": 0.823,
+        "dE_mean": 5.0,
+        "dE_p95": 10.8,
+        "dL": -1.6,
+        "dC": -0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1967170701a03329f88b811a118c19c0a81b8bfcac59c9453b313aa6eef18fa4",
+      "photos": [
+        619654620
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The plumage is smooth, plain greyish brown, with no stripes or bars on the body or wing; a bold white band runs along the lower edge of the folded wing, above blackish flight feathers. The eye is small and orange-red, in a thin ring of bare blue skin; it is not a large black eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        2613002413,
+        3971510331
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): cowbird white shoulder and wing stripe, rail painted blue and pink, dove striped with no white wing band, tern with a line across its breast"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 1072150873,
+      "dark": false,
+      "measure": {
+        "iou": 0.864,
+        "dE_mean": 8.1,
+        "dE_p95": 13.7,
+        "dL": -5.3,
+        "dC": 3.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "1ddb0844d26f7a2360731e2475614a0e158e77afde46e7df3a611b3a2075b0fa",
+      "photos": [
+        715185306
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "seed": 284652382,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "sha256": "cabe29e9a2557f3aee3fd6820ece57b8f0e11976e44d48d5418a0c2740ec3e91",
+      "photos": [
+        615093220
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "an upright oval",
+        "cord": "deep sea-blue",
+        "twill": "pale sky-blue cotton twill",
+        "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1743799240
+      ],
+      "why": "maintainer: should be on a branch"
+    }
+  }
+}

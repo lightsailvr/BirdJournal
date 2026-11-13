@@ -230,8 +230,12 @@ def candidate_sheet(definition: PackDefinition, overrides: dict, species: list[s
 
 
 def write_overrides(path: Path, overrides: dict) -> None:
-    """The file in the format it is committed in, so a review's diff is only the review."""
-    Path(path).write_text(json.dumps(overrides, indent=1, ensure_ascii=False) + "\n")
+    """The file in the format it is committed in, so a review's diff is only the review: the indent the file already has
+    (#58: the packs' files differ), one space for a new file."""
+    path = Path(path)
+    lines = path.read_text().splitlines() if path.exists() else []
+    indent = len(lines[1]) - len(lines[1].lstrip(" ")) if len(lines) > 1 else 0
+    path.write_text(json.dumps(overrides, indent=indent or 1, ensure_ascii=False) + "\n")
 
 
 def propose(definition: PackDefinition, overrides: dict, species_id: str, photo_id: int, why: str) -> None:

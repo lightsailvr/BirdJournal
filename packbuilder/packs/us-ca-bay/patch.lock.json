@@ -1,0 +1,5014 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 224813246,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 15.7,
+        "dE_p95": 23.2,
+        "dL": -14.1,
+        "dC": -3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.958,
+      "sha256": "52c621eee8eae9f6c7023266773bef569563e78f8cc2988daa7932a64ca0030e",
+      "photos": [
+        714079965
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "aechmophorus-clarkii": {
+      "common_name": "Clark's Grebe",
+      "seed": 1258053519,
+      "dark": false,
+      "measure": {
+        "iou": 0.827,
+        "dE_mean": 18.3,
+        "dE_p95": 38.4,
+        "dL": -17.0,
+        "dC": 1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.981,
+      "sha256": "4a8bb506bb491feb1f22638e4aeff81f192d14a27a8ec7fcffa91c85c7020ca7",
+      "photos": [
+        628672312
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "seed": 3137492400,
+      "dark": false,
+      "measure": {
+        "iou": 0.774,
+        "dE_mean": 12.7,
+        "dE_p95": 30.3,
+        "dL": -6.9,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.985,
+      "sha256": "222580ec466f121a20df03d2c881de239d73875bfbef51f9b460528bdaff2464",
+      "photos": [
+        664473000
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 180827052,
+      "dark": true,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 11.2,
+        "dE_p95": 69.3,
+        "dL": -8.1,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.948,
+      "sha256": "8f59650b49f460a1017ad7eaf98b7f10ec5b24b5d59f249f7e976eaa3e858eaf",
+      "photos": [
+        658043289
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy black; the shoulder patch is bright scarlet red with a narrow yellow lower edge.",
+      "review": "approved",
+      "rejected_seeds": [
+        3838399113,
+        2479776273
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 4187097137,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 8.8,
+        "dE_p95": 17.1,
+        "dL": -6.4,
+        "dC": -1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0031,
+      "attempts": 2,
+      "shape_fit": 0.939,
+      "sha256": "1ccf14fa4219fbdfe7a1a09b5180d0a829750bb171cc17cc5ebcd7415a49aa6a",
+      "photos": [
+        729997611
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anarhynchus-nivosus": {
+      "common_name": "Snowy Plover",
+      "seed": 4174993644,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 12.5,
+        "dE_p95": 18.0,
+        "dL": -11.5,
+        "dC": 3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "11f967557cb0e286750914918a1c2af325420e790be5bcf6e7738d7fce49a87a",
+      "photos": [
+        613801870
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "seed": 129312123,
+      "dark": true,
+      "measure": {
+        "iou": 0.87,
+        "dE_mean": 21.5,
+        "dE_p95": 38.3,
+        "dL": 15.8,
+        "dC": -4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "b76ecefc407ddc567e8ab85e4b96813a02f9782a8c1f85c2d1989f6512a1febb",
+      "photos": [
+        350807738
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "seed": 2374190796,
+      "dark": false,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 12.0,
+        "dE_p95": 23.7,
+        "dL": -0.7,
+        "dC": -6.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "a5de60d07808bacad5ae612169293c6bd149dd85ad543a86f8f3c58572da1bc4",
+      "photos": [
+        613736625
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 2832536889,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 6.1,
+        "dE_p95": 16.8,
+        "dL": 1.8,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0049,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "3e43097d25af3098d888854f6156180d8121705851f3d49d5aac04416dfbc678",
+      "photos": [
+        682334173
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "rejected_seeds": [
+        3755091375
+      ],
+      "why": "maintainer: stitching is off, and the perspective doesn't work: we look down at the bird but the scene's horizon is level"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "seed": 2832167322,
+      "dark": false,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 13.7,
+        "dE_p95": 20.8,
+        "dL": -2.1,
+        "dC": -11.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.958,
+      "sha256": "f0534e8e8dc7f7421736f36173b91e8dcb5997bd89bf3dfaf760bcf665cbecf7",
+      "photos": [
+        739934872
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 2611217418,
+      "dark": false,
+      "measure": {
+        "iou": 0.74,
+        "dE_mean": 20.3,
+        "dE_p95": 33.3,
+        "dL": -19.1,
+        "dC": -4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0048,
+      "attempts": 1,
+      "shape_fit": 0.971,
+      "sha256": "d955924487dadcea266474b7b805fa98639c56199ec8bdd8581d45a5b41aedc8",
+      "photos": [
+        723940438
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 1554844738,
+      "dark": false,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 10.5,
+        "dE_p95": 16.5,
+        "dL": -9.8,
+        "dC": -2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.963,
+      "sha256": "ea290a7a378682c868dcd7c29f396a229a38f60edf61011d82565d5a4a01c1bf",
+      "photos": [
+        723396314
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        732576983
+      ],
+      "why": "the patch is a hexagon standing on its point (points at top and bottom), not lying on a flat edge"
+    },
+    "arenaria-melanocephala": {
+      "common_name": "Black Turnstone",
+      "seed": 2557208980,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 13.5,
+        "dE_p95": 22.5,
+        "dL": 5.3,
+        "dC": -8.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.977,
+      "sha256": "fc591f09868028bd4308a452161596c36539d0492e04b5e8b762e7a9a8c0c562",
+      "photos": [
+        716270074
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 2868149524,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 16.7,
+        "dE_p95": 28.5,
+        "dL": 16.0,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.961,
+      "sha256": "93d75dcc6982b045b95ca3a93ac154f6b30730c87226a6782bec2695e7c4f6be",
+      "photos": [
+        698224284
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "athene-cunicularia": {
+      "common_name": "Burrowing Owl",
+      "seed": 2831428299,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 10.8,
+        "dE_p95": 16.4,
+        "dL": -10.1,
+        "dC": -1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0069,
+      "attempts": 3,
+      "shape_fit": 0.953,
+      "sha256": "fa3da98350147ae4458cd089b9475766999ac544b6c4a493ecbf75c28218f70b",
+      "photos": [
+        611567214
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "seed": 1616729050,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.978,
+      "sha256": "45db646ec7bb1dddac0e1ca0d88d359bcca2f09be16ee3b533be3b5ffc8cfebf",
+      "photos": [
+        481017562
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        391799632
+      ],
+      "why": "maintainer: needs a yellow eye"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 1730832219,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 14.8,
+        "dE_p95": 30.7,
+        "dL": 2.9,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.979,
+      "sha256": "c661c82ac690228ba1cf390537c8a248b5fd8d0891da21d9a18f8e9330cd3e23",
+      "photos": [
+        613072013
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "aythya-marila": {
+      "common_name": "Greater Scaup",
+      "seed": 2401402977,
+      "dark": false,
+      "measure": {
+        "iou": 0.852,
+        "dE_mean": 11.8,
+        "dE_p95": 30.2,
+        "dL": 0.9,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.987,
+      "sha256": "9846323830e0ae7422aaf434931b7259587176ce1ad716eed3a9652386d1c424",
+      "photos": [
+        639417711
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "aythya-valisineria": {
+      "common_name": "Canvasback",
+      "seed": 3438248600,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 15.6,
+        "dE_p95": 29.2,
+        "dL": -6.8,
+        "dC": -3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0054,
+      "attempts": 3,
+      "shape_fit": 0.974,
+      "sha256": "9808c09afb5d42d93622c1afa1f66bab8a055bee816cf1b14bd5b115bdd68619",
+      "photos": [
+        613736607
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "baeolophus-inornatus": {
+      "common_name": "Oak Titmouse",
+      "seed": 3949281569,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 10.5,
+        "dE_p95": 18.3,
+        "dL": -5.5,
+        "dC": -2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "8d3685e094bb4a96d3796b0fe8eb5725a7b72863db82a1341a7e578c81ef7965",
+      "photos": [
+        683563432
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 2860403823,
+      "dark": false,
+      "measure": {
+        "iou": 0.865,
+        "dE_mean": 14.2,
+        "dE_p95": 24.0,
+        "dL": -10.6,
+        "dC": -4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.973,
+      "sha256": "2d4deb46086dbb234af6bb6d7fee2d4947a5c44228809643afbd0002e07e1eda",
+      "photos": [
+        645694644
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 2949841730,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0063,
+      "attempts": 1,
+      "shape_fit": 0.953,
+      "sha256": "c96abcd48cf271a4b9e09b08a0d8a3be5657f3004e5c4979865609475fef2289",
+      "photos": [
+        703214007
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "rejected_seeds": [
+        3637785556
+      ],
+      "why": "maintainer: the patch cord is poorly done (missing at the bottom)"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 1007480016,
+      "dark": false,
+      "measure": {
+        "iou": 0.964,
+        "dE_mean": 4.9,
+        "dE_p95": 9.3,
+        "dL": 1.4,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "a42cfed00a9379c382b7952bdad82f049b25503b1a6f7093f0869da50a12b7e4",
+      "photos": [
+        712224249
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "seed": 1908251032,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 17.5,
+        "dE_p95": 35.5,
+        "dL": -11.5,
+        "dC": 1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0054,
+      "attempts": 2,
+      "shape_fit": 0.959,
+      "sha256": "bd709d16aa26ca43d56350ce8088056483c634b5c0c706295b7131ab20b86ccb",
+      "photos": [
+        624251508
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "bucephala-clangula": {
+      "common_name": "Common Goldeneye",
+      "seed": 175860536,
+      "dark": false,
+      "measure": {
+        "iou": 0.704,
+        "dE_mean": 19.9,
+        "dE_p95": 66.1,
+        "dL": -8.4,
+        "dC": 0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.981,
+      "sha256": "41de9cf9c6c78319da242dcd161debaf14ce190f0fd3bb9444d9d1342a3ad1c2",
+      "photos": [
+        615650112
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy black with a green sheen and a round white spot between the eye and the bill; the eye is yellow; the breast and sides are pure white; the back is black with white stripes.",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 134521695,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 7.5,
+        "dE_p95": 13.5,
+        "dL": -7.1,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0118,
+      "attempts": 1,
+      "shape_fit": 0.956,
+      "sha256": "d22914f2eecefa19ad95c5cea608dfde5d334b1a29db35b219428c0d9f5c5485",
+      "photos": [
+        740257016
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 2953686125,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 9.0,
+        "dE_p95": 16.3,
+        "dL": 1.3,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0038,
+      "attempts": 1,
+      "shape_fit": 0.98,
+      "sha256": "8ceca1b7022fb66a3413179ff2db48ec9c35e6460e52ab75bb3687bcf936d14e",
+      "photos": [
+        738548593
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 186370334,
+      "dark": false,
+      "measure": {
+        "iou": 0.867,
+        "dE_mean": 7.5,
+        "dE_p95": 16.6,
+        "dL": 0.7,
+        "dC": -3.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.953,
+      "sha256": "7a0179ac05dd1dd02a9c5a18c533a3289d92653c2a59dbf3ad6d1f3a571cd482",
+      "photos": [
+        689870882
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-alba": {
+      "common_name": "Sanderling",
+      "seed": 333434187,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 18.1,
+        "dE_p95": 25.1,
+        "dL": -18.0,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.976,
+      "sha256": "df82b833a34bc7da90efbdc328845b238fae29b16efa9ff4d4d41d8264f2f867",
+      "photos": [
+        593456961
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "rejected_seeds": [
+        1691942365
+      ],
+      "why": "the patch shows two birds: a second head and body behind the first"
+    },
+    "calidris-alpina": {
+      "common_name": "Dunlin",
+      "seed": 362641277,
+      "dark": false,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 13.7,
+        "dE_p95": 26.0,
+        "dL": 10.0,
+        "dC": -3.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0147,
+      "attempts": 1,
+      "shape_fit": 0.974,
+      "sha256": "9ca3c9c98e023552a5ba697d0d762c18001bc281fe500ce0066c97e049c57d29",
+      "photos": [
+        671042374
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "seed": 2344238595,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 16.0,
+        "dE_p95": 27.4,
+        "dL": 15.2,
+        "dC": -0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.986,
+      "sha256": "ca377893a25425f3a45cafec01eeaca353d086062f7a778ed3b70964f7494790",
+      "photos": [
+        640560482
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 1712533888,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 10.8,
+        "dE_p95": 18.7,
+        "dL": -10.5,
+        "dC": 0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.977,
+      "sha256": "3a20c25184ffe58ffc92ecb2e7ceff73c7e04b8f13188d9fa014f8a1c46031b7",
+      "photos": [
+        726941065
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "seed": 3400825312,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 12.5,
+        "dE_p95": 18.5,
+        "dL": -10.3,
+        "dC": -4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "c01b9d2f811df5ecbe0ff9be2a836779bbebfd042f6c7088bc27cdae68f34a85",
+      "photos": [
+        715583890
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3182643575
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "seed": 1781590343,
+      "dark": false,
+      "measure": {
+        "iou": 0.856,
+        "dE_mean": 12.3,
+        "dE_p95": 24.9,
+        "dL": -8.4,
+        "dC": -3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0059,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "ebcf525b63f54b39f48c99d501199ec937fe29110b09e4cafb66efe6e5cb165f",
+      "photos": [
+        736770528
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The throat is a large iridescent rose-pink patch; the back and flanks are green and the breast and belly grey.",
+      "review": "approved"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "seed": 724998703,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 22.3,
+        "dE_p95": 31.2,
+        "dL": -16.2,
+        "dC": -12.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.984,
+      "sha256": "dfdde3a64d299ef958a7132a23cdab1d327b5ab1648602d8c9a23dfed0de6712",
+      "photos": [
+        730680175
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The face and underparts are bright lemon yellow, the back and wings olive green, and the crown a small round glossy black cap.",
+      "review": "approved",
+      "rejected_seeds": [
+        1546758841
+      ],
+      "why": "the bird came out khaki olive instead of bright lemon yellow"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 2758374765,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 22.5,
+        "dE_p95": 41.6,
+        "dL": 22.2,
+        "dC": -1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0061,
+      "attempts": 1,
+      "shape_fit": 0.931,
+      "sha256": "33c1daf538a0bd45b999eb224b456bd6b4635399822985cc0fabe09087709104",
+      "photos": [
+        716270417
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "seed": 1712576277,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 4.2,
+        "dE_p95": 9.1,
+        "dL": -1.5,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.981,
+      "sha256": "83ec4f29fd6dd0c69f7bb3c9041459c83b665fd0c47f06f7ea33b26226780a46",
+      "photos": [
+        599932048
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "seed": 3256169694,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0044,
+      "attempts": 3,
+      "shape_fit": 0.94,
+      "sha256": "b9fb06b3a2f692b4030cc08e492b8cc60254e38973372dedf2450b7ff6e7a309",
+      "photos": [
+        201383637
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3037856844
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "certhia-americana": {
+      "common_name": "Brown Creeper",
+      "seed": 705837237,
+      "dark": false,
+      "measure": {
+        "iou": 0.473,
+        "dE_mean": 49.8,
+        "dE_p95": 73.0,
+        "dL": -49.1,
+        "dC": 7.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0088,
+      "attempts": 2,
+      "shape_fit": 0.969,
+      "sha256": "8eabd9ba1916fab2a03c397b9d8e399accd9ce3eddfd7d263539fb7b99beed89",
+      "photos": [
+        629795093
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved",
+      "rejected_seeds": [
+        1561659426
+      ],
+      "why": "maintainer: upside-down bird; needs a better reference photo"
+    },
+    "chamaea-fasciata": {
+      "common_name": "Wrentit",
+      "seed": 2173502201,
+      "dark": false,
+      "measure": {
+        "iou": 0.965,
+        "dE_mean": 4.4,
+        "dE_p95": 9.9,
+        "dL": 1.5,
+        "dC": -1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.98,
+      "sha256": "83d10d26a129e3f6335e57706aa3fc85a8bd9d612e8ea7178133d82c4398e418",
+      "photos": [
+        593910525
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "charadrius-semipalmatus": {
+      "common_name": "Semipalmated Plover",
+      "seed": 1891651130,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 6.6,
+        "dE_p95": 12.6,
+        "dL": -1.8,
+        "dC": -1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "35dc22a7c2513934008479935d35ed6b97f5ad52486d461b8b4c128dc84f37f0",
+      "photos": [
+        726941143
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 74652279,
+      "dark": false,
+      "measure": {
+        "iou": 0.892,
+        "dE_mean": 6.9,
+        "dE_p95": 14.9,
+        "dL": -2.0,
+        "dC": -1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "3f54c2797101b021868e830475a6acd5b2c43b0df5958c55519fefea1e5b1bfa",
+      "photos": [
+        714399879
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "chondestes-grammacus": {
+      "common_name": "Lark Sparrow",
+      "seed": 1880633515,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 7.9,
+        "dE_p95": 14.8,
+        "dL": -7.3,
+        "dC": -1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.022,
+      "attempts": 3,
+      "shape_fit": 0.942,
+      "sha256": "a63f3df478253a4a5a760f8da4cdefc0f00ba01400a44b94923692c39020401f",
+      "photos": [
+        488927020
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 3283541119,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 7.7,
+        "dE_p95": 14.3,
+        "dL": -4.8,
+        "dC": -4.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.983,
+      "sha256": "3403e98d9834525b2fea531f79414ca24a369799f569889b38bd8b9fd20dd5b6",
+      "photos": [
+        671997724
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 2630463313,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 4.7,
+        "dE_p95": 8.8,
+        "dL": -1.3,
+        "dC": -1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0129,
+      "attempts": 2,
+      "shape_fit": 0.963,
+      "sha256": "3066885f0a0f0eb7ca971da87b1e6a8850b3070bfc05ef63d3e4266f99f3ca46",
+      "photos": [
+        617083516
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 638629392,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 7.6,
+        "dE_p95": 13.3,
+        "dL": -2.7,
+        "dC": -2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.979,
+      "sha256": "2f39f06dc50ee2ab54186339e87335d229e6029189876f36c96701fa423126b7",
+      "photos": [
+        726050066
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        1360496263
+      ],
+      "why": "the patch is lopsided, with an upright flat right side instead of a point at the right"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 2560723551,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 10.0,
+        "dE_p95": 19.6,
+        "dL": -9.2,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0048,
+      "attempts": 2,
+      "shape_fit": 0.976,
+      "sha256": "f2cdb55655655cd52c3503537976e36ecca6ca71c51c486fea3ad91ccab03740",
+      "photos": [
+        609521160
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 421383024,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 8.4,
+        "dE_p95": 14.6,
+        "dL": -1.7,
+        "dC": -6.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0088,
+      "attempts": 2,
+      "shape_fit": 0.95,
+      "sha256": "971a643cbfe237116afa557c2b5fadcc13270182be88551e7644035b9f2ff947",
+      "photos": [
+        684435364
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread with no white, grey, blue or pale thread anywhere on it: no pale patch, bar, streak, eyebrow or feather edge. The feathers are told apart only by the direction of the black stitches. The eye is black like the head and barely shows, with at most a pin-point highlight; it is not a white or pale eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        4034817627,
+        2272878285,
+        510660470,
+        1769422817,
+        4145261124,
+        2148834005
+      ],
+      "why": "fifth repaint (my check, 2026-11-11): bird and shape right, but the cord is thin and dark and the scene grey"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "seed": 1242403326,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.939,
+      "sha256": "4a4fdb75fe96cecdba8a34da08c3e8c5691f4555eb846dd358fe232379a56383",
+      "photos": [
+        722292466
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere.",
+      "review": "approved",
+      "rejected_seeds": [
+        1024106858
+      ],
+      "why": "the patch is not the edition's shape"
+    },
+    "cyanocitta-stelleri": {
+      "common_name": "Steller's Jay",
+      "seed": 803420821,
+      "dark": false,
+      "measure": {
+        "iou": 0.845,
+        "dE_mean": 14.8,
+        "dE_p95": 29.0,
+        "dL": 10.6,
+        "dC": -4.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "48329ef801ffff9702875cb20ababb287189094099735df7cd09fc7239b61824",
+      "photos": [
+        678791095
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "cygnus-olor": {
+      "common_name": "Mute Swan",
+      "seed": 2052010498,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 14.3,
+        "dE_p95": 22.7,
+        "dL": -13.8,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.974,
+      "sha256": "b26d5e277db8eb46d86671880a2c65a4ea0670c9874d5ac968cc3a3903e17bb9",
+      "photos": [
+        494862013
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "dryobates-nuttallii": {
+      "common_name": "Nuttall's Woodpecker",
+      "seed": 2151527039,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 7.7,
+        "dE_p95": 15.2,
+        "dL": -6.4,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0095,
+      "attempts": 3,
+      "shape_fit": 0.966,
+      "sha256": "9d7d27203a8b16ba3a503b05c1b87c9bdaa2c52db592e92470e8f16170362578",
+      "photos": [
+        705473299
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 2266588436,
+      "dark": false,
+      "measure": {
+        "iou": 0.954,
+        "dE_mean": 12.9,
+        "dE_p95": 20.7,
+        "dL": -8.8,
+        "dC": -3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.987,
+      "sha256": "064f6d134097266533af771d3115003d0d34df0d4dfe82b4ba1d8df16df4cd40",
+      "photos": [
+        603690071
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "dryobates-villosus": {
+      "common_name": "Hairy Woodpecker",
+      "seed": 1508148427,
+      "dark": true,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 8.9,
+        "dE_p95": 23.1,
+        "dL": 3.9,
+        "dC": -1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.914,
+      "sha256": "e6c2d84756708800ab272b3c69bd3afbb8a1ea34c08aab357b94d93f5fb6a499",
+      "photos": [
+        647392981
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "egretta-thula": {
+      "common_name": "Snowy Egret",
+      "seed": 2247030475,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 10.7,
+        "dE_p95": 19.2,
+        "dL": -9.8,
+        "dC": -0.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0081,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "1a3d8a5046c3ea28148196ca86ee8f84c867e02eab264cba0e55a997819dac9d",
+      "photos": [
+        727155060
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The whole bird is pure bright white; the bill and legs are black, the bare skin in front of the eye and the feet bright yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        4075406942
+      ],
+      "why": "the bird is grey thread, not pure white, and its feet are dark instead of yellow"
+    },
+    "elanus-leucurus": {
+      "common_name": "White-tailed Kite",
+      "seed": 1058499261,
+      "dark": true,
+      "measure": {
+        "iou": 0.927,
+        "dE_mean": 19.9,
+        "dE_p95": 39.2,
+        "dL": 19.2,
+        "dC": -1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0137,
+      "attempts": 1,
+      "shape_fit": 0.965,
+      "sha256": "766b16c1f191c2f6efa65499bbec7f3ee776dd03618b1a823442518ca58fd8c2",
+      "photos": [
+        653375362
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "seed": 4137278403,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 5.3,
+        "dE_p95": 10.9,
+        "dL": -1.5,
+        "dC": -2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0098,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "e21752bbbc293ee933a373873afec655223663a74bda1674683bbf70b29fb864",
+      "photos": [
+        697629960
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "seed": 55769737,
+      "dark": false,
+      "measure": {
+        "iou": 0.96,
+        "dE_mean": 3.5,
+        "dE_p95": 9.8,
+        "dL": -1.3,
+        "dC": -0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.975,
+      "sha256": "ad4516ecc1a7df8e941ce387d54db096decae63864b9b300465b14f8e90c46d0",
+      "photos": [
+        661111283
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is glossy black, with a purple sheen on the head and a blue-green sheen on the body and no white or grey; the eye is pale yellow.",
+      "review": "approved"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 310239111,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 8.4,
+        "dE_p95": 21.4,
+        "dL": 1.3,
+        "dC": -5.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.013,
+      "attempts": 3,
+      "shape_fit": 0.965,
+      "sha256": "23a23d9b0fde12b0bb5f1d6f1098b7e5c92a9d5acbecb76c57d22ee09357b7b8",
+      "photos": [
+        630580480
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 3289433464,
+      "dark": false,
+      "measure": {
+        "iou": 0.934,
+        "dE_mean": 8.0,
+        "dE_p95": 16.0,
+        "dL": 1.1,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0142,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "2472957fcbeff11f3a6bfa1aedc7a46f244d8c53fd4f85387dc2deb9c63ff3f3",
+      "photos": [
+        653375462
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back and tail are rufous orange, the wings blue-grey, the breast pale buff with black spots, and the white face has two black vertical stripes.",
+      "review": "approved",
+      "rejected_seeds": [
+        706651220,
+        1561957572
+      ],
+      "why": "the patch is not the edition's shape"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 96094684,
+      "dark": false,
+      "measure": {
+        "iou": 0.945,
+        "dE_mean": 14.7,
+        "dE_p95": 27.0,
+        "dL": -13.9,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.95,
+      "sha256": "87491e58aba0a248edc22ea3d1705b45436df50f4391165b06866331282aca75",
+      "photos": [
+        729303531
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved"
+    },
+    "gallinula-galeata": {
+      "common_name": "Common Gallinule",
+      "seed": 225463288,
+      "dark": false,
+      "measure": {
+        "iou": 0.683,
+        "dE_mean": 12.6,
+        "dE_p95": 24.0,
+        "dL": 1.2,
+        "dC": 3.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0071,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "ed5b6098a4213db94dcdf0872e837c84e3f3ca4c5d0be66056dcbeea39579b1c",
+      "photos": [
+        647488991
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "gavia-immer": {
+      "common_name": "Common Loon",
+      "seed": 3939935744,
+      "dark": true,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 9.1,
+        "dE_p95": 24.9,
+        "dL": 7.6,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.978,
+      "sha256": "f71f30408a4fc17a88a28a532ed645c5041694a19931424fe68675ae31f56e45",
+      "photos": [
+        672554080
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 3670456756,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 15.8,
+        "dE_p95": 25.3,
+        "dL": -9.5,
+        "dC": -9.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.959,
+      "sha256": "034fbf4ad5f7b03801226886910c2268c2d89189e2ebad0508b089d9e518336d",
+      "photos": [
+        671997720
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "glaucidium-gnoma": {
+      "common_name": "Mountain Pygmy Owl",
+      "seed": 1871410620,
+      "dark": false,
+      "measure": {
+        "iou": 0.979,
+        "dE_mean": 9.3,
+        "dE_p95": 16.1,
+        "dL": -1.0,
+        "dC": -3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.945,
+      "sha256": "658590b4b268aa3bebd9a7009a96cd34e977b0879a3e1473a11d45ed7b9ee479",
+      "photos": [
+        86246
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haematopus-bachmani": {
+      "common_name": "Black Oystercatcher",
+      "seed": 4191409742,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 19.2,
+        "dE_p95": 26.4,
+        "dL": -17.2,
+        "dC": -6.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0098,
+      "attempts": 1,
+      "shape_fit": 0.942,
+      "sha256": "29e7dfb4c89e71216c8fe251b1853dffb003c079560c630d30b019b73353848f",
+      "photos": [
+        621320222
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring.",
+      "review": "approved"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 3441756935,
+      "dark": false,
+      "measure": {
+        "iou": 0.753,
+        "dE_mean": 16.4,
+        "dE_p95": 35.8,
+        "dL": 11.2,
+        "dC": 0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "aa8e232238c10a0633816aa64cbb5ed7b68520742469c06bbfee21e903e509c9",
+      "photos": [
+        728953938
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haemorhous-purpureus": {
+      "common_name": "Purple Finch",
+      "seed": 705888471,
+      "dark": false,
+      "measure": {
+        "iou": 0.347,
+        "dE_mean": 32.8,
+        "dE_p95": 59.2,
+        "dL": -29.0,
+        "dC": 4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "18af15fda80247664984a3697667fb5f9e6a435bd2eca76c96ed05b1b0ba4d2b",
+      "photos": [
+        668736579
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        3290259964,
+        3004846446
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "seed": 948972460,
+      "dark": false,
+      "measure": {
+        "iou": 0.876,
+        "dE_mean": 7.2,
+        "dE_p95": 16.1,
+        "dL": -4.3,
+        "dC": -0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0079,
+      "attempts": 1,
+      "shape_fit": 0.949,
+      "sha256": "d85b461ec84f5341786624aaffb8e9f47c55ba59ecfe460dabaaf0e89b57498f",
+      "photos": [
+        270268563
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The body and wings are plain dark blackish brown with no white or pale spots or streaks; the head and tail are pure white; the bill is yellow and the eye is small and pale yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2711190040,
+        3600697984,
+        1335302970
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): crow with a white eyebrow and wing edges, merganser's eye still large with a white ring, eagle's patch missing a corner"
+    },
+    "himantopus-mexicanus": {
+      "common_name": "Black-necked Stilt",
+      "seed": 3552204774,
+      "dark": false,
+      "measure": {
+        "iou": 0.755,
+        "dE_mean": 16.1,
+        "dE_p95": 35.7,
+        "dL": 10.4,
+        "dC": -4.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.981,
+      "sha256": "f59740ae55b2bf180d624044a154d0f3b6a91bfa932d5210c2459b4efcb1a3ef",
+      "photos": [
+        709920788
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        2763876210
+      ],
+      "why": "the patch came out an octagon, not a hexagon lying on a flat edge with a point at left and right"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "seed": 2183093279,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.949,
+      "sha256": "dc6ba9d52e04280b6582687c4d52af1241b727b8574483ccdae5b40ca6128df7",
+      "photos": [
+        704481360
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1813069105,
+        454430120
+      ],
+      "why": "a corner of the patch peels up from the card and the patch is not the edition's shape"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 2621555287,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 6.8,
+        "dE_p95": 15.4,
+        "dL": -1.3,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0116,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "a1e8d4a87b28a4489ae8a67eb1e4f32ea2149331a5dc0d0ec14c80ec94c4203f",
+      "photos": [
+        719063226
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "icterus-cucullatus": {
+      "common_name": "Hooded Oriole",
+      "seed": 3510521356,
+      "dark": false,
+      "measure": {
+        "iou": 0.812,
+        "dE_mean": 24.1,
+        "dE_p95": 56.8,
+        "dL": -9.1,
+        "dC": -13.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0159,
+      "attempts": 3,
+      "shape_fit": 0.969,
+      "sha256": "5095fd7254e1037c9702b1881e4cf7ecba127b01da511bb876abe879ae6be687",
+      "photos": [
+        689485752
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ixoreus-naevius": {
+      "common_name": "Varied Thrush",
+      "seed": 1273103953,
+      "dark": false,
+      "measure": {
+        "iou": 0.918,
+        "dE_mean": 10.1,
+        "dE_p95": 17.8,
+        "dL": 5.3,
+        "dC": -4.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "8e3729a9536b982f6355a1f8f8820b3f1963a4da493bfb1ce6508655580ea9fa",
+      "photos": [
+        257540592
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "seed": 4252462605,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 5.9,
+        "dE_p95": 14.1,
+        "dL": -2.8,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "916aa4ae760ffdb0e5870db1182a54166fefe4cf60fa36933028b7685abff74e",
+      "photos": [
+        724506572
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "larus-brachyrhynchus": {
+      "common_name": "Short-billed Gull",
+      "seed": 2212037654,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 18.5,
+        "dE_p95": 33.9,
+        "dL": -17.3,
+        "dC": 2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0072,
+      "attempts": 1,
+      "shape_fit": 0.968,
+      "sha256": "dcc9c8659a84d88abdcb8c6b1c357e836c6d4ab64b7d7c0ac98d728ecfb83b7a",
+      "photos": [
+        621842769
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "seed": 2031623474,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 7.1,
+        "dE_p95": 17.1,
+        "dL": -5.7,
+        "dC": 0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.99,
+      "sha256": "7d818e58bef86d89cc6fa3003df978945523af82298eb51ef531b561aab4904d",
+      "photos": [
+        705671994
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 1009048116,
+      "dark": false,
+      "measure": {
+        "iou": 0.959,
+        "dE_mean": 8.4,
+        "dE_p95": 16.4,
+        "dL": -6.4,
+        "dC": -3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.961,
+      "sha256": "1ba0a9281023ea4f29831257b9c1f08270a735083d54b90ea19382da231c113d",
+      "photos": [
+        727156110
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "larus-glaucescens": {
+      "common_name": "Glaucous-winged Gull",
+      "seed": 4260619644,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 6.6,
+        "dE_p95": 12.8,
+        "dL": -0.8,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.968,
+      "sha256": "9404016c43e14a06677d1f837453762fac5289705a6077de2c9fc1a480620748",
+      "photos": [
+        475325348
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved",
+      "rejected_seeds": [
+        2331301357
+      ],
+      "why": "the patch is a hexagon standing on its point (points at top and bottom), not lying on a flat edge"
+    },
+    "larus-heermanni": {
+      "common_name": "Heermann's Gull",
+      "seed": 1675489396,
+      "dark": false,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 10.8,
+        "dE_p95": 20.6,
+        "dL": 10.4,
+        "dC": -0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "4f9f30e395c423aaf1fdce3c9129f378ccfaf9313717b155ddf08ccaad284a17",
+      "photos": [
+        739608318
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "larus-occidentalis": {
+      "common_name": "Western Gull",
+      "seed": 943688487,
+      "dark": false,
+      "measure": {
+        "iou": 0.895,
+        "dE_mean": 8.2,
+        "dE_p95": 14.9,
+        "dL": -4.1,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.982,
+      "sha256": "e4bbc41cdbd99445e35ed4f5386873360cdbee71e97ad2366d600051c823ddf2",
+      "photos": [
+        730111176
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "seed": 2191704225,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 9.3,
+        "dE_p95": 15.0,
+        "dL": -7.3,
+        "dC": -1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.982,
+      "sha256": "dc4449d2d284720cb077647eb7a996b4c0a4f1fd5bbba674cf5837c82b2c0a11",
+      "photos": [
+        597125855
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        4121292809
+      ],
+      "why": "the patch came out an octagon, not a hexagon lying on a flat edge with a point at left and right"
+    },
+    "limosa-fedoa": {
+      "common_name": "Marbled Godwit",
+      "seed": 3391968861,
+      "dark": false,
+      "measure": {
+        "iou": 0.952,
+        "dE_mean": 7.2,
+        "dE_p95": 12.1,
+        "dL": 4.1,
+        "dC": -3.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.971,
+      "sha256": "f778d486c57b3d409bcb9a20867e6bb770db985d0974fce93fa6ad1a0dc44e7c",
+      "photos": [
+        623108844
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "seed": 3683071023,
+      "dark": false,
+      "measure": {
+        "iou": 0.873,
+        "dE_mean": 13.1,
+        "dE_p95": 26.3,
+        "dL": -1.4,
+        "dC": -6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.989,
+      "sha256": "1dd55129623687f90a11c20a07e563d625d9da124a7c0d91e548bd1a37d04be0",
+      "photos": [
+        673155793
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 585962559,
+      "dark": false,
+      "measure": {
+        "iou": 0.707,
+        "dE_mean": 25.0,
+        "dE_p95": 56.1,
+        "dL": -3.1,
+        "dC": -5.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.986,
+      "sha256": "a54051d3815c3cdabc88401366c74b68f8393a2a8252e1d3a5031d060e2f9564",
+      "photos": [
+        613736581
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "seed": 3817667510,
+      "dark": false,
+      "measure": {
+        "iou": 0.825,
+        "dE_mean": 15.5,
+        "dE_p95": 37.6,
+        "dL": -7.4,
+        "dC": 2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0048,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "e719758d4ef6eeb3e973f01059b50ab4140bb4cc0eb90810b8daad915a473ec7",
+      "photos": [
+        741988232
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 3457469626,
+      "dark": false,
+      "measure": {
+        "iou": 0.881,
+        "dE_mean": 11.4,
+        "dE_p95": 23.3,
+        "dL": 4.3,
+        "dC": -5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.988,
+      "sha256": "42c23ffdd5496743ebbe5a0f0a038636f58947b8bcef08ed49b68414dc809b3f",
+      "photos": [
+        705671954
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "megascops-kennicottii": {
+      "common_name": "Western Screech Owl",
+      "seed": 2120063710,
+      "dark": false,
+      "measure": {
+        "iou": 0.961,
+        "dE_mean": 5.1,
+        "dE_p95": 10.4,
+        "dL": -2.5,
+        "dC": -1.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.966,
+      "sha256": "7e3794f7303fc7b0bbd920f99f072e879d36410a6d4dba1f32211b6daaae147b",
+      "photos": [
+        487362699
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melanerpes-formicivorus": {
+      "common_name": "Acorn Woodpecker",
+      "seed": 43751292,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 6.2,
+        "dE_p95": 12.3,
+        "dL": -0.5,
+        "dC": -0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.935,
+      "sha256": "8db68c0fe0b56448bd5e00d45189b23afbe5828628a10511989368caf98ccd83",
+      "photos": [
+        717685620
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1973200878
+      ],
+      "why": "the patch came out an octagon, not a hexagon lying on a flat edge with a point at left and right"
+    },
+    "melanitta-perspicillata": {
+      "common_name": "Surf Scoter",
+      "seed": 4194265498,
+      "dark": true,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 11.5,
+        "dE_p95": 25.8,
+        "dL": -0.1,
+        "dC": -3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.958,
+      "sha256": "887d935ababf8bd2eaff3cc847ec264390ff61ccd7c39076a2af32676badbefd",
+      "photos": [
+        687327830
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "seed": 2267725198,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 4.5,
+        "dE_p95": 10.9,
+        "dL": -2.0,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0187,
+      "attempts": 2,
+      "shape_fit": 0.969,
+      "sha256": "aa4ec0a5b6c89774f6d8bfa8a938886338b2f3eca8045a26efb49c35c60e7d17",
+      "photos": [
+        721547162
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "seed": 3528611347,
+      "dark": false,
+      "measure": {
+        "iou": 0.882,
+        "dE_mean": 10.6,
+        "dE_p95": 20.1,
+        "dL": -10.1,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0057,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "2e300f6b217d8ef6436a1d7b19916fa92672658381c2805195d03cacf9202ac8",
+      "photos": [
+        716476512
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melozone-crissalis": {
+      "common_name": "California Towhee",
+      "seed": 1300220261,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 7.6,
+        "dE_p95": 16.0,
+        "dL": -5.8,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.961,
+      "sha256": "628a986e6147a2ee729ddbfd0aebe2a281480c9b5c885aec7c0ab25b80d0e777",
+      "photos": [
+        714775993
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "mergus-merganser": {
+      "common_name": "Common Merganser",
+      "seed": 1657324768,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 13.1,
+        "dE_p95": 24.4,
+        "dL": -10.8,
+        "dC": -0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.97,
+      "sha256": "b25403141de3e3fde5c14401dc961a7c9317ff85aa26db103f9ecdea60c06be4",
+      "photos": [
+        652606348
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy dark green, almost black, with a slim red bill. The eye is a tiny dark dot that barely shows against the dark head: no white ring or pale circle around it, and it is far smaller than the bill is deep.",
+      "review": "approved",
+      "rejected_seeds": [
+        2361828813,
+        4223767898
+      ],
+      "why": "second repaint still wrong (my check, 2026-11-11): crow with a white eyebrow and wing edges, merganser's eye still large with a white ring, eagle's patch missing a corner"
+    },
+    "mimus-polyglottos": {
+      "common_name": "Northern Mockingbird",
+      "seed": 2000771196,
+      "dark": false,
+      "measure": {
+        "iou": 0.869,
+        "dE_mean": 7.3,
+        "dE_p95": 14.9,
+        "dL": 2.0,
+        "dC": 0.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0039,
+      "attempts": 2,
+      "shape_fit": 0.985,
+      "sha256": "93719052555ecf39f5c04adce73060601a567f9e91d3b52bdee58bc8ba1c44eb",
+      "photos": [
+        671625297
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 4028319386,
+      "dark": true,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 5.2,
+        "dE_p95": 16.5,
+        "dL": 0.8,
+        "dC": -0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0226,
+      "attempts": 2,
+      "shape_fit": 0.97,
+      "sha256": "fb06c7d65962b477d822caadc150404b196fedcade14af2e3bd1880a3fcfe2d2",
+      "photos": [
+        670224719
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The body, wings and tail are glossy black with no white or grey anywhere; the head and neck are dark chocolate brown; the bill is short, thick and dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        504702903,
+        1762793251
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "myiarchus-cinerascens": {
+      "common_name": "Ash-throated Flycatcher",
+      "seed": 947781227,
+      "dark": false,
+      "measure": {
+        "iou": 0.839,
+        "dE_mean": 9.4,
+        "dE_p95": 19.1,
+        "dL": -5.6,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.01,
+      "attempts": 1,
+      "shape_fit": 0.97,
+      "sha256": "fd19a09e6c9865a99bb11570f62dc1d1d1cebd48ce7e585952bea015ac5c63f5",
+      "photos": [
+        538853690
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 2733928216,
+      "dark": true,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 10.4,
+        "dE_p95": 22.6,
+        "dL": 8.7,
+        "dC": 0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0091,
+      "attempts": 1,
+      "shape_fit": 0.963,
+      "sha256": "62eb82b90740b68c4ef07ae0b11a01a8fc1cc24ee2f965fe6f21dc2a5bb8eee5",
+      "photos": [
+        710521409
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The whole bird is black with a faint bronze-green sheen and no white or brown; the bare skin of the throat and face is orange-yellow.",
+      "review": "approved"
+    },
+    "numenius-americanus": {
+      "common_name": "Long-billed Curlew",
+      "seed": 3057572618,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 4.1,
+        "dE_p95": 10.1,
+        "dL": 0.4,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.983,
+      "sha256": "871fbbd66adf3416ee43382bdf05a758ab52e9e94dada1dedc55c9ef88adca8c",
+      "photos": [
+        636648692
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "numenius-hudsonicus": {
+      "common_name": "Hudsonian Whimbrel",
+      "seed": 1461308316,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 3.2,
+        "dE_p95": 6.7,
+        "dL": -0.6,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.932,
+      "sha256": "7db41834f84d5fa11fd14fa64976d0f7439887dc63e363afe0e6da168a7079a6",
+      "photos": [
+        642244896
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "nycticorax-nycticorax": {
+      "common_name": "Black-crowned Night Heron",
+      "seed": 1123922343,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.962,
+      "sha256": "183bab416e4e46c8c63c2c1ddfb520e12b5be111efe8b78a81fe0ae4b63ee1ae",
+      "photos": [
+        694294709
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The eye is red, stitched in red thread with a small black centre.",
+      "review": "approved",
+      "rejected_seeds": [
+        905609522
+      ],
+      "why": "maintainer: needs red in the eye to match the reference photo"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "seed": 3722510439,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 5.5,
+        "dE_p95": 12.2,
+        "dL": -0.6,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.985,
+      "sha256": "6ce8b882cddf6656290337a53f1c970c5fe32cc888ecf0cd456eadc8765420b3",
+      "photos": [
+        628672240
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 399333389,
+      "dark": false,
+      "measure": {
+        "iou": 0.833,
+        "dE_mean": 8.7,
+        "dE_p95": 17.1,
+        "dL": 5.7,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.965,
+      "sha256": "537a0ee857cceff596f6b3a41bb2309198febaa34687137cd6a18d729584e27d",
+      "photos": [
+        694616436
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 2962545824,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 3.4,
+        "dE_p95": 8.2,
+        "dL": -0.6,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.973,
+      "sha256": "91027df98d2e5b053f1fc2e8e7c02f12fb34b9a8826ff26fcca32340fcf046b4",
+      "photos": [
+        655520101
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 1635749411,
+      "dark": false,
+      "measure": {
+        "iou": 0.959,
+        "dE_mean": 4.9,
+        "dE_p95": 11.0,
+        "dL": -3.6,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.958,
+      "sha256": "c9c6eab855ebf8a44cc6412920a0fbf24bcb7a00b525989395d36f7f4ff7cf32",
+      "photos": [
+        623708032
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerella-iliaca": {
+      "common_name": "Red Fox Sparrow",
+      "seed": 3488576703,
+      "dark": false,
+      "measure": {
+        "iou": 0.898,
+        "dE_mean": 5.9,
+        "dE_p95": 13.4,
+        "dL": -5.3,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.976,
+      "sha256": "fbfe79a3fca9dcb5913f7c0698afe127fae1e2bc62debf6510299e15fcd75538",
+      "photos": [
+        574948743
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "patagioenas-fasciata": {
+      "common_name": "Band-tailed Pigeon",
+      "seed": 3036832957,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 10.0,
+        "dE_p95": 16.4,
+        "dL": -2.9,
+        "dC": -3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "820ca3003721f22ee5875ea1fcf7d32bd2d81e74366c6443acadb28ab5d6ca06",
+      "photos": [
+        711326192
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 3039241796,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 5.6,
+        "dE_p95": 14.1,
+        "dL": -0.4,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "bcee465cf755a7ea3a6e9392ab93ec96ae04671633390ec2dad5f26751cb38e2",
+      "photos": [
+        726452917
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange.",
+      "review": "approved"
+    },
+    "pelecanus-occidentalis": {
+      "common_name": "Brown Pelican",
+      "seed": 58915841,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 12.7,
+        "dE_p95": 25.5,
+        "dL": 9.9,
+        "dC": -0.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.933,
+      "sha256": "f9d561945381c4aa30e4b4a619637fa50100e8a7349fdc00be73999777f7ca5e",
+      "photos": [
+        741493820
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "seed": 3050116723,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 6.6,
+        "dE_p95": 12.2,
+        "dL": 3.1,
+        "dC": -1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0031,
+      "attempts": 2,
+      "shape_fit": 0.958,
+      "sha256": "76e30c62cd9be8379128496fb10b72c3ab7401e1f88d176bdd0970611fef4677",
+      "photos": [
+        707642123
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "seed": 233642981,
+      "dark": false,
+      "measure": {
+        "iou": 0.861,
+        "dE_mean": 16.5,
+        "dE_p95": 32.8,
+        "dL": -8.7,
+        "dC": -7.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0057,
+      "attempts": 2,
+      "shape_fit": 0.949,
+      "sha256": "592c14b43dd9fe1abf4d4ac63f041294653954e3c4e8b2ea36cfbf71f8e2c7ed",
+      "photos": [
+        710027553
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "seed": 1553110843,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 7.2,
+        "dE_p95": 16.6,
+        "dL": 4.5,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0082,
+      "attempts": 2,
+      "shape_fit": 0.97,
+      "sha256": "ed7dadc8ac0ee364e0eacfaab71bfcade7e4465a02fd505dfa5fb344c23f0605",
+      "photos": [
+        683823781
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "seed": 2997885743,
+      "dark": false,
+      "measure": {
+        "iou": 0.894,
+        "dE_mean": 16.2,
+        "dE_p95": 27.0,
+        "dL": -8.9,
+        "dC": -11.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0906,
+      "attempts": 2,
+      "shape_fit": 0.901,
+      "sha256": "77294bfb7c04f8bde247551e81a6b42671ea801a7bb4f71817b92ff0e974f728",
+      "photos": [
+        643177750
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body is bright yellow, the head orange-red, and the back, wings and tail black, with one yellow and one white wing bar.",
+      "review": "approved",
+      "rejected_seeds": [
+        733563540,
+        1555986948,
+        3317115833
+      ],
+      "why": "a corner of the patch peels up from the card"
+    },
+    "pluvialis-squatarola": {
+      "common_name": "Grey Plover",
+      "seed": 3867560040,
+      "dark": false,
+      "measure": {
+        "iou": 0.858,
+        "dE_mean": 11.2,
+        "dE_p95": 24.3,
+        "dL": -9.2,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0047,
+      "attempts": 3,
+      "shape_fit": 0.97,
+      "sha256": "76cbb5110171e781550edd931edcbd92e94f2c07b68bc2d35ca73cd9014113d3",
+      "photos": [
+        628549899
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "podiceps-auritus": {
+      "common_name": "Horned Grebe",
+      "seed": 3497222127,
+      "dark": false,
+      "measure": {
+        "iou": 0.818,
+        "dE_mean": 13.0,
+        "dE_p95": 32.2,
+        "dL": -8.0,
+        "dC": -3.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.973,
+      "sha256": "1be584abf54cb2d45502a0c9cad295df6bcca3eca676cd058e78a4a1e5a4f884",
+      "photos": [
+        609754428
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "podiceps-nigricollis": {
+      "common_name": "Black-necked Grebe",
+      "seed": 398022592,
+      "dark": false,
+      "measure": {
+        "iou": 0.961,
+        "dE_mean": 4.6,
+        "dE_p95": 8.9,
+        "dL": 1.1,
+        "dC": 1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.977,
+      "sha256": "e5270335e035bc4c0c9e1d93d93c9a66b39a77c9c637fb34bc5e2d9b317a9a32",
+      "photos": [
+        608482176
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 2262661731,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 15.4,
+        "dE_p95": 21.7,
+        "dL": -14.4,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.99,
+      "sha256": "897d4a54bb03d7314e2ee2f6c7221bda7b446ae93dbb66313e5b83e751173e78",
+      "photos": [
+        692540104
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "poecile-rufescens": {
+      "common_name": "Chestnut-backed Chickadee",
+      "seed": 2578708076,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 10.1,
+        "dE_p95": 20.9,
+        "dL": -8.1,
+        "dC": -0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.97,
+      "sha256": "cad8eab7b42c6f25ce794486354725b432263a42e5d4a7dbe7a9bf3eadd643ee",
+      "photos": [
+        729978475
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "porzana-carolina": {
+      "common_name": "Sora",
+      "seed": 3579137164,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 12.2,
+        "dE_p95": 18.0,
+        "dL": 1.2,
+        "dC": -7.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.982,
+      "sha256": "81c500a3c2f8518b572ee14bca520fd3cecfb74b799c80f5ad8982a9377e9553",
+      "photos": [
+        621661016
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved",
+      "rejected_seeds": [
+        2723314716
+      ],
+      "why": "the patch stands on its point (points at top and bottom), not lying on a flat edge"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "seed": 567690409,
+      "dark": false,
+      "measure": {
+        "iou": 0.881,
+        "dE_mean": 8.9,
+        "dE_p95": 15.3,
+        "dL": -7.5,
+        "dC": -1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "4ddd53debfc1cd5cf969b8418242631847e8dc2bf91d491a2e4816a0c2c8098c",
+      "photos": [
+        681873638
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "quiscalus-mexicanus": {
+      "common_name": "Great-tailed Grackle",
+      "seed": 217835980,
+      "dark": true,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 9.9,
+        "dE_p95": 17.9,
+        "dL": 2.8,
+        "dC": -6.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.956,
+      "sha256": "76eb51aed67c4117e404a64f696d8c95bccba63361174b0589b9d310d4ec3538",
+      "photos": [
+        578593820
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "seed": 2053261433,
+      "dark": false,
+      "measure": {
+        "iou": 0.968,
+        "dE_mean": 8.9,
+        "dE_p95": 18.6,
+        "dL": 6.5,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0038,
+      "attempts": 2,
+      "shape_fit": 0.977,
+      "sha256": "ebcf92334759492e1bb9d6a66129fdf5f1035f0f598bb6798f22e93b57d3f8f9",
+      "photos": [
+        174592420
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "recurvirostra-americana": {
+      "common_name": "American Avocet",
+      "seed": 3003720838,
+      "dark": false,
+      "measure": {
+        "iou": 0.572,
+        "dE_mean": 16.2,
+        "dE_p95": 36.5,
+        "dL": 4.2,
+        "dC": 2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.978,
+      "sha256": "57289cbe6034b2d810dffc50ae39d072f28b3e7d84a0e8b3fe6bc9d5dc0e789a",
+      "photos": [
+        648850172
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "regulus-satrapa": {
+      "common_name": "Golden-crowned Kinglet",
+      "seed": 796203270,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 10.4,
+        "dE_p95": 20.3,
+        "dL": -8.5,
+        "dC": 0.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.007,
+      "attempts": 2,
+      "shape_fit": 0.98,
+      "sha256": "a4932b9fe40c080e6615b525ac5f3fc053750cada215a775292167e793fc39bd",
+      "photos": [
+        443439137
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "seed": 3500326975,
+      "dark": false,
+      "measure": {
+        "iou": 0.826,
+        "dE_mean": 31.9,
+        "dE_p95": 54.1,
+        "dL": -21.0,
+        "dC": -8.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.968,
+      "sha256": "4e41778d38ad76ad18150e314adebf955d1e818fdf510898f2340777211f02f3",
+      "photos": [
+        720898138
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
+      "review": "approved"
+    },
+    "sayornis-saya": {
+      "common_name": "Say's Phoebe",
+      "seed": 3997803181,
+      "dark": false,
+      "measure": {
+        "iou": 0.921,
+        "dE_mean": 8.7,
+        "dE_p95": 16.5,
+        "dL": 2.5,
+        "dC": -2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.966,
+      "sha256": "a81c0547e591eb3c99e796d9fe7e9e226eac60b61ac0e3f0c919a47ecaea1a48",
+      "photos": [
+        651109446
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "selasphorus-sasin": {
+      "common_name": "Allen's Hummingbird",
+      "seed": 593743466,
+      "dark": false,
+      "measure": {
+        "iou": 0.94,
+        "dE_mean": 11.6,
+        "dE_p95": 19.9,
+        "dL": -8.7,
+        "dC": -5.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.951,
+      "sha256": "6e4cd17520ec5d6de12fafe050639e8ee1c3bffd9d10aaaed95d61ea2ddfa503",
+      "photos": [
+        535145029
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 1964035071,
+      "dark": false,
+      "measure": {
+        "iou": 0.909,
+        "dE_mean": 12.4,
+        "dE_p95": 20.8,
+        "dL": -1.2,
+        "dC": 1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "4bb4fad6511bcb8a04c2eeb3bf8fdea76ec7dee10a859a567e916a5bcb712c4e",
+      "photos": [
+        739664730
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, a little more olive on the back and wings, with no grey, tan or brown.",
+      "review": "approved"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 284466079,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 8.0,
+        "dE_p95": 18.3,
+        "dL": 0.1,
+        "dC": -2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0055,
+      "attempts": 1,
+      "shape_fit": 0.95,
+      "sha256": "b23833afb5b2cefd13c0fa7d257b4f8234e6b4babe2b11733813f52056f30383",
+      "photos": [
+        620016696
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "seed": 3090347160,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 15.4,
+        "dE_p95": 29.7,
+        "dL": 2.1,
+        "dC": -3.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.982,
+      "sha256": "49d083765ff54fde304a6610e6f19e65ebfb26a2efdc3a3930021ddbd24e5b9e",
+      "photos": [
+        606292539
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "seed": 4129299193,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 10.6,
+        "dE_p95": 18.7,
+        "dL": -7.1,
+        "dC": -2.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0048,
+      "attempts": 1,
+      "shape_fit": 0.97,
+      "sha256": "5ddcb77f07ad21b66934660ab5554f4bd7fecd4a26893c306d5fe5648f1d444a",
+      "photos": [
+        713621046
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "seed": 2783839613,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 9.6,
+        "dE_p95": 18.7,
+        "dL": -2.5,
+        "dC": -5.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.978,
+      "sha256": "af60456a94df0a0f3cac6dcd7fc9ab3afbfc5935406aed4267b054a422cfdc69",
+      "photos": [
+        692070197
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved",
+      "rejected_seeds": [
+        3538499052
+      ],
+      "why": "the patch came out an octagon with upright sides, not a hexagon with a point at left and right"
+    },
+    "sitta-pygmaea": {
+      "common_name": "Pygmy Nuthatch",
+      "seed": 515479073,
+      "dark": false,
+      "measure": {
+        "iou": 0.97,
+        "dE_mean": 7.8,
+        "dE_p95": 13.8,
+        "dL": 3.1,
+        "dC": -2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0036,
+      "attempts": 1,
+      "shape_fit": 0.931,
+      "sha256": "143c151f207f9856fd984ab426fd7d23c0c12b0603888c56748ce52c76275650",
+      "photos": [
+        640337457
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 3084473904,
+      "dark": true,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 8.7,
+        "dE_p95": 24.3,
+        "dL": 0.1,
+        "dC": -1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0075,
+      "attempts": 2,
+      "shape_fit": 0.959,
+      "sha256": "7e63d3bf1740653138923f34aefd20c6d73ddbc7f3bc2ab7164a69613c8193b2",
+      "photos": [
+        637293198
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "seed": 3182043465,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 10.0,
+        "dE_p95": 20.2,
+        "dL": 4.3,
+        "dC": -5.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.927,
+      "sha256": "ac175e7270396ad3113482beb422ba10eb34496414dd593ff5a5fa91da8d5ab5",
+      "photos": [
+        625905541
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "seed": 1280171745,
+      "dark": false,
+      "measure": {
+        "iou": 0.844,
+        "dE_mean": 8.1,
+        "dE_p95": 19.5,
+        "dL": -1.8,
+        "dC": -4.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.988,
+      "sha256": "891c3e50f56ebbee9d70017116392fc6bfca75a5e61fc9f591a7358d8c76ff87",
+      "photos": [
+        714859462
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "seed": 1010267234,
+      "dark": false,
+      "measure": {
+        "iou": 0.972,
+        "dE_mean": 17.6,
+        "dE_p95": 26.8,
+        "dL": -11.8,
+        "dC": -11.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.982,
+      "sha256": "6d467c1faadd8cf3673dc2926456c9d59d50fa061b3e2968164f3b0d4bf716c7",
+      "photos": [
+        627080185
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sterna-forsteri": {
+      "common_name": "Forster's Tern",
+      "seed": 2884911601,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 10.5,
+        "dE_p95": 16.1,
+        "dL": -4.7,
+        "dC": -6.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0057,
+      "attempts": 1,
+      "shape_fit": 0.945,
+      "sha256": "6439146d3ba9c261c739dcd03de230914d62ed90d8c1adc64c48b13a7ea89ed5",
+      "photos": [
+        725621719
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "seed": 1328748388,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 5.4,
+        "dE_p95": 11.7,
+        "dL": -4.2,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0105,
+      "attempts": 1,
+      "shape_fit": 0.947,
+      "sha256": "7c47953d4b4f4905ac23a981433f73bae4777727d1816b71c2cf5129fe353a4c",
+      "photos": [
+        629385504
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "seed": 965050653,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 22.1,
+        "dE_p95": 34.0,
+        "dL": -19.4,
+        "dC": -7.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.971,
+      "sha256": "fa515f46687ea581fe68041a060cee52c6f77b9d2df78c43810e3a38dc93b8bf",
+      "photos": [
+        629872325
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 2852665741,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 7.9,
+        "dE_p95": 13.0,
+        "dL": -2.2,
+        "dC": -4.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.968,
+      "sha256": "0db84c1377470aa22bd25fb2c5391189a14c625a6365c65f817770301253deee",
+      "photos": [
+        710513983
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "seed": 2482030199,
+      "dark": false,
+      "measure": null,
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "39b091adb8f840bb4be298494e2d0fc3abc9251448dc933b35ba6b9bd05d9c19",
+      "photos": [
+        651196006
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The upperparts from the crown to the tail are glossy iridescent blue-green, not black; the throat, breast and belly are pure white; the eye is small and dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        184129485,
+        2113840987,
+        3841455841
+      ],
+      "why": "maintainer: needs a better reference photo to tell the colour accurately; eye is too large"
+    },
+    "tachycineta-thalassina": {
+      "common_name": "Violet-green Swallow",
+      "seed": 1749099296,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 7.3,
+        "dE_p95": 14.4,
+        "dL": -3.8,
+        "dC": -3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0134,
+      "attempts": 2,
+      "shape_fit": 0.977,
+      "sha256": "3ce1740e607eaecf1ddd2b7fffe773a14c4d0086fe8023f92fcf56ea5f164999",
+      "photos": [
+        677396766
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "thalasseus-elegans": {
+      "common_name": "Elegant Tern",
+      "seed": 2805741231,
+      "dark": false,
+      "measure": {
+        "iou": 0.899,
+        "dE_mean": 13.3,
+        "dE_p95": 24.4,
+        "dL": -7.2,
+        "dC": -7.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0136,
+      "attempts": 3,
+      "shape_fit": 0.961,
+      "sha256": "9775f29fe232cc66d11106388dc9f9352a3fd6ffd38feb7f73d31e56a668e60d",
+      "photos": [
+        722613777
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "seed": 1660730837,
+      "dark": false,
+      "measure": {
+        "iou": 0.867,
+        "dE_mean": 7.9,
+        "dE_p95": 14.9,
+        "dL": -7.6,
+        "dC": 1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0171,
+      "attempts": 1,
+      "shape_fit": 0.928,
+      "sha256": "965c4cd33197162e5c6df47a4eb1b5c0c598c27bd7f9673e6244963562fbd1d4",
+      "photos": [
+        677422609
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "toxostoma-redivivum": {
+      "common_name": "California Thrasher",
+      "seed": 275520135,
+      "dark": true,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 19.7,
+        "dE_p95": 36.0,
+        "dL": 17.8,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.959,
+      "sha256": "6bf0e98ebc7f4f0dbae964aaf2616796c9bcf0327ad8432445d3313827d6fe57",
+      "photos": [
+        470878091
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird is plain grey-brown above and on the breast, with a long, strongly down-curved black bill, a pale buff throat and a warm cinnamon-buff belly and undertail; there is no white or black pattern on the wings or body.",
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 370233987,
+      "dark": false,
+      "measure": {
+        "iou": 0.885,
+        "dE_mean": 5.2,
+        "dE_p95": 10.8,
+        "dL": -5.0,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0031,
+      "attempts": 2,
+      "shape_fit": 0.979,
+      "sha256": "93dfc967a0e79ab8be992ecb4d6a14183ef1c7057eaf6540e4cc17f2c3a3302f",
+      "photos": [
+        696982075
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "tringa-semipalmata": {
+      "common_name": "Willet",
+      "seed": 3631316068,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 7.0,
+        "dE_p95": 10.4,
+        "dL": 0.4,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0121,
+      "attempts": 1,
+      "shape_fit": 0.979,
+      "sha256": "d4c2e662b60653b1effb881a12ff7e4b585009232696b21f79836f8efb205bdb",
+      "photos": [
+        703791124
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "troglodytes-pacificus": {
+      "common_name": "Pacific Wren",
+      "seed": 3839662621,
+      "dark": false,
+      "measure": {
+        "iou": 0.774,
+        "dE_mean": 15.0,
+        "dE_p95": 23.0,
+        "dL": -10.1,
+        "dC": -9.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.985,
+      "sha256": "1e477ffae13f227691103802390713997103daf24b4b8388435189e9e9577b8e",
+      "photos": [
+        445546568
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 4292360771,
+      "dark": false,
+      "measure": {
+        "iou": 0.85,
+        "dE_mean": 5.9,
+        "dE_p95": 13.5,
+        "dL": -3.4,
+        "dC": -1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.953,
+      "sha256": "51b281df3745acffdb10f1c521da6547211b787041abeaef717189fd85c9764e",
+      "photos": [
+        675754527
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "tyto-furcata": {
+      "common_name": "American Barn Owl",
+      "seed": 1239923748,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 4.1,
+        "dE_p95": 10.4,
+        "dL": -3.1,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.974,
+      "sha256": "b44ba06c584acc76ba3630577b503b2eaa6772eafa16446139b73a5e299180b4",
+      "photos": [
+        740257326
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "review": "approved"
+    },
+    "uria-aalge": {
+      "common_name": "Common Murre",
+      "seed": 469489200,
+      "dark": false,
+      "measure": {
+        "iou": 0.957,
+        "dE_mean": 7.0,
+        "dE_p95": 12.6,
+        "dL": -5.4,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "d2335d34c7dff845af8edd4184ff36fe9eb0ff968004f6c29133828d782f5cce",
+      "photos": [
+        528460331
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "urile-pelagicus": {
+      "common_name": "Pelagic Cormorant",
+      "seed": 641401385,
+      "dark": true,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 8.9,
+        "dE_p95": 18.6,
+        "dL": 6.5,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.943,
+      "sha256": "86020c44565a595d3c985638a5e6ad7b23435d7534d94cea80207ce26f590c36",
+      "photos": [
+        579142990
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "urile-penicillatus": {
+      "common_name": "Brandt's Cormorant",
+      "seed": 2903986270,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 6.0,
+        "dE_p95": 12.7,
+        "dL": -0.3,
+        "dC": -2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.949,
+      "sha256": "bc2badeda3c29ace574af6c76822ccda5dce247f31c1e3d82d7d37ac9713309f",
+      "photos": [
+        645815726
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "vireo-huttoni": {
+      "common_name": "Hutton's Vireo",
+      "seed": 1099972950,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 6.6,
+        "dE_p95": 12.6,
+        "dL": 2.7,
+        "dC": -3.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "a10c7faa82617e61a722a351ef1c8ee7a906d0240b504d48dbb4d8fe42e01dfc",
+      "photos": [
+        456424367
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 2714662094,
+      "dark": false,
+      "measure": {
+        "iou": 0.952,
+        "dE_mean": 10.2,
+        "dE_p95": 17.8,
+        "dL": 0.8,
+        "dC": -4.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.983,
+      "sha256": "9f38fb03d2f4fdb0ab096592adcc8056946648339f6b3da88804bc48e96a1f38",
+      "photos": [
+        710518333
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-atricapilla": {
+      "common_name": "Golden-crowned Sparrow",
+      "seed": 3022568699,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 7.7,
+        "dE_p95": 16.7,
+        "dL": -6.9,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.004,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "9040dbf60ef2a6546d5f17b10667929e75aabea8d005aed36da5cb625719cc87",
+      "photos": [
+        640560683
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "seed": 732302466,
+      "dark": false,
+      "measure": {
+        "iou": 0.849,
+        "dE_mean": 6.5,
+        "dE_p95": 15.9,
+        "dL": -4.1,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.98,
+      "sha256": "be8373a7127f7b2c7c4d51dba4956e539bc5a62d02e25e7336dc48efce985cc2",
+      "photos": [
+        731245856
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+        "cord": "silver-grey",
+        "twill": "cool pale grey cotton twill",
+        "motif": "banks of fog rolling over oak hills and a few tall redwoods"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        1554070551
+      ],
+      "why": "the patch came out an octagon, not a hexagon lying on a flat edge with a point at left and right"
+    }
+  }
+}

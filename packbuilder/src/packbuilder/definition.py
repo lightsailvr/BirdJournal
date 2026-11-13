@@ -83,6 +83,15 @@ def load_overrides(path: Path) -> dict[str, dict]:
     return json.loads(path.read_text())
 
 
+def wider_places(species: list["SpeciesEntry"], overrides: dict[str, dict]) -> dict[int, tuple[int, ...]]:
+    """By taxon id, the iNaturalist places a species borrows photos from beyond the pack's own (`"wider_places": [14]`
+    in `overrides.json`, #58), for a species the region has no usable open-licensed photo of."""
+    return {
+        entry.inat_taxon_id: tuple(int(place) for place in places)
+        for entry in species if (places := (overrides.get(entry.scientific_name) or {}).get("wider_places"))
+    }
+
+
 def _place_ids(data: dict) -> tuple[int, ...]:
     if "inat_place_ids" in data:
         ids = tuple(int(p) for p in data["inat_place_ids"])

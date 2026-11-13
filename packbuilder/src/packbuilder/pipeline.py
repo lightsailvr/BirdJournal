@@ -92,7 +92,8 @@ def build_pack(
     definition: PackDefinition, overrides_path: Path, metadata: MetadataSource, detector: Detector, options: BuildOptions, descriptions: DescriptionSource | None = None,
     sounds: SoundPicker | None = None, card_set: dict | None = None, joined: dict[str, JoinedSpecies] | None = None, artist: PackArtist | None = None,
     art_sheets: Path | None = None, lore: LoreWriter | None = None, lore_review: Path | None = None, cover_painter: CoverPainter | None = None,
-    patch_artist: PatchArtist | None = None, silhouette_maker: SilhouetteMaker | None = None,
+    patch_artist: PatchArtist | None = None, silhouette_maker: SilhouetteMaker | None = None, reference_picker: PackArtist | None = None,
+    export_references: Path | None = None,
 ) -> WrittenPack:
     """`card_set` is the pinned set definition (`sets.py`) the pack carries; None writes an empty set table. `joined` is
     the joined stats, threatened flags and type lines (`stats.join`); None leaves their tables empty. `artist` paints
@@ -102,7 +103,10 @@ def build_pack(
     the set's cover the cover lock lacks (issue #114) and draws its contact sheet into `art_sheets` too; None builds a
     pack without a cover. `patch_artist` paints the patches the patch lock lacks (issue #133) and draws their contact
     sheets into `art_sheets`/patches; a pack with patches has no pack art. `silhouette_maker` derives the silhouettes the
-    silhouette lock lacks from the cached isolated birds (#150) and draws their contact sheets into `art_sheets`/silhouettes."""
+    silhouette lock lacks from the cached isolated birds (#150) and draws their contact sheets into `art_sheets`/silhouettes.
+    `reference_picker` first picks and isolates the reference bird of every species the pack-art lock has none for (#58),
+    which the patches and the silhouettes are made from; it paints no pack art. With `export_references` it isolates nothing:
+    it saves the crops of the birds still to isolate and lists them in that file, for `packbuilder isolate` on the box."""
     raw_overrides = load_overrides(overrides_path)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
@@ -119,6 +123,13 @@ def build_pack(
         if art_sheets is not None:
             sheets = artist.sheets(results, art, art_sheets)
             log.info("pack art contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
+    if reference_picker is not None and export_references is not None:
+        import json
+
+        export_references.parent.mkdir(parents=True, exist_ok=True)
+        export_references.write_text(json.dumps(reference_picker.export_references(results), indent=1) + "\n")
+    elif reference_picker is not None:
+        reference_picker.isolate_references(results)
     patches = None
     if patch_artist is not None:
         ids = [r.entry.id for r in results]

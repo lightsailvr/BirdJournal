@@ -63,6 +63,8 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--sound-tries", type=int, default=3, help="recordings downloaded per species and kind before the kind is a gap (default 3)")
     build.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints the pack art the lock lacks (default {COMFY}, on the tailnet)")
     build.add_argument("--no-art", action="store_true", help="skip the pack art and the set's cover (the pack then has neither)")
+    build.add_argument("--no-patches", action="store_true", help="isolate the reference birds but paint no patches (the pack then has none): paint them with `packbuilder patches`, on the box")
+    build.add_argument("--export-references", type=Path, metavar="FILE", help="isolate nothing: save the crops of the reference birds still to isolate in the cache and list them in FILE, for `packbuilder isolate` on the box (implies --no-patches)")
     build.add_argument("--no-silhouettes", action="store_true", help="skip only the silhouettes (the pack then has none; --no-art skips them too)")
     build.add_argument("--no-cover", action="store_true", help="skip only the set's cover (the pack then has none)")
     build.add_argument("--art-sheets", type=Path, help="folder for the pack art's contact sheets (default build/pack-art/<pack id>)")
@@ -160,6 +162,11 @@ def main(argv: list[str] | None = None) -> int:
     patch_review.add_argument("--reject", action="append", default=[], metavar="SPECIES", help="reject a patch: the next `patches` run paints it again with the next seed (repeat)")
     patch_review.add_argument("--gap", action="append", default=[], metavar="SPECIES", help="give up on a species' patch (repeat)")
     patch_review.add_argument("--why", help="the reason, kept in the lock with --reject or --gap")
+    isolate = commands.add_parser("isolate", help="isolate the reference birds a build listed with --export-references, from their crops in the cache, into art.lock.json (#58)")
+    isolate.add_argument("definition", type=Path, help="folder holding pack.json and art.lock.json")
+    isolate.add_argument("--todo", type=Path, required=True, help="the file `packbuilder build --export-references` wrote")
+    isolate.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that isolates (default {COMFY}, on the tailnet; http://127.0.0.1:8189 on the box)")
+    isolate.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the build's cache: the crops in art/reference-crops, the birds to art/isolated (default: packbuilder/cache)")
     references = commands.add_parser("art-references", help="export each species' isolated reference bird for the art worker's scene art (issue #68)")
     references.add_argument("definition", type=Path, help="folder holding pack.json, overrides.json and art.lock.json")
     references.add_argument("--pack", type=Path, required=True, help="the built pack (its pack.sqlite gives each species' size)")
@@ -213,6 +220,8 @@ def main(argv: list[str] | None = None) -> int:
         return _thumbnails(args)
     if args.command == "calibrate-rarity":
         return _calibrate_rarity(args)
+    if args.command == "isolate":
+        return _isolate(args)
     if args.command == "art-references":
         return _art_references(args)
     if args.command == "art-review":
@@ -267,7 +276,12 @@ def main(argv: list[str] | None = None) -> int:
     else:
         from packbuilder.metadata_api import APIMetadata
 
-        metadata = APIMetadata(definition.place_ids, args.cache, created_before=definition.created_before, licenses=args.photo_licenses)
+        from packbuilder.definition import load_overrides as _raw_overrides, wider_places
+
+        metadata = APIMetadata(
+            definition.place_ids, args.cache, created_before=definition.created_before, licenses=args.photo_licenses,
+            wider=wider_places(definition.species, _raw_overrides(args.definition / "overrides.json")),
+        )
 
     detector = BirdDetector(ensure_model(args.cache))
     descriptions = None if args.no_descriptions else WikipediaDescriptions(args.cache, lock_path=args.definition / "wikipedia.lock.json")
@@ -276,9 +290,12 @@ def main(argv: list[str] | None = None) -> int:
         archive_path=args.zip, built_at=args.built_at, download_workers=args.workers, photo_licenses=args.photo_licenses,
     )
     sounds = None if args.no_sounds else _sound_picker(args, definition)
-    patch_artist = None if args.no_art else _patch_artist(args, definition)
-    # A pack with patches (#133) has no pack art: its references come from the pack art's lock, painted before.
-    artist = None if args.no_art or patch_artist is not None else _artist(args, definition)
+    # A pack whose edition has a patch (#133) has no pack art: the pack-art step only picks and isolates its reference
+    # birds (#58), into the pack art's lock, and the patches and silhouettes are made from them.
+    patched = _has_patch(definition)
+    reference_picker = _artist(args, definition) if patched and not args.no_art else None
+    patch_artist = None if reference_picker is None or args.no_patches or args.export_references else _make_patch_artist(args, definition, reference_picker.client, art_lock=reference_picker.lock)
+    artist = None if args.no_art or patched else _artist(args, definition)
     silhouette_maker = None if args.no_art or args.no_silhouettes else _silhouette_maker(args, definition)
     cover_painter = None if args.no_art or args.no_cover else _cover_painter(args, definition, card_set)
     sheets = args.art_sheets or _art_sheets_path(definition.id)
@@ -291,7 +308,7 @@ def main(argv: list[str] | None = None) -> int:
         build_pack(
             definition, args.definition / "overrides.json", metadata, detector, options, descriptions, sounds,
             card_set=card_set, joined=joined, artist=artist, art_sheets=sheets, lore=lore, lore_review=lore_review, cover_painter=cover_painter,
-            patch_artist=patch_artist, silhouette_maker=silhouette_maker,
+            patch_artist=patch_artist, silhouette_maker=silhouette_maker, reference_picker=reference_picker, export_references=args.export_references,
         )
     except (MissingAPIKey, RateLimited, RequestBudgetExceeded, XenoCantoBusy, XenoCantoError) as error:
         logging.getLogger("packbuilder").error("sounds stopped the build: %s", error)
@@ -383,21 +400,29 @@ def _cover_painter(args: argparse.Namespace, definition: PackDefinition, card_se
     return CoverPainter(ComfyClient(args.comfy), pack_id=definition.id, theme=theme, lock=CoverLock.load(args.definition / LOCK_FILE), cache_dir=args.cache / "covers")
 
 
-def _patch_artist(args: argparse.Namespace, definition: PackDefinition):
-    """The patch step (#133) for a pack whose edition has a patch in art/patch-prompts.json and whose pack art's lock
-    names its reference birds; None otherwise (the pack keeps its pack art until its references exist)."""
-    from packbuilder.comfy import ComfyClient
-    from packbuilder.pack_art import LOCK_FILE as ART_LOCK
+def _isolate(args: argparse.Namespace) -> int:
+    """The reference birds a build exported (#58), isolated where ComfyUI is."""
+    import json
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
+    definition = PackDefinition.load(args.definition / "pack.json")
+    todo = json.loads(args.todo.read_text())
+    isolated = _artist(args, definition).isolate_exported(todo)
+    print(f"{definition.id} reference birds: {isolated} isolated of {len(todo)} listed", file=sys.stderr)
+    return 0
+
+
+def _has_patch(definition: PackDefinition) -> bool:
+    """Whether the pack's edition has a patch in art/patch-prompts.json: its patch is then its only painting."""
     from packbuilder.patch_art import PatchPrompts
 
-    if definition.id not in PatchPrompts.load().editions or not (args.definition / ART_LOCK).exists():
-        return None
-    return _make_patch_artist(args, definition, ComfyClient(args.comfy))
+    return definition.id in PatchPrompts.load().editions
 
 
-def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, client):
+def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, client, art_lock=None):
     """The patch step over the pack's locks, with each species' setting, pinned reference and markings from overrides.json,
-    and the detector found only if a pinned reference has to be isolated."""
+    and the detector found only if a pinned reference has to be isolated. `art_lock` is the build's own pack-art lock,
+    which its reference step has just written; None reads the committed one."""
     from packbuilder.definition import load_overrides
     from packbuilder.detector import BirdDetector, ensure_model
     from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
@@ -416,7 +441,7 @@ def _make_patch_artist(args: argparse.Namespace, definition: PackDefinition, cli
             raise ValueError("no bird detected in the pinned reference photo")
         return max(detections, key=lambda d: d.score).box
 
-    return PatchArtist(client, pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE), art_lock=ArtLock.load(args.definition / ART_LOCK),
+    return PatchArtist(client, pack_id=definition.id, lock=PatchLock.load(args.definition / LOCK_FILE), art_lock=art_lock or ArtLock.load(args.definition / ART_LOCK),
                        cache_dir=args.cache / "art", pins=pins, originals=args.cache / "photos" / "original", find_bird=find_bird)
 
 
@@ -425,12 +450,18 @@ def _silhouette_maker(args: argparse.Namespace, definition: PackDefinition):
     from packbuilder.definition import load_overrides
     from packbuilder.pack_art import LOCK_FILE as ART_LOCK, ArtLock
     from packbuilder.patch_art import LOCK_FILE as PATCH_LOCK, PatchLock
-    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, SilhouetteMaker, pins_in, sources
+    from packbuilder.silhouettes import LOCK_FILE, SilhouetteLock, SilhouetteMaker, fills_in, pins_in, sources
 
-    if not (args.definition / PATCH_LOCK).exists() and not (args.definition / ART_LOCK).exists():
+    if not (args.definition / PATCH_LOCK).exists() and not (args.definition / ART_LOCK).exists() and not _has_patch(definition):
         return None
-    birds = sources(PatchLock.load(args.definition / PATCH_LOCK), ArtLock.load(args.definition / ART_LOCK), pins_in(definition, load_overrides(args.definition / "overrides.json")))
-    return SilhouetteMaker(pack_id=definition.id, lock=SilhouetteLock.load(args.definition / LOCK_FILE), sources=birds, cache_dir=args.cache / "art")
+    overrides = load_overrides(args.definition / "overrides.json")
+    pins = pins_in(definition, overrides)
+
+    def birds():  # read when the step starts: the same build may have isolated the birds and painted the patches
+        return sources(PatchLock.load(args.definition / PATCH_LOCK), ArtLock.load(args.definition / ART_LOCK), pins)
+
+    return SilhouetteMaker(pack_id=definition.id, lock=SilhouetteLock.load(args.definition / LOCK_FILE), sources=birds, cache_dir=args.cache / "art",
+                           fill_holes=fills_in(definition, overrides))
 
 
 def _silhouettes(args: argparse.Namespace) -> int:
@@ -508,8 +539,11 @@ def _hero_candidates(args: argparse.Namespace) -> int:
     except KeyError as error:
         print(error.args[0], file=sys.stderr)
         return 1
-    metadata = APIMetadata(definition.place_ids, args.cache, created_before=definition.created_before)
-    print(candidate_sheet(definition, load_overrides(args.definition / "overrides.json"), species, metadata, BirdDetector(ensure_model(args.cache)), args.cache, args.out, args.top), file=sys.stderr)
+    from packbuilder.definition import wider_places
+
+    overrides = load_overrides(args.definition / "overrides.json")
+    metadata = APIMetadata(definition.place_ids, args.cache, created_before=definition.created_before, wider=wider_places(definition.species, overrides))
+    print(candidate_sheet(definition, overrides, species, metadata, BirdDetector(ensure_model(args.cache)), args.cache, args.out, args.top), file=sys.stderr)
     return 0
 
 
@@ -658,7 +692,7 @@ def _mascot_assets(args: argparse.Namespace) -> int:
 def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
     """The lore step (issue #56): writes what `lore.lock.json` lacks, or what --regenerate-lore names, through the
     Anthropic API; the key is read only when a request is needed."""
-    from packbuilder.lore import ALL, DEFAULT_INTERVAL, LOCK_FILE, MODEL, AnthropicLoreClient, LoreLock, LoreWriter, api_key_from_environment
+    from packbuilder.lore import ALL, DEFAULT_INTERVAL, LOCK_FILE, MODEL, AnthropicLoreClient, LoreLock, LoreWriter, api_key_from_environment, shared_lore
 
     model = args.lore_model or MODEL
     lock = LoreLock.load(args.definition / LOCK_FILE)
@@ -680,6 +714,7 @@ def _lore_writer(args: argparse.Namespace, definition: PackDefinition):
         lock=lock, client_factory=lambda: AnthropicLoreClient(api_key_from_environment(), model), model=model,
         regenerate=species_ids(args.regenerate_lore, "--regenerate-lore"), regenerate_titles=species_ids(args.regenerate_title, "--regenerate-title"),
         titles=not args.no_titles, interval=args.lore_interval if args.lore_interval is not None else DEFAULT_INTERVAL, budget=args.lore_budget,
+        shared=shared_lore(args.definition.resolve().parent, args.definition.resolve().name),
     )
 
 
