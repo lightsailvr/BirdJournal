@@ -1,4 +1,5 @@
-// Bump the marketing version when striking a release from dev to main.
-MARKETING_VERSION = 0.1.0
+// The marketing version moves when a release is struck from dev to main, and `scripts/release.py prepare <version>` moves it,
+// with the release's notes (docs/agents/release.md): the "What's new" card only shows notes written for the version it's built as.
+MARKETING_VERSION = 0.2.0
 // Match Xcode's generated keys to Cloud before plist processing; local builds fall back to 1.
 CURRENT_PROJECT_VERSION = $(CI_BUILD_NUMBER:default=1)

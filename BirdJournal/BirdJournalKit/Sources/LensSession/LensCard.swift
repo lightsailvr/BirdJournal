@@ -106,6 +106,24 @@ public struct LensSoundRow: Sendable, Equatable {
     public var words: Int { label.words }
 }
 
+/// One row of the page that names a photo by voice (issue #194): a bird the words may name, or one of the two ways on.
+/// As on the species list, the app moves the highlight and a tap chooses; rows are not tappable on the display.
+public struct LensChoiceRow: Sendable, Equatable {
+    /// A bird's common name, "Say it again" or "Name it later".
+    public var label: String
+    /// "New patch" for a bird whose patch the naming would sew.
+    public var detail: String?
+    public var isSelected: Bool
+
+    public init(label: String, detail: String?, isSelected: Bool) {
+        self.label = label
+        self.detail = detail
+        self.isSelected = isSelected
+    }
+
+    public var words: Int { label.words + (detail?.words ?? 0) }
+}
+
 /// One element of a card, in Display DSL terms.
 public enum LensElement: Sendable, Equatable {
     /// The one-line strip of a species card: species count and position on the photo page, and who is calling now.
@@ -123,12 +141,23 @@ public enum LensElement: Sendable, Equatable {
     case button(LensCardButton)
     /// The saved line above "Add another" once the species is added, with a check.
     case saved(String)
-    /// The rows of the species list's current page, one selected.
+    /// The "Capture a sighting" row above the birds on every page of the species list (issue #193), highlighted like a
+    /// bird's row when the highlight is on it.
+    case capture(label: String, isSelected: Bool)
+    /// The rows of the species list's current page, one selected unless the capture row is.
     case list([LensListRow])
     /// A species' reference clips on its sounds page, the next one marked.
     case sounds([LensSoundRow])
     /// The live camera picture on the viewfinder page; the adapter fills it with the stream's latest frame.
     case viewfinder
+    /// The photo just taken, small, on "Say the bird's name" (issue #194); the adapter fills it, or leaves it out.
+    case capturedPhoto
+    /// The mark of a photo being taken, from the tap until the glasses have it: a frame's four corners, drawn as large
+    /// as the lens, which the adapter draws. It is the wearer's cue that the tap was taken (2026-11-12: the glasses'
+    /// photo mode makes no sound, and a sound from the phone would come seconds late).
+    case shutter
+    /// The rows a photo is named from: the birds the words heard may be, then "Say it again" and "Name it later".
+    case choices([LensChoiceRow])
 }
 
 /// A card, described without the toolkit: one column of elements, sent whole as the single root `FlexBox` of a
@@ -163,10 +192,12 @@ extension LensElement {
         switch self {
         case .status(let text), .heading(let text), .body(let text), .passage(let text), .meta(let text), .saved(let text): text.words
         case .title(let name, let detail): name.words + detail.words
+        case .capture(let label, _): label.words
         case .button(let button): button.label.words
         case .list(let rows): rows.reduce(0) { $0 + $1.words }
         case .sounds(let rows): rows.reduce(0) { $0 + $1.words }
-        case .photo, .viewfinder: 0
+        case .choices(let rows): rows.reduce(0) { $0 + $1.words }
+        case .photo, .viewfinder, .capturedPhoto, .shutter: 0
         }
     }
 }

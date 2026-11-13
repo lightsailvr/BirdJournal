@@ -13,7 +13,8 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       `lightsailvr/meta-wearables-dat-ios` (same 1.0.0 revision) so Xcode Cloud can fetch it.
       Products by phase: `MWDATCore` + `MWDATMockDevice` (always); `MWDATCamera` (audio + camera);
       `MWDATDisplay` (lens cards); `MWDATInputs` (Neural Band nav/select/drag, experimental);
-      `MWDATMockDeviceTestClient` (UI-test target only).
+      `MWDATMockDeviceTestClient` (UI-test target only). `MWDATSpeech` (dictation of a bird's name on the lens,
+      experimental) since #194, in the app and its unit tests.
 - [x] Deployment target ≥ iOS 17.2. Decided: iOS 27.0 (DECISIONS.md), Swift 6 language mode, strict concurrency.
 - [x] Bundle ID with **no dash** (DAT rejects `-`): `com.matthewcelia.mybirdjournal`.
 - [x] Info.plist: URL scheme + `MWDAT` dict (`AppLinkURLScheme`, `MetaAppID` empty/0 for Dev Mode, `ClientToken`, `TeamID`),
@@ -22,7 +23,11 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       `UISupportedExternalAccessoryProtocols` = com.meta.ar.wearable, `NSBluetoothAlwaysUsageDescription`,
       `NSLocalNetworkUsageDescription`, `NSBonjourServices` = _bonjour._tcp, `NSMicrophoneUsageDescription`.
       App Store Connect also wants `NSCameraUsageDescription` and `NSSpeechRecognitionUsageDescription` (ITMS-90683):
-      the toolkit references those APIs even though the app never asks for either permission.
+      the toolkit references those APIs. Since #186 the app does ask for the phone's camera, for "Capture a sighting",
+      and the camera text says so. Since #194 the app does use speech: the toolkit's Speech capability hears a bird's name
+      on the glasses, which recognise it themselves, so iOS's own speech-recognition question should never appear on a
+      phone (Mock Device Kit's live source, the host's recogniser, is the one path that would ask). The text now says
+      what the feature is instead of denying it; whether iOS ever shows it is on the #195 walk (step 16).
       Done in #3: `BirdJournal/Info.plist` (outside the synchronized source folder), merged with the generated keys.
 - [x] `Wearables.configure()` at launch; `.onOpenURL` forwards links containing `metaWearablesAction` to `Wearables.shared.handleUrl`.
 - [x] Wearables Developer Center: iOS integration created. Universal link field: not needed for Dev Mode; use custom scheme `birdjournal://` now, add an https universal link before Beta distribution.
@@ -31,6 +36,9 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
 - [ ] Meta AI app (iOS) **v290+** — check App Store update.
 - [ ] Meta Ray-Ban Display firmware **v128+** — Meta AI app > Devices > glasses > gear > General > About > Version.
 - [ ] Neural Band paired (needed for select/nav on the lens).
+- [ ] Speech enabled for the app in the Wearables Developer Center (#194: the DAT docs' Speech guide asks for it before the
+      capability starts; experimental, so Dev Mode and the Beta channel only). Without it, expect the lens to go from
+      "Say the bird's name" to "Photo saved" with "Speech unavailable" or "Speech error" in the glasses log.
 - [ ] DAT glasses app installed on the Display glasses (Dev Mode screen has an Install button; wear the glasses, keep Meta AI open ~10 s, accept the Wi-Fi prompt).
 
 ## Developer Mode
@@ -107,6 +115,23 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
       `TEST_RUNNER_BIRDJOURNAL_MDK_STRESS=40`). With the old teardown the link wedged at cycle 7; with the settle (wait for
       the device list to empty, then 300 ms) 40 of 40 passed, with or without the unpair. Recovery once wedged: a new test
       host process (kill the run, `simctl shutdown` the simulator); the script's watchdog does this.
+
+- [x] Found in #194 (Speech on the mock, `glasses.services.speech`, with the `speech` and `mockdevice-testing` skills and
+      `search_dat_docs`): `session.addSpeech()` on the run's started session returns a `Speech` beside Display, Inputs and
+      a stand-in stream, and `removeSpeech()` then `addSpeech()` again on the same session works, so one dictation can
+      follow another ("Say it again"). After `start()` the state goes `.starting`, `.started`; `isListening` is true a
+      moment later and false after `stop()`. `simulateTranscription(text:isFinal:confidence:)` arrives on
+      `transcriptionPublisher` at once, partial or final (the docs: dropped while Speech is not listening).
+      `simulateError(errorCode: 5, message:)` arrives on `errorPublisher` as an error that reads "Unexpected error" (the
+      code is the recogniser's raw one, not a `SpeechError`). **`simulateCompletion()` reports nothing to the app**: no
+      state change and no transcription, so a dictation the mock completes ends at the app's own silence limit, and
+      Speech stopping by itself (`.stopped`, which the docs say real glasses do after inactivity or a timeout) cannot be
+      staged; `DictationProgressTests` holds that path as a value. `removeSpeech()` on a session the glasses already
+      ended throws "Session has already been stopped", which is harmless.
+      `MockDeviceKit.shared.permissions.set(.microphone, .denied)` makes `checkPermissionStatus(.microphone)` answer
+      `.denied` mid-session, and `setRequestResult` sets the request's answer.
+      **Not on the mock**: a real voice, real partial results and their timing, whether Speech and the camera stream's
+      audio coexist (the mock's stream carries no audio at all), and what the glasses do at the end of an utterance.
 
 ## Local verification steps (in order)
 1. Build the untouched project for the simulator — baseline compiles.
@@ -239,6 +264,133 @@ Target: iOS (Xcode project `BirdJournal/BirdJournal.xcodeproj`, SwiftUI). Androi
      list Bird Journal; note what it says), and if it does, whether it covers or interrupts the app's lens pages. If the
      glasses mirror it, a friend's push may show twice on the lens (the system's copy and the banner): record it, and
      DECISIONS.md decides whether the banner stays.
+15. [ ] Capture a sighting from the lens (issue #193; the hardware walk is #195), from "Listen with the glasses":
+   - **The row.** Before any bird is heard the species list reads "No species yet", "Birds appear as they call." and a
+     highlighted "Capture a sighting" row. With birds on it the row is above the first bird and the highlight is on the
+     first bird; one swipe up moves it to the row, a swipe down or right moves it back. Record whether the row's
+     icon (the viewfinder's four corners) reads as one, and whether a full page (the row and five birds, with
+     "Page 1 of 2." on the hint line; six species heard) fits the lens without anything cut at the bottom. On the mock
+     it takes about 500 of the 600 pixels.
+   - **The viewfinder.** A tap on the highlighted row opens it on the listening stream's frames with the journal's crop
+     frame, "Capture a sighting" and "Tap: take the photo · swipe right: back". One tap on the row opens it and it
+     stays: nothing is taken by the same tap (the echo window, as for "Add to my list"). A swipe returns to the list and
+     nothing appears on the phone.
+   - **The photo.** A tap on the viewfinder shows "Saving the photo…", then "Photo saved" / "Name it on your phone.".
+     Note the time between the two (the in-stream photo crosses Bluetooth; `photo taken in N s` in the camera log). On
+     the phone the photo is under "Seen this run" as "Unnamed sighting · Your photo" while the run is on, in the run's
+     review after Stop, and under "To name" in the Collection. Name it there: its page says "Seen, photographed with
+     Ray-Ban Display", with the place of the walk and the time of the tap.
+   - **No photo.** If a tap lands while the camera is off (right after a clip, or with the stream down), the lens shows
+     "No photo taken" and nothing is on the phone. Record whether it happens when the viewfinder was showing a picture.
+   - **Interruptions.** Take the glasses off with the capture viewfinder open and put them back on: the viewfinder is
+     back and still waits for a tap. With the phone's Developer tools, send a friend's find while on the viewfinder: it
+     shows only once back on the list.
+   - Record the answers in DECISIONS.md, "Seen birds: capture a sighting from the lens".
+
+16. [ ] Say the bird's name on the lens (issue #194; the hardware walk is #195), a Debug build, from "Listen with the
+   glasses". Everything here was built against Mock Device Kit's injected transcriptions; none of it has heard a voice.
+   The glasses log (the Developer screen's glasses run, Console category `glasses-audio`, and the day's file, step 12)
+   says what Speech did: "dictation: listening", "dictation: Speech started" and each later state, then
+   `dictation: heard "<words>"` (the words only in a Debug build), or "nothing heard in time", "Speech stopped with
+   nothing heard", "Speech error: …", "Speech unavailable: …".
+   - **Before the walk**: Speech is enabled for the app in the Wearables Developer Center (above). The glasses'
+     microphone permission is the one the run already asks for at Start, so nothing new is asked in Meta AI.
+   - **Does Speech run beside the camera stream?** (#185's first open question.) Take a photo from the lens: "Capture a
+     sighting", a tap, a tap. After "Saving the photo…" the lens reads "Say the bird's name" with the photo and
+     "Listening…". Say "Black Phoebe". Record whether the words appear, whether the birds are listed, and the log lines.
+     - If the lens always ends on "Photo saved" (the log says a Speech error, unavailable, or nothing heard) with the
+       stream on: Settings → Developer → "Dictation on the lens" → turn **off** "Keep the camera stream on while saying a
+       name", and take another photo. The log then reads "holding the stream for a dictation" before "dictation:
+       listening", and "stream restart" / "stream back" after. Record which setting hears a name. With it off, record how
+       long listening is away (the phone's waveform is flat) and whether the stream ever fails to come back.
+     - If it works with the stream on: does the phone's waveform keep moving during a dictation, and does the wearer's
+       own voice ever put a bird on the species list (the run is still listening, and nothing suppresses it)?
+     - Either way, record the answer in DECISIONS.md and set the switch's default to match
+       (`DictationSettings.keepsStreamByDefault`: a Release build never reads the Developer screen's toggle, so the
+       default in code is what ships).
+   - **Partial and final words.** Do words appear while speaking (partial results), and does a final result come by
+     itself at a pause? If no final ever comes, the lens takes the words as final 3 s after the last one
+     (`GlassesDictation.Limits.pause`): record the wait from the end of the name to the birds, and whether 3 s is right.
+     Say nothing: the lens gives up after 8 s (`Limits.silence`) and reads "Photo saved". Record whether Speech stops by
+     itself sooner ("Speech stopped with nothing heard"). Say "Anna's humming" and stop: a name cut off part way through
+     a word should still offer its bird (the review of #185).
+   - **What the recogniser writes.** Say ten birds of the walk, among them Anna's Hummingbird, Black Phoebe, California
+     Towhee, Bushtit, Lesser Goldfinch, Red-tailed Hawk, Mourning Dove, and one outside the field guide. For each, note
+     what the log says was heard and whether the bird was the first of the three offered, in the three, or missing. A
+     name that is never found goes into `SpokenNameTests` as it was written, and the matcher is fixed there.
+   - **The pages.** The birds' page (the "You said" line, three birds, "Say it again", "Name it later", the hint) fits the
+     lens; on the mock it is about 420 of the 600 pixels, and "Say the bird's name" with its photo about 450. "New
+     patch" is beside a bird you have no patch of here and not beside one you have. Swipe down and up move the highlight and stop at the ends; a tap on a bird shows "Added", the
+     bird, "Seen", the set (no such line outside every set), and "New patch, sewn on your phone." or "Seen again · N
+     times". "Say it again" listens again
+     (does Speech come back on the same session every time?). "Name it later", and a tap while the lens listens, read
+     "Photo saved" / "Name it on your phone.". Words no bird answers to read "No bird by that name".
+   - **Echoed taps.** A tap that lands within a second of the press that opened "Say the bird's name" (after "Say it
+     again"), "Photo saved" or "Added" is taken for that press again and dropped, as on the viewfinders. Record whether
+     a select on a row is ever delivered twice (the Developer screen's input log), and whether a deliberate second tap
+     ever feels swallowed.
+   - **The phone gets there first.** With the birds listed on the lens, name the photo on the phone (its row under
+     "Seen this run"), then tap a bird on the lens: it reads "Nothing to name" / "That photo was named or deleted on
+     your phone.", and swipe right is the list.
+   - **On the phone.** While the run is on, the named photo is under "Seen this run" with the bird's name and nothing
+     else happens on the phone. After Stop the stitch-in of a new patch plays once, as for an add on the lens. The
+     sighting's page says "Seen, photographed with Ray-Ban Display", at the place and time of the photo. Its photo is
+     shown at the journal's crop on its row, in "Name this bird" and on its page ("Your glasses snapshot"): check that
+     the bird sits where the viewfinder's frame had it, and that "View original photo" shows the whole frame.
+   - **Without the permission.** If Meta AI lets the microphone be taken away while a run is on, do it and take a photo:
+     the lens goes straight to "Photo saved", and the run's page on the phone shows "Say the bird's name on your glasses"
+     with "Allow in Meta AI", which opens Meta AI. If it cannot be taken away mid-run, record that: the offer then never
+     shows, since Start itself asks for the same permission.
+   - **A doff while the lens listens**: the lens comes back on "Photo saved", and the photo is on the phone.
+   - **iOS's speech-recognition question** never appears on the phone. If it does, note when, and the wording shown.
+   - Record the answers in DECISIONS.md, "Seen birds: say the bird's name on the lens".
+
+17. [ ] The capture's still (2026-11-12), a Debug build, from "Listen with the glasses". Pull the day's camera log
+   afterwards (step 12); every step below has a line in it.
+   - **The photo mode comes up.** Start a run. A second or so after "stream: streaming" the log reads "photo mode:
+     starting" and "photo mode: started". If it never reads "started", photos fall back to the stream ("photo: the
+     photo mode is …, taking it in the stream"): note it, that is the finding.
+   - **The shutter.** Swipe up to "Capture a sighting" (the hint reads "Tap: take a photo.") and tap. The lens reads
+     "Taking the photo…", then "Photo taken" / "Sending it to your phone…", then "Say the bird's name" with the
+     photo. Note the seconds from the tap to "Photo taken" and to the photo. From the log: "stream set aside (N s,
+     stopped)", "still: first bytes N s after it was asked for", then "still taken in N s (bytes, W×H, …; the glasses'
+     time for it is N s after it was asked for, the crossing took N s; N s from the tap)", or "still not taken after
+     15.0 s" and any "photo mode error: …". **Whether the photo shows the moment of the tap or a later one** (move
+     your head just after tapping) is the thing to settle: a bird does not wait for a late shutter.
+   - **The photo.** On the phone, the photo under "Seen this run": is it sharp enough to name the bird from, at the
+     journal's crop and in "View original photo"?
+   - **Right after Start.** Tap the row within five seconds of Start: the lens waits on "Saving the photo…" ("the photo
+     waited N s for the camera" in the log) and then has the photo.
+   - **The cues.** At the tap the lens shows a large bright frame over "Hold still", then "Photo taken"; two rising
+     notes sound just before listening is back. Note whether the frame appears at once, and whether the notes are
+     heard, in the glasses or from the phone. To learn when the shutter really fires, photograph a clock that shows
+     seconds and compare it with the log's "capture: listening paused" line.
+   - **The percentage** moves in tens while the photo crosses ("still: 40% at N s (bytes)" in the log, which is the
+     link's speed), and the photo is not given up on while it moves.
+   - **Listening after it.** The lens reads "Photo saved" / "Name it on your phone." and does not ask for a name; the
+     log reads "capture: listening resumes" and "stream back (attempt 1, N s)". Then a bird that calls is listed
+     again. Take three photos in a row and check the stream is back after each, and that each photo on the phone is
+     the scene of its own tap (look somewhere different for each).
+   - **More than one.** On the capture page tap twice more while the first photo crosses. The page reads "3 photos
+     taken" and "Sending photo 1 of 3…"; the log has "still N: asked for … N in the queue" at each tap, with no
+     "photo mode error" after it (an error there means the glasses refuse a photo while another crosses: note it).
+     Each photo on the phone is the scene of its own tap.
+   - **Away and back.** Swipe right to the species list while photos cross, then select "Capture a sighting": the page
+     is back with the progress, and no photo is taken.
+   - **Stop.** Swipe down on the capture page: "Stop sending?" Swipe right keeps sending. Swipe down again and tap: the
+     list, the chime, listening back, and no photo for the ones not yet in. Take a photo afterwards and check whether
+     a stopped one arrives with it ("stills: the earlier photo arrived, kept").
+   - **A run dismissed.** End the run and dismiss its review without naming: the photos are in the Collection, under
+     "To name".
+   - **On the phone.** In "Name this bird", tap the photo: it opens full screen, whole, and pinches to zoom.
+   - **Sizes.** Settings → Glasses → "Photos from the glasses": take one photo each at Full detail (the default),
+     Standard and Small, from a fresh run each, and note each one's "still taken in N s", its "still: N% at N s" lines
+     and how the photo looks. The words under the picker claim a minute and ten seconds: correct them to what is
+     measured.
+   - **The picture fits.** The photo on "Say the bird's name" and, from "Add to my list", the viewfinder's picture are
+     whole on the lens with nothing cut at the bottom, dark bands left and right. If so, the glasses stretch a `.fill`
+     image to its width: record it in DECISIONS.md, "Toolkit facts".
+   - Record the answers in DECISIONS.md, "The capture's camera".
 
 ## Facts that change the spec (see grill questions)
 - No standalone microphone capability. Ambient audio only arrives in-band on a **camera stream** (experimental, dev/beta channels only). HFP is 8 kHz mono and beamformed to the wearer's voice — useless for birdsong.

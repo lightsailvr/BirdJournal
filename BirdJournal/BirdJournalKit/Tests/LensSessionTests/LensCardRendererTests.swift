@@ -19,14 +19,27 @@ struct LensCardRendererTests {
         return order
     }()
 
-    static func render(_ page: LensPage, selection: Int = 0, saved: Set<Int> = []) -> LensCard {
-        LensCardRenderer.render(page, stack: stack, order: quietOrder, selection: selection, saved: saved, profile: profile)
+    static func render(_ page: LensPage, selection: Int = 0, captureSelected: Bool = false, saved: Set<Int> = [], naming: LensNaming? = nil, named: LensNamedCapture? = nil) -> LensCard {
+        LensCardRenderer.render(page, stack: stack, order: quietOrder, selection: selection, captureSelected: captureSelected, saved: saved, naming: naming, named: named, profile: profile)
     }
 
-    static func render(_ page: LensPage, stack: CandidateStack, at time: Double, selection: Int = 0, saved: Set<Int> = [], profile: @escaping (Species) -> SpeciesProfile? = profile) -> LensCard {
+    static func render(_ page: LensPage, stack: CandidateStack, at time: Double, selection: Int = 0, captureSelected: Bool = false, saved: Set<Int> = [], profile: @escaping (Species) -> SpeciesProfile? = profile) -> LensCard {
         var order = SpeciesListOrder()
         order.update(with: stack, at: time)
-        return LensCardRenderer.render(page, stack: stack, order: order, selection: selection, saved: saved, profile: profile)
+        return LensCardRenderer.render(page, stack: stack, order: order, selection: selection, captureSelected: captureSelected, saved: saved, profile: profile)
+    }
+
+    /// The "Capture a sighting" row on top of the list (issue #193).
+    static func captureRow(selected: Bool = false) -> LensElement {
+        .capture(label: "Capture a sighting", isSelected: selected)
+    }
+
+    /// The bird rows of a list card.
+    static func rows(_ card: LensCard) -> [LensListRow] {
+        for element in card.elements {
+            if case .list(let rows) = element { return rows }
+        }
+        return []
     }
 
     static let saveButton = LensElement.button(LensCardButton(label: "Add to my list", action: .save))
@@ -36,6 +49,7 @@ struct LensCardRendererTests {
     static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1),
         .problem(.noLocation), .problem(.connectionLost), .friend(Fakes.mayasPhoebe),
+        .captureSaving, .captureCancel, .captureSaved, .problem(.photoNotTaken), .problem(.photoGone),
     ]
 
     @Test("every page is one screenful inside the word budget; the details page has the larger one of its small-style text", arguments: pages)
@@ -54,13 +68,14 @@ struct LensCardRendererTests {
 
     @Test("the list counts the species heard and has one row per species, newest last, with the selection marked")
     func list() {
-        #expect(Self.render(.list, stack: CandidateStack(), at: Fakes.quiet).screenfuls == [[
-            .heading("No species yet"), .meta("Birds appear as they call."),
+        #expect(Self.render(.list, stack: CandidateStack(), at: Fakes.quiet, captureSelected: true).screenfuls == [[
+            .heading("No species yet"), .meta("Birds appear as they call. Tap: take a photo."), Self.captureRow(selected: true),
         ]])
         #expect(Self.render(.list, stack: Fakes.stack(1), at: Fakes.quiet).screenfuls[0][0] == .heading("1 species heard"))
         #expect(Self.render(.list, selection: 1).screenfuls == [[
             .heading("3 species heard"),
             .meta("Swipe down to choose, tap to open."),
+            Self.captureRow(),
             .list([
                 LensListRow(index: 0, commonName: "Black Phoebe", confidence: "80%", hasPhoto: true, isSaved: false, isSelected: false, isCalling: false),
                 LensListRow(index: 1, commonName: "House Finch", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: true, isCalling: false),
@@ -71,8 +86,7 @@ struct LensCardRendererTests {
 
     @Test("saved species are marked on the list")
     func listMarksSaved() {
-        guard case .list(let rows) = Self.render(.list, saved: [1]).screenfuls[0][2] else { Issue.record("no rows"); return }
-        #expect(rows.map(\.isSaved) == [false, true, false])
+        #expect(Self.rows(Self.render(.list, saved: [1])).map(\.isSaved) == [false, true, false])
     }
 
     @Test("a long list shows the page of rows holding the selection, and says which page it is")
@@ -83,7 +97,7 @@ struct LensCardRendererTests {
             let card = Self.render(.list, stack: stack, at: Fakes.quiet, selection: selection, profile: { _ in nil })
             #expect(card.screenfuls.count == 1)
             #expect(card.screenfuls[0].wordCount <= LensCardRenderer.wordBudget)
-            guard case .list(let rows) = card.screenfuls[0][2] else { Issue.record("no rows"); return (card.screenfuls[0][1], [], []) }
+            let rows = Self.rows(card)
             return (card.screenfuls[0][1], rows.map(\.index), rows.filter(\.isSelected).map(\.index))
         }
         let first = rows(selection: 4)
@@ -94,6 +108,218 @@ struct LensCardRendererTests {
         #expect(second.hint == .meta("Swipe down to choose, tap to open. Page 2 of 3."))
         let last = rows(selection: 11)
         #expect(last.indices == [10, 11] && last.selected == [11])
+    }
+
+    // MARK: - Capture a sighting (issue #193)
+
+    @Test("the capture row is above the first bird on every page of the list; when it has the highlight no bird does")
+    func captureRow() {
+        let chosen = Self.render(.list, selection: 0, captureSelected: true)
+        #expect(chosen.elements[2] == Self.captureRow(selected: true))
+        #expect(chosen.elements[1] == .meta("Tap: take a photo."), "the hint says what a tap does on the row")
+        #expect(Self.rows(chosen).map(\.isSelected) == [false, false, false])
+
+        let species = (0..<12).map { Species(index: $0, scientificName: "Genus species\($0)", commonName: "Winded Bird \($0)", taxonomicClass: "Aves") }
+        let stack = CandidateStack(candidates: species.map { Fakes.candidate($0) })
+        for selection in [0, 6, 11] {
+            let card = Self.render(.list, stack: stack, at: Fakes.quiet, selection: selection, profile: { _ in nil })
+            #expect(card.elements[2] == Self.captureRow(), "page of row \(selection)")
+            #expect(Self.rows(card).filter(\.isSelected).map(\.index) == [selection])
+            #expect(card.wordCount <= LensCardRenderer.wordBudget)
+        }
+        // With the highlight on the capture row the list shows its first page: the row is above the first bird.
+        let top = Self.render(.list, stack: stack, at: Fakes.quiet, selection: 0, captureSelected: true, profile: { _ in nil })
+        #expect(Self.rows(top).first?.index == 0)
+    }
+
+    @Test("after the tap the lens says the photo is being taken, then that the glasses have it, then that it is saved and named on the phone")
+    func capturedPages() {
+        var machine = LensStateMachine()
+        let elements = { LensCardRenderer.render(machine, profile: Self.profile).elements }
+        _ = machine.apply(.tap)
+        #expect(elements() == [.shutter, .heading("Hold still"), .meta("Taking the photo…")])
+        _ = machine.shutterEnded()
+        #expect(elements() == [
+            .heading("Photo taken"),
+            .body("Waiting for it from the glasses…"),
+            .meta("Listening is paused until it arrives."),
+            .meta("Tap: another photo · down: stop · right: all species"),
+        ])
+        _ = machine.captureTaken(1, sent: 0.5)
+        #expect(elements()[1] == .body("Sending it to your phone… 50%"))
+
+        // Another photo: the page counts them, and says which one is crossing.
+        _ = machine.apply(.tap)
+        _ = machine.shutterEnded()
+        #expect(elements()[0] == .heading("2 photos taken"))
+        #expect(elements()[1] == .body("Sending photo 1 of 2 to your phone… 50%"))
+        #expect(elements()[2] == .meta("Listening is paused until they arrive."))
+        _ = machine.apply(.swipeDown)
+        #expect(elements() == [
+            .heading("Stop sending?"),
+            .body("2 photos have not reached your phone and may be lost."),
+            .meta("Tap: stop and listen · swipe right: keep sending"),
+        ])
+        _ = machine.apply(.swipeRight)
+        _ = machine.captureSaved(1, dictation: false)
+        #expect(elements()[1] == .body("Waiting for photo 2 of 2 from the glasses…"))
+        _ = machine.captureSaved(2, dictation: false)
+        #expect(elements() == [.heading("2 photos saved"), .body("Name them on your phone."), .meta("Tap or swipe right: all species")])
+        #expect(Self.render(.captureSaved).elements == [
+            .heading("Photo saved"),
+            .body("Name it on your phone."),
+            .meta("Tap or swipe right: all species"),
+        ])
+    }
+
+    // MARK: - Saying the bird's name (issue #194)
+
+    /// "Say the bird's name", with `heard` so far.
+    static func listening(heard: String = "") -> LensNaming {
+        var naming = LensNaming(capture: 1, dictation: 1)
+        naming.heard = heard
+        return naming
+    }
+
+    /// The birds' page for `heard`, the row `highlight` highlighted.
+    static func listed(_ heard: String, _ matches: [LensNameMatch], highlight: Int = 0) -> LensNaming {
+        var naming = listening(heard: heard)
+        naming.matches = matches
+        naming.highlight = highlight
+        return naming
+    }
+
+    static let sayItAgain = "Say it again"
+    static let nameItLater = "Name it later"
+
+    @Test("\"Say the bird's name\" shows the photo, that the glasses are listening, then the words as they are heard, and what a tap does")
+    func namingPage() {
+        #expect(Self.render(.captureNaming, naming: Self.listening()).elements == [
+            .heading("Say the bird's name"),
+            .capturedPhoto,
+            .meta("Listening…"),
+            .meta("Tap: name it later on the phone"),
+        ])
+        #expect(Self.render(.captureNaming, naming: Self.listening(heard: "black pho")).elements == [
+            .heading("Say the bird's name"),
+            .capturedPhoto,
+            .body("black pho"),
+            .meta("Tap: name it later on the phone"),
+        ])
+    }
+
+    @Test("the birds' page says what was heard and lists the birds it may be, \"New patch\" on those that would sew one, then \"Say it again\" and \"Name it later\"; one row is highlighted")
+    func matchesPage() {
+        #expect(Self.render(.captureMatches, naming: Self.listed("black phoebe", Fakes.matches)).elements == [
+            .status("You said: black phoebe"),
+            .choices([
+                LensChoiceRow(label: "Black Phoebe", detail: "New patch", isSelected: true),
+                LensChoiceRow(label: "Say's Phoebe", detail: nil, isSelected: false),
+                LensChoiceRow(label: "Eastern Phoebe", detail: "New patch", isSelected: false),
+                LensChoiceRow(label: Self.sayItAgain, detail: nil, isSelected: false),
+                LensChoiceRow(label: Self.nameItLater, detail: nil, isSelected: false),
+            ]),
+            .meta("Swipe down: next · tap: choose"),
+        ])
+        for highlight in 0..<5 {
+            let card = Self.render(.captureMatches, naming: Self.listed("black phoebe", Fakes.matches, highlight: highlight))
+            guard case .choices(let rows) = card.elements[1] else {
+                Issue.record("no rows")
+                return
+            }
+            #expect(rows.map(\.isSelected) == (0..<5).map { $0 == highlight })
+        }
+    }
+
+    @Test("words no bird answers to: the page says so, over the same two rows")
+    func noMatchPage() {
+        #expect(Self.render(.captureMatches, naming: Self.listed("flibber jibbet", [])).elements == [
+            .status("You said: flibber jibbet"),
+            .heading("No bird by that name"),
+            .choices([
+                LensChoiceRow(label: Self.sayItAgain, detail: nil, isSelected: true),
+                LensChoiceRow(label: Self.nameItLater, detail: nil, isSelected: false),
+            ]),
+            .meta("Swipe down: next · tap: choose"),
+        ])
+    }
+
+    @Test("\"Added\" names the bird, Seen, the set its patch is in, and what the add earned")
+    func addedPage() {
+        #expect(Self.render(.captureAdded, named: Fakes.namedPhoebe).elements == [
+            .title("Black Phoebe", detail: "Seen"),
+            .meta("Los Angeles"),
+            .saved("Added"),
+            .body("New patch, sewn on your phone."),
+            .meta("Tap or swipe right: all species"),
+        ])
+        #expect(Self.render(.captureAdded, named: LensNamedCapture(commonName: "House Finch", place: nil, earned: .seenAgain(count: 3))).elements == [
+            .title("House Finch", detail: "Seen"),
+            .saved("Added"),
+            .body("Seen again · 3 times"),
+            .meta("Tap or swipe right: all species"),
+        ])
+    }
+
+    @Test("a long ramble and three long names stay one screenful inside the word budget: what was heard is cut")
+    func namingBudget() {
+        let ramble = "well I think that one over there on the wire might just be a northern rough winged swallow or something like it"
+        let long = [
+            LensNameMatch(id: "a", commonName: "Northern Rough-winged Swallow", isNewPatch: true),
+            LensNameMatch(id: "b", commonName: "Black-crowned Night Heron", isNewPatch: true),
+            LensNameMatch(id: "c", commonName: "Greater White-fronted Goose", isNewPatch: true),
+        ]
+        for card in [
+            Self.render(.captureNaming, naming: Self.listening(heard: ramble)),
+            Self.render(.captureMatches, naming: Self.listed(ramble, long)),
+            Self.render(.captureMatches, naming: Self.listed(ramble, [])),
+            Self.render(.captureAdded, named: LensNamedCapture(commonName: "Northern Rough-winged Swallow", place: "San Francisco Bay Area", earned: .seenAgain(count: 12))),
+        ] {
+            #expect(card.screenfuls.count == 1)
+            #expect(card.wordCount <= LensCardRenderer.wordBudget, "\(card.wordCount) words")
+        }
+        #expect(Self.render(.captureNaming, naming: Self.listening(heard: ramble)).elements[2] == .body("well I think that one over there on…"))
+        #expect(Self.render(.captureMatches, naming: Self.listed(ramble, long)).elements[0] == .status("You said: well I think that one over…"))
+    }
+
+    @Test("a photo that was not taken is a problem page that says nothing was saved")
+    func photoNotTaken() {
+        #expect(Self.render(.problem(.photoNotTaken)).elements == [
+            .heading("No photo taken"),
+            .body("The camera was not ready, so nothing was saved. Open Capture a sighting again."),
+            .meta("Swipe right to continue"),
+        ])
+    }
+
+    // Review of #185, J5.
+    @Test("the card of a machine is the card of its page and its state: the list with the capture row highlighted, a saved bird's details, the birds a name may be, and \"Added\"")
+    func cardOfAMachine() {
+        var machine = LensStateMachine()
+        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements == [.heading("No species yet"), .meta("Birds appear as they call. Tap: take a photo."), Self.captureRow(selected: true)])
+
+        machine.update(with: Fakes.stack(3), at: Fakes.quiet)
+        _ = machine.apply(.swipeUp)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements.contains(Self.captureRow(selected: true)))
+
+        _ = machine.apply(.tap)
+        _ = machine.captureSaved(1, dictation: true)
+        machine.matched("black phoebe", Fakes.matches, dictation: 1)
+        _ = machine.apply(.swipeDown)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile) == Self.render(.captureMatches, naming: machine.naming))
+        #expect(machine.naming?.highlight == 1)
+
+        _ = machine.apply(.tap)
+        machine.captureNamed(1, as: Fakes.namedPhoebe)
+        #expect(LensCardRenderer.render(machine, profile: Self.profile) == Self.render(.captureAdded, named: Fakes.namedPhoebe))
+    }
+
+    @Test("a photo the phone named or deleted before the lens could is a problem page that says so, and not that the photo waits on the phone")
+    func photoGone() {
+        #expect(Self.render(.problem(.photoGone)).elements == [
+            .heading("Nothing to name"),
+            .body("That photo was named or deleted on your phone."),
+            .meta("Swipe right to continue"),
+        ])
     }
 
     // MARK: - Calling now (issue #42)
@@ -113,6 +339,7 @@ struct LensCardRendererTests {
         #expect(card.screenfuls == [[
             .heading("3 species heard"),
             .meta("Swipe down to choose, tap to open."),
+            Self.captureRow(),
             .list([
                 LensListRow(index: 2, commonName: "California Towhee", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: false, isCalling: true),
                 LensListRow(index: 1, commonName: "House Finch", confidence: "80%", hasPhoto: false, isSaved: false, isSelected: true, isCalling: true),
@@ -128,13 +355,13 @@ struct LensCardRendererTests {
         var candidates = species.map { Fakes.candidate($0, lastHeardAt: Double($0.index)) }
         candidates[0].lastHeardAt = 99
         let card = Self.render(.list, stack: CandidateStack(candidates: candidates), at: 100, selection: 11, profile: { _ in nil })
-        guard case .list(let rows) = card.screenfuls[0][2] else { Issue.record("no rows"); return }
+        let rows = Self.rows(card)
         #expect(rows.map(\.index) == [0, 11, 10, 9, 8])
         #expect(rows.map(\.isCalling) == [true, false, false, false, false])
         #expect(rows.map(\.isSelected) == [false, true, false, false, false])
         #expect(card.screenfuls[0][1] == .meta("Swipe down to choose, tap to open. Page 1 of 3."))
         let second = Self.render(.list, stack: CandidateStack(candidates: candidates), at: 100, selection: 6, profile: { _ in nil })
-        guard case .list(let secondRows) = second.screenfuls[0][2] else { Issue.record("no rows"); return }
+        let secondRows = Self.rows(second)
         #expect(secondRows.map(\.index) == [7, 6, 5, 4, 3])
         #expect(secondRows.map(\.isSelected) == [false, true, false, false, false])
         #expect(second.screenfuls[0][1] == .meta("Swipe down to choose, tap to open. Page 2 of 3."))

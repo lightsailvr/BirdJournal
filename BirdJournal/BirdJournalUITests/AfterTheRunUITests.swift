@@ -13,6 +13,11 @@ final class AfterTheRunUITests: XCTestCase {
         return clip
     }
 
+    /// A recap's label in its sentences: the date and the city if it's known, the time listened, the birds heard, the patches.
+    private static func sentences(_ label: String) -> [String] {
+        label.components(separatedBy: ". ")
+    }
+
     @MainActor
     private func recap(_ app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any)["run-recap"]
@@ -134,7 +139,10 @@ final class AfterTheRunUITests: XCTestCase {
         let card = recap(app)
         XCTAssertTrue(card.waitForExistence(timeout: 30), "the review didn't come back; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(card.label.contains("birds heard") || card.label.contains("bird heard"), card.label)
-        XCTAssertEqual(card.label, label, "the same run")
+        // The city comes from a geocoder, some time after the card: either reading may be from before it.
+        let (before, after) = (Self.sentences(label), Self.sentences(card.label))
+        XCTAssertEqual(after.dropFirst(), before.dropFirst(), "the same run: \(card.label), \(label)")
+        XCTAssertTrue(after[0].hasPrefix(before[0]) || before[0].hasPrefix(after[0]), "on the same day, with or without its city: \(card.label), \(label)")
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'new patch waiting'")).firstMatch.exists, "with its birds; screen: \(app.debugDescription.prefix(4000))")
 
         app.buttons["Done"].firstMatch.tap()
@@ -207,12 +215,23 @@ final class AfterTheRunUITests: XCTestCase {
         XCTAssertFalse(app.buttons["card-flip"].exists, "no page for a patch that isn't there")
     }
 
+    /// The album's on disk, as a birder's is, and the cold start has no `-seedBoard` or `-autoScreen`: those run once the app is
+    /// up, after a link that came with the launch has been answered (the launch waits for the collection, issue #175), so with
+    /// them the patch wasn't there yet when the link asked for it, and Listen was put back in front.
     @MainActor
     func testTheLinkOpensThePatchFromAColdStartToo() {
-        let app = launchBoard()
+        let album = "link-\(UUID().uuidString)"
+        let app = XCUIApplication()
+        app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES", "-seedBoard", "YES", "-autoScreen", "listen"]
+        app.launch()
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 30))
+        XCTAssertTrue(app.buttons["board-patch"].firstMatch.waitForExistence(timeout: 30), "no board was seeded; screen: \(app.debugDescription.prefix(4000))")
+        app.terminate()
+
+        app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES"]
         app.open(URL(string: Self.seeded)!)
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 30), "the patch didn't open; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Red-tailed Hawk'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor

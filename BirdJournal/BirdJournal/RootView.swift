@@ -158,7 +158,7 @@ struct RootView: View {
     @State private var isClearForReview = false
 
     /// A sheet, alert or the like is up. There are many, in many views, and no one place that knows of them all but UIKit.
-    private static var isSomethingPresented: Bool {
+    static var isSomethingPresented: Bool {
         UIApplication.shared.connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap(\.windows)
@@ -242,6 +242,9 @@ struct RootView: View {
         // Over the tabs and their bars. The run review sheet carries its own, since an add there happens over it, and while
         // it's up this one waits: two pages would sew the patch twice, each with its own haptics.
         .patchReveal(isCovered: run.isReviewing)
+        // What the release brought, the first time the app is opened after an update, and only with nothing else going on: it
+        // waits for the next quiet moment otherwise. Under the tint, so its button is the place's colour.
+        .whatsNewCard(isStageClear: !isUnderSplash && !run.state.isActive && !run.isReviewing && !run.hasCeremonyWaiting && run.reveal == nil && pendingPatch == nil && circles.pendingInvite == nil && pushes.pendingCircle == nil && !pushes.isExplaining)
         // The accent follows the place (issue #150), over the reveal too; a set's page and a patch's page set their own.
         .tint(place.setID.map(PatchEdition.tint(setID:)) ?? .moss)
         // The patches a glasses run sewed: once it's over and the app is in front, which may be a launch or two later.

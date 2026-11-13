@@ -1,8 +1,10 @@
 import Album
 import Foundation
 import Identification
+import ImageIO
 import OSLog
 import SwiftData
+import UniformTypeIdentifiers
 
 /// Writes confirmed sightings to the album (spec "Album store"): the frame goes to the `FrameStore`, the record to
 /// SwiftData. One per app, over the container the screens query.
@@ -49,24 +51,175 @@ final class SightingRecorder {
         source: SightingSource,
         method: SightingMethod = .heard
     ) throws -> Recorded {
-        let speciesID = candidate.species.birdnetLabel
-        let context = container.mainContext
-        let surviving = try context.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
-        let sets = sets()
-        let existing = CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
-        let sighting = Sighting(
-            speciesID: speciesID,
+        try write(Sighting(
+            speciesID: candidate.species.birdnetLabel,
             confirmedAt: confirmedAt,
             location: location,
             soundConfidence: Double(candidate.score),
             frameImagePath: try frame.map { try frames.write(jpeg: $0) },
             source: source,
             method: method
+        ))
+    }
+
+    /// Writes a capture (issue #188, of #185): the photo as it came, with when and where it was taken and the device that
+    /// took it. Called at the shutter, before any name, so nothing that happens next can lose the picture. It is no
+    /// sighting: no rarity is read, no patch is sewn, and nothing is told to anyone.
+    @discardableResult
+    func recordCapture(photo: Data, takenAt: Date, location: Coordinate?, source: SightingSource) throws -> Capture {
+        let path = try frames.write(photo, pathExtension: Self.pathExtension(of: photo))
+        let capture = Capture(takenAt: takenAt, location: location, photoPath: path, source: source)
+        let context = container.mainContext
+        context.insert(capture)
+        do {
+            try context.save()
+            return capture
+        } catch {
+            // No capture, so nothing would ever remove the file.
+            context.delete(capture)
+            try? FileManager.default.removeItem(at: frames.url(for: path))
+            throw error
+        }
+    }
+
+    /// Gives a capture written before its place was known that place (issue #191): with no run, a shutter can be quicker
+    /// than the phone's first fix.
+    func place(_ capture: Capture, at location: Coordinate) throws {
+        let context = container.mainContext
+        capture.location = location
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
+    /// Names a capture (issues #186 and #188, of #185): writes the sighting of `bird` it becomes, and the capture goes, in one
+    /// save. The sighting is Seen and marked as named by the birder, with no match score, at the capture's own time and place
+    /// and from its device, whenever it is named; the photo, the same file, is its original photo.
+    ///
+    /// Which of the sighting's photos it is follows the device that took it. One from the phone's camera or the library is
+    /// one of the birder's own (`attachedPhotoPaths`), shown whole. One taken from the lens is the sighting's glasses photo
+    /// (`frameImagePath`), as the photo of an add on the lens is, and so is shown everywhere at the journal's crop
+    /// (`FrameCrop.albumZoom`): the crop the lens's viewfinder marked when the wearer framed the bird.
+    ///
+    /// From there it is a sighting like any other: its rarity is read for that place and week, it is placed in its set, and
+    /// it sews its bird's patch there or adds to it.
+    @discardableResult
+    func name(_ capture: Capture, as bird: NameableBird) throws -> Recorded {
+        let isGlassesPhoto = capture.source == .glasses
+        let sighting = Sighting(
+            speciesID: bird.speciesID, confirmedAt: capture.takenAt, location: capture.location, soundConfidence: 0,
+            frameImagePath: isGlassesPhoto ? capture.photoPath : nil, source: capture.source, method: .seen, namedByBirder: true
         )
-        sighting.rarity = raritySnapshot(scientificName: candidate.species.scientificName, location: location, at: confirmedAt)
+        if !isGlassesPhoto { sighting.attachedPhotoPaths = [capture.photoPath] }
+        let context = container.mainContext
+        context.delete(capture)
+        do {
+            return try write(sighting)
+        } catch {
+            // Neither half happened: the capture still waits, with its photo.
+            context.rollback()
+            throw error
+        }
+    }
+
+    /// How many surviving sightings of `speciesID` are in the placement a sighting at `location` would have: zero when the
+    /// next one would sew the bird's patch there. What the lens reads for "New patch" beside a bird it offers (issue #194).
+    func patchCount(ofSpeciesID speciesID: String, at location: Coordinate?) -> Int {
+        (try? count(ofSpeciesID: speciesID, at: location, in: sets())) ?? 0
+    }
+
+    /// The surviving sightings of `speciesID` in the placement one at `location` has among `sets`, without the sighting
+    /// `excluding` when it is given: what says whether a write sews the bird's patch there or adds to it.
+    private func count(ofSpeciesID speciesID: String, at location: Coordinate?, in sets: [CardSet], excluding: UUID? = nil) throws -> Int {
+        var surviving = try container.mainContext.fetch(FetchDescriptor<Sighting>(predicate: #Predicate { $0.speciesID == speciesID }))
+        if let excluding { surviving.removeAll { $0.identifier == excluding } }
+        return CardCollection(sightings: surviving, sets: sets).count(ofSpeciesID: speciesID, at: location)
+    }
+
+    /// Takes a naming back: the sighting goes and its photo waits for a name again, as a capture with the sighting's time,
+    /// place and source. Nil, with nothing changed, for a sighting that was not named from a photo it still has. Undo never
+    /// removes the photo that was named: only a delete does. A capture holds that one photo, so anything else attached to
+    /// the sighting since the naming (in the seconds its Undo is offered) goes with the sighting, as when one is removed.
+    func takeBackName(of sighting: Sighting) throws -> Capture? {
+        guard sighting.namedByBirder, let photo = Self.namedPhotoPath(of: sighting) else { return nil }
+        let others = sighting.filePaths.filter { $0 != photo }
+        let capture = Capture(takenAt: sighting.confirmedAt, location: sighting.location, photoPath: photo, source: sighting.source)
+        let context = container.mainContext
+        context.insert(capture)
+        context.delete(sighting)
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        for path in others { try? FileManager.default.removeItem(at: frames.url(for: path)) }
+        return capture
+    }
+
+    /// The photo a sighting the birder named was named from: for one taken from the lens the sighting's glasses photo,
+    /// else the first of the birder's own. Nil for a sighting BirdNET heard, and once the birder has removed the photo.
+    static func namedPhotoPath(of sighting: Sighting) -> String? {
+        guard sighting.namedByBirder else { return nil }
+        return sighting.source == .glasses ? sighting.frameImagePath ?? sighting.attachedPhotoPaths.first : sighting.attachedPhotoPaths.first
+    }
+
+    /// Changes the bird of a sighting (issue #190, of #185): the same sighting, with its identifier, photo, time, place,
+    /// source and note, now of `bird`. Only its bird is written; patches are derived from sightings, so the old bird's patch
+    /// loses this one, and is unpicked if it had no other there, and the new bird's gains it or is sewn, which is what the
+    /// answer says. What was read or written for the old bird does not stay: the rarity is read again for the new bird at
+    /// the sighting's own place and week, and the caption goes. One save, or nothing changes.
+    @discardableResult
+    func changeBird(of sighting: Sighting, to bird: NameableBird) throws -> Recorded {
+        let speciesID = bird.speciesID
+        let location = sighting.location
+        let context = container.mainContext
+        let sets = sets()
+        let existing = try count(ofSpeciesID: speciesID, at: location, in: sets, excluding: sighting.identifier)
+        sighting.speciesID = speciesID
+        sighting.rarity = raritySnapshot(scientificName: bird.scientificName, location: location, at: sighting.confirmedAt)
+        sighting.caption = nil
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+        return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
+    }
+
+    /// Removes a capture and its photo from the album: the one thing that loses a photo.
+    func delete(_ capture: Capture) throws {
+        let path = capture.photoPath
+        try deleteAndSave(capture)
+        try? FileManager.default.removeItem(at: frames.url(for: path))
+    }
+
+    /// The capture with `identifier`, while it still waits for its name.
+    func capture(_ identifier: UUID) -> Capture? {
+        try? container.mainContext.fetch(FetchDescriptor<Capture>(predicate: #Predicate { $0.identifier == identifier })).first
+    }
+
+    /// Writes a new sighting with the rarity for its place and week, and says what it did to its bird's patch.
+    private func write(_ sighting: Sighting) throws -> Recorded {
+        let speciesID = sighting.speciesID
+        let location = sighting.location
+        let context = container.mainContext
+        let sets = sets()
+        let existing = try count(ofSpeciesID: speciesID, at: location, in: sets)
+        sighting.rarity = raritySnapshot(scientificName: sighting.scientificName, location: location, at: sighting.confirmedAt)
         context.insert(sighting)
         try context.save()
         return Recorded(sighting: sighting, sewsPatch: existing == 0, patchCount: existing + 1, placement: CardSet.placement(speciesID: speciesID, at: location, in: sets))
+    }
+
+    /// The extension a photo's file takes, from what the picture is (a camera gives HEIC or JPEG); "jpg" when it can't be told.
+    static func pathExtension(of photo: Data) -> String {
+        guard let source = CGImageSourceCreateWithData(photo as CFData, nil), let type = CGImageSourceGetType(source) else { return "jpg" }
+        return UTType(type as String)?.preferredFilenameExtension ?? "jpg"
     }
 
     /// Gives each sighting saved before rarity existed its snapshot from its saved coordinate and date, once per album
@@ -106,9 +259,21 @@ final class SightingRecorder {
     /// Removes a sighting and its files from the album.
     func delete(_ sighting: Sighting) throws {
         let files = sighting.filePaths
-        container.mainContext.delete(sighting)
-        try container.mainContext.save()
+        try deleteAndSave(sighting)
         for path in files { try? FileManager.default.removeItem(at: frames.url(for: path)) }
+    }
+
+    /// Deletes one record, or nothing: a delete whose save fails is taken back, so it does not go through with the next
+    /// save of something else and leave the record's files behind with no record.
+    private func deleteAndSave(_ model: some PersistentModel) throws {
+        let context = container.mainContext
+        context.delete(model)
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
     }
 }
 

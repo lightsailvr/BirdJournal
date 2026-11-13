@@ -10,6 +10,7 @@ import SwiftUI
 /// (issue #44), your note and your photos (issue #137) stay in view. The rest is a bird's page and a tap away: a reference photo
 /// kept apart and labelled, and the rarity and the explained match in disclosures. Sharing is in the toolbar, and a removal is
 /// confirmed and recoverable. Since #134 the paper card holds the species and the patch's history, and each of its sightings opens here.
+/// A sighting the birder named offers "Change bird" (issue #190), which opens the naming sheet again; one BirdNET heard does not.
 struct SightingDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -23,6 +24,8 @@ struct SightingDetailView: View {
     @State private var showingMap = false
     @State private var confirmingRemoval = false
     @State private var showingOriginal = false
+    /// The sighting as "Change bird" opened on it; nil while the sheet is closed.
+    @State private var changingBird: NamedSighting?
     @FocusState private var editingNote: Bool
 
     /// Fetched, not `model(for:)`: a deleted id would come back as a placeholder that faults on first access.
@@ -58,15 +61,33 @@ struct SightingDetailView: View {
 
                     SightingFacts(name: commonName, sighting: sighting, place: placeText(for: sighting))
 
-                    Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
-                        ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                    if sighting.namedByBirder {
+                        // Nothing heard it, so there's no Heard to choose (issue #186).
+                        Text("You saw this bird and named it from your photo.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 12)
+                            .accessibilityIdentifier("sighting-named-by-you")
+                            .id("sighting-named-by-you")
+                        // The name is the birder's own, so it is theirs to correct (issue #190).
+                        Button(ChangeBirdText.title, systemImage: "pencil") {
+                            changingBird = NamedSighting(sighting, commonName: commonName)
+                        }
+                        .buttonStyle(.journalOutlined)
+                        .padding(.top, 10)
+                        .accessibilityHint(ChangeBirdText.hint)
+                        .accessibilityIdentifier("sighting-change-bird")
+                    } else {
+                        Picker("How you met it", selection: Binding(get: { sighting.method }, set: { edits.setMethod($0, on: sighting) })) {
+                            ForEach(SightingMethod.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .pickerStyle(.segmented)
+                        .padding(.top, 16)
+                        Text(sighting.method == .heard ? "Choose Seen if you saw the bird too." : "You saw this bird.")
+                            .font(JournalFont.attribution)
+                            .foregroundStyle(Color.inkSecondary)
+                            .padding(.top, 6)
                     }
-                    .pickerStyle(.segmented)
-                    .padding(.top, 16)
-                    Text(sighting.method == .heard ? "Choose Seen if you saw the bird too." : "You saw this bird.")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
-                        .padding(.top, 6)
                     if let caption = sighting.caption?.text.nilIfEmpty {
                         Text(caption)
                             .font(CardFont.lore)
@@ -89,7 +110,7 @@ struct SightingDetailView: View {
                                     Color.clear.contentShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
-                                .accessibilityLabel("Map of where you heard this bird. Opens every sighting on a map.")
+                                .accessibilityLabel("Map of where you \(sighting.namedByBirder ? "saw" : "heard") this bird. Opens every sighting on a map.")
                                 .accessibilityIdentifier("sighting-map-card")
                             }
                             .padding(.top, 16)
@@ -183,6 +204,7 @@ struct SightingDetailView: View {
             }
             #if DEBUG
             .debugScroll(proxy, to: "sighting-disclosures")
+            .debugScroll(proxy, to: "sighting-named-by-you")
             #endif
             }
             // A sighting's page is in its patch's edition, like the patch's own.
@@ -204,9 +226,20 @@ struct SightingDetailView: View {
             .sheet(isPresented: $showingMap) {
                 SightingMapView(focus: sighting)
             }
-            .sheet(isPresented: $showingOriginal) {
+            // The whole screen and not a sheet: the photo is there to be zoomed, and a drag on it is a drag across the photo.
+            .fullScreenCover(isPresented: $showingOriginal) {
                 if let path = CardText.originalPhotoPath(sighting) {
-                    OriginalPhotoView(path: path)
+                    OriginalPhotoView(path: path, note: OriginalPhotoView.evidenceNote)
+                }
+            }
+            .sheet(item: $changingBird) { named in
+                // The page under the sheet is this sighting's, so it is the new bird's as the sheet closes: nothing is
+                // revealed and nothing plays.
+                NameBirdView(changing: named) { bird in
+                    guard let sighting = self.sighting else { return false }
+                    return edits.changeBird(of: sighting, to: bird)
+                } close: {
+                    changingBird = nil
                 }
             }
             .confirmationDialog("Remove this sighting?", isPresented: $confirmingRemoval, titleVisibility: .visible) {
@@ -230,6 +263,15 @@ struct SightingDetailView: View {
                     UserDefaults.standard.removeObject(forKey: "autoMap")
                     try? await Task.sleep(for: .milliseconds(600))
                     showingMap = true
+                }
+                // `-autoChangeBird YES`, for the screenshots of "Change bird".
+                if UserDefaults.standard.bool(forKey: "autoChangeBird") {
+                    UserDefaults.standard.removeObject(forKey: "autoChangeBird")
+                    try? await Task.sleep(for: .milliseconds(600))
+                    // Fetched again: the sighting may have gone during the waits above.
+                    if let current = self.sighting, current.namedByBirder {
+                        changingBird = NamedSighting(current, commonName: library.commonName(for: current))
+                    }
                 }
                 #endif
             }
@@ -296,7 +338,7 @@ private struct GlassesSnapshot: View {
                 .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
                 .accessibilityLabel("Your glasses snapshot from this sighting")
                 .accessibilityIdentifier("sighting-photo")
-            Text("Your glasses snapshot: the centre of the camera frame when you added the bird. It may show the surroundings rather than the bird.")
+            Text(CardText.glassesSnapshotNote(sighting))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
         }
@@ -425,66 +467,21 @@ struct FactRow: View {
     }
 }
 
-/// The saved score, explained, and whether there's a photo to go with it.
+/// The saved score, explained, and whether there's a photo to go with it. A bird the birder named has no score, and says so.
 private struct SightingMatchDetails: View {
     let sighting: Sighting
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            LabeledContent("Model score", value: sighting.soundConfidence.formatted(.number.precision(.fractionLength(2))))
-            Text("BirdNET's best single-window score for this species when it was added, between 0 and 1. It is not a calibrated probability, and it does not make the sighting certain: you did, when you added it.")
+            if let score = CardText.matchScore(sighting) {
+                LabeledContent("Model score", value: score)
+            }
+            Text(CardText.identification(sighting))
                 .font(JournalFont.attribution)
                 .foregroundStyle(Color.inkSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             LabeledContent("Evidence", value: CardText.evidence(sighting))
         }
         .font(JournalFont.supporting)
-    }
-}
-
-/// The original photo, whole and unaltered: evidence kept with the sighting, never art.
-struct OriginalPhotoView: View {
-    @Environment(\.frameStore) private var frameStore
-    @Environment(\.dismiss) private var dismiss
-    let path: String
-    @State private var image: UIImage?
-    @State private var loaded = false
-
-    var body: some View {
-        NavigationStack {
-            PaperPage {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let image {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .clipShape(RoundedRectangle(cornerRadius: JournalLayout.cornerRadius, style: .continuous))
-                            .accessibilityLabel("Original photo")
-                    } else if loaded {
-                        StateNotice("Photo unavailable", message: "The file is no longer on this iPhone.", mark: .symbol("photo"))
-                    } else {
-                        ProgressView()
-                            .frame(maxWidth: .infinity, minHeight: 200)
-                    }
-                    Text("The unaltered photo kept with this sighting: evidence, never art.")
-                        .font(JournalFont.attribution)
-                        .foregroundStyle(Color.inkSecondary)
-                }
-                .padding(.top, 4)
-            }
-            .navigationTitle("Original photo")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .task(id: path) {
-                if let url = frameStore?.url(for: path) {
-                    image = await Task.detached(priority: .userInitiated) { (try? Data(contentsOf: url)).flatMap(UIImage.init(data:)) }.value
-                }
-                loaded = true
-            }
-        }
     }
 }

@@ -16,11 +16,13 @@
 		000000000000000000000406 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000306 /* MWDATDisplay */; };
 		000000000000000000000407 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000307 /* MWDATInputs */; };
 		000000000000000000000408 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000308 /* MWDATMockDevice */; };
+		000000000000000000000409 /* MWDATSpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000309 /* MWDATSpeech */; };
 		000000000000000000000410 /* MWDATCore in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000310 /* MWDATCore */; };
 		000000000000000000000411 /* MWDATCamera in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000311 /* MWDATCamera */; };
 		000000000000000000000412 /* MWDATMockDevice in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000312 /* MWDATMockDevice */; };
 		000000000000000000000413 /* MWDATDisplay in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000313 /* MWDATDisplay */; };
 		000000000000000000000414 /* MWDATInputs in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000314 /* MWDATInputs */; };
+		000000000000000000000416 /* MWDATSpeech in Frameworks */ = {isa = PBXBuildFile; productRef = 000000000000000000000316 /* MWDATSpeech */; };
 		61CF3A9230698B9800A0B268 /* MyBirdJournal-Default.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3A9130698B9800A0B268 /* MyBirdJournal-Default.icon */; };
 		61CF3AAA3069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA83069D4D100A0B268 /* MyBirdJournal-RedTailedHawk.icon */; };
 		61CF3AAB3069D4D100A0B268 /* MyBirdJournal-StellersJay.icon in Resources */ = {isa = PBXBuildFile; fileRef = 61CF3AA93069D4D100A0B268 /* MyBirdJournal-StellersJay.icon */; };
@@ -122,6 +124,7 @@
 				000000000000000000000406 /* MWDATDisplay in Frameworks */,
 				000000000000000000000407 /* MWDATInputs in Frameworks */,
 				000000000000000000000408 /* MWDATMockDevice in Frameworks */,
+				000000000000000000000409 /* MWDATSpeech in Frameworks */,
 			);
 		};
 		000000000000000230000000 /* Frameworks */ = {
@@ -132,6 +135,7 @@
 				000000000000000000000412 /* MWDATMockDevice in Frameworks */,
 				000000000000000000000413 /* MWDATDisplay in Frameworks */,
 				000000000000000000000414 /* MWDATInputs in Frameworks */,
+				000000000000000000000416 /* MWDATSpeech in Frameworks */,
 			);
 		};
 		000000000000000330000000 /* Frameworks */ = {
@@ -213,6 +217,7 @@
 				000000000000000000000306 /* MWDATDisplay */,
 				000000000000000000000307 /* MWDATInputs */,
 				000000000000000000000308 /* MWDATMockDevice */,
+				000000000000000000000309 /* MWDATSpeech */,
 			);
 			productName = BirdJournal;
 			productReference = 000000000000000000000120 /* BirdJournal.app */;
@@ -241,6 +246,7 @@
 				000000000000000000000312 /* MWDATMockDevice */,
 				000000000000000000000313 /* MWDATDisplay */,
 				000000000000000000000314 /* MWDATInputs */,
+				000000000000000000000316 /* MWDATSpeech */,
 			);
 			productName = BirdJournalTests;
 			productReference = 000000000000000000000121 /* BirdJournalTests.xctest */;
@@ -615,11 +621,12 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild uses the camera to photograph a bird you have seen, so you can name it and add the sighting to your collection.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard or seen.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Featherguild saves a copy of each photo you take with its camera to your Photos library. It can add photos and can't see the ones already there.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild hears the name of a bird you say to your glasses after taking its photo, to name the sighting. The glasses recognize the words themselves; the iPhone is asked only if it has to help.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -664,11 +671,12 @@
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Featherguild connects to your Meta glasses over Bluetooth to hear birds around you.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild does not use your camera. iOS asks for this notice because the Meta glasses toolkit the app is built on includes camera features.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Featherguild uses the camera to photograph a bird you have seen, so you can name it and add the sighting to your collection.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Featherguild finds and connects to your Meta glasses over Wi-Fi.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Featherguild uses your location to show the painting and set for the place you're in, to list the birds that live where you are listening, and to record where each bird was heard or seen.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Featherguild listens for birdsong with the phone microphone when your glasses are not connected.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild does not use speech recognition. iOS asks for this notice because the Meta glasses toolkit the app is built on includes voice features.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "Featherguild saves a copy of each photo you take with its camera to your Photos library. It can add photos and can't see the ones already there.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Featherguild hears the name of a bird you say to your glasses after taking its photo, to name the sighting. The glasses recognize the words themselves; the iPhone is asked only if it has to help.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -934,6 +942,11 @@
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATMockDevice;
 		};
+		000000000000000000000309 /* MWDATSpeech */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATSpeech;
+		};
 		000000000000000000000310 /* MWDATCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
@@ -958,6 +971,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
 			productName = MWDATInputs;
+		};
+		000000000000000000000316 /* MWDATSpeech */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 000000000000000000000201 /* XCRemoteSwiftPackageReference "meta-wearables-dat-ios" */;
+			productName = MWDATSpeech;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

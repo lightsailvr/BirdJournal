@@ -7,6 +7,7 @@ import MWDATInputs
 import MWDATMockDevice
 import SwiftData
 import Testing
+import UIKit
 @testable import BirdJournal
 
 // Pause, disconnect and error handling on Mock Device Kit (issue #10). The mock does not pause a session on a doff
@@ -109,6 +110,48 @@ extension MockDeviceKitTests {
                     #expect(run.lens.phase == .stopped(.phone))
                     #expect(run.listening.phase == .idle)
                     #expect(source.isStopped)
+                }
+            }
+        }
+
+        @Test("a doff while a capture's photo is on its way: the page waits, the capture lets the camera go with the session and has it again on the new one, and the photo is saved when it arrives (issue #193)")
+        func doffDuringCapture() async throws {
+            try await withMockDisplay { glasses in
+                let source = ManualAudioSource()
+                try await Self.withRun(source: source) { run in
+                    // No bird yet, so "Capture a sighting" is the highlighted row: a tap takes the photo, which is
+                    // held on its way here.
+                    let jpeg = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in
+                        UIColor.red.setFill()
+                        context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
+                    }.jpegData(compressionQuality: 0.9)
+                    source.photo = jpeg
+                    source.holdsPhoto = true
+                    let input = glasses.services.input
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .captureSaving }
+                    try await waitUntil(timeout: .seconds(1)) { source.captureSteps == [true] }
+
+                    glasses.doff()
+                    try await waitUntil { Self.isDoffed(glasses) }
+                    glasses.powerOff()
+                    try await waitUntil { run.phase == .paused(.glassesOff) }
+                    #expect(run.lens.phase == .suspended)
+                    #expect(run.lens.page == .captureSaving, "the page waits where the wearer left it")
+                    #expect(run.sightings.unnamed.isEmpty)
+
+                    glasses.powerOn()
+                    glasses.don()
+                    try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
+                    #expect(run.lens.page == .captureSaving)
+                    try await waitUntil { run.lens.inputsState == .active }
+                    // The capture let the camera go with the session, and has it again on the new one.
+                    try await waitUntil(timeout: .seconds(2)) { source.captureSteps == [true, false, true] }
+                    source.deliverPhoto()
+                    try await waitUntil(timeout: .seconds(5)) { run.lens.page == .captureSaved }
+                    #expect(run.sightings.unnamed.count == 1)
+                    #expect(run.sightings.unnamed.first?.source == .glasses)
+                    #expect(run.errorMessage == nil)
                 }
             }
         }

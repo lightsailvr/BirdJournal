@@ -149,14 +149,33 @@ final class ListeningCoordinator {
     private(set) var clock = ListeningClock()
     /// A run that had ended and was waiting for its review when the app was killed: the birds heard, read back at launch.
     private(set) var restored: EndedRun?
-    /// Set when a run that heard something ends, until the review is dismissed.
+    /// Set when a run that left something ends (birds heard, birds seen, or photos still to name), until the review is
+    /// dismissed.
     var isReviewing = false
     /// The candidate the birder is reviewing, nil when none.
     var reviewing: Candidate?
+    /// "Capture a sighting" is open (issue #186): the camera, then the naming of the photo it took.
+    var isCapturing = false {
+        didSet {
+            guard isCapturing != oldValue else { return }
+            // Opened with no run to take its photos (issue #191): they belong to none, and the phone's place is read for them.
+            isCapturingOutsideRun = isCapturing && !showsRun
+            if isCapturingOutsideRun {
+                latePlaces = [:]
+                placeOutsideRun.open()
+            } else {
+                placeOutsideRun.close()
+            }
+        }
+    }
+    /// The camera was opened from the idle Listen tab: what it takes is no run's, and is recorded where the phone is now.
+    private(set) var isCapturingOutsideRun = false
 
     let phone: ListeningSession
     let glasses: GlassesListeningSession
     let sightings: RunSightings
+    /// Where the phone is while the camera is open with no run (issue #191).
+    let placeOutsideRun: CapturePlace
 
     @ObservationIgnored private let levels: LevelSink
     @ObservationIgnored private let defaults: UserDefaults
@@ -164,6 +183,8 @@ final class ListeningCoordinator {
     @ObservationIgnored private var hasRun = false
     @ObservationIgnored private var waveformTask: Task<Void, Never>?
     @ObservationIgnored private var acknowledgmentTask: Task<Void, Never>?
+    /// Photos taken with no run before the place was read, each until the read's first answer has placed it.
+    @ObservationIgnored private var latePlaces: [UUID: Task<UnnamedSighting?, Never>] = [:]
     /// From Stop until the run's end has been dealt with, so a ceremony starts over the review rather than just before it.
     private var isEnding = false
     @ObservationIgnored private let archive: UserDefaults?
@@ -174,16 +195,23 @@ final class ListeningCoordinator {
     /// - Parameters:
     ///   - defaultSource: the source for a phone that has not chosen one: the glasses when a pair is linked.
     ///   - archive: where a review waiting to be seen outlives the app; by default `defaults`, and with nil it doesn't.
-    init(phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard, archive: UserDefaults?? = .none) {
+    ///   - captureLocation: where the phone is for a photo taken with no run (issue #191), read only while the camera is open.
+    init(
+        phone: ListeningSession, glasses: GlassesListeningSession, sightings: RunSightings, levels: LevelSink, defaultSource: Source, defaults: UserDefaults = .standard,
+        archive: UserDefaults?? = .none, captureLocation: any LocationProvider = CoreLocationProvider(heldThroughBackground: false)
+    ) {
         self.phone = phone
         self.glasses = glasses
         self.sightings = sightings
+        placeOutsideRun = CapturePlace(location: captureLocation)
         self.levels = levels
         self.defaults = defaults
         source = defaults.string(forKey: Self.sourceKey).flatMap(Source.init(rawValue:)) ?? defaultSource
         pendingCeremonies = defaults.stringArray(forKey: Self.pendingCeremoniesKey)?.compactMap(UUID.init(uuidString:)) ?? []
         self.archive = archive ?? defaults
         glasses.onPatchSewn = { [weak self] identifier in self?.pendingCeremonies.append(identifier) }
+        // A photo taken on the lens as the run ended is written a moment after: the review waiting to be seen lists it too.
+        glasses.onCaptured = { [weak self] _ in self?.keepLatePhoto() }
         restoreEndedRun()
         followState()
     }
@@ -279,6 +307,11 @@ final class ListeningCoordinator {
     var locationState: ListeningSession.LocationState { listening.locationState }
     /// The location the next add records.
     var coordinate: Coordinate? { restored?.coordinate ?? listening.coordinate }
+    /// Where a photo taken now is recorded when it carries no place of its own: the run's place, or with no run the place
+    /// read while the camera is open (issue #191); nil when there is none.
+    var capturePlace: Coordinate? { isCapturingOutsideRun ? placeOutsideRun.coordinate : coordinate }
+    /// The Listen tab shows a run, under way or ended with something on its page, and not the idle tab.
+    var showsRun: Bool { state.isActive || (state != .idle && lastRunHasSomething) }
     /// When that location was fixed.
     var locationFixedAt: Date? { listening.locationFixedAt }
     /// Whether a phone-microphone run holds the audio session, which a reference clip then plays in (issue #41).
@@ -347,13 +380,14 @@ final class ListeningCoordinator {
     }
 
     /// What every end of a run comes to, by Stop or on its own (Back on the lens, the source giving out): the clock stops, and
-    /// what was heard goes to the review. Once per run.
+    /// what the run left goes to the review: the birds heard, and the photos taken, named or not. A run of a silent bird's
+    /// photo and nothing heard has its review like any other (issues #188 and #193). Once per run.
     private func settleEnd() {
         guard endedAt == nil else { return }
         endedAt = .now
         stopWaveform()
         listOrder = currentOrder()
-        isReviewing = !candidates.isEmpty
+        isReviewing = lastRunHasSomething
         // The page moves to over the review: it picks up as finished rather than starting again.
         if isReviewing { finishCeremony() }
         keepEndedRun()
@@ -397,25 +431,182 @@ final class ListeningCoordinator {
         let frame = runSource == .glasses ? await glasses.captureFrame() : nil
         do {
             let addition = try sightings.add(candidate, confirmedAt: confirmedAt, location: coordinate, frame: frame, source: runSource == .glasses ? .glasses : .phone, method: method)
-            keepEndedRun()
-            if addition.sewsPatch {
-                let reveal = Reveal(addition: addition, commonName: candidate.species.commonName)
-                self.reveal = reveal
-                acknowledge(reveal.title, undo: addition)
-            } else {
-                acknowledge(
-                    Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount),
-                    ticksFrom: Self.seenAgainText(candidate.species.commonName, addition.placement, count: addition.patchCount - 1),
-                    undo: addition
-                )
-            }
+            announce(addition, commonName: candidate.species.commonName)
             return addition
         } catch {
-            Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
-            failedActions += 1
-            acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
+            addFailed(error)
             return nil
         }
+    }
+
+    // Photo first, name second (issues #186 and #188, of #185).
+
+    /// Whose a photo is and where it is recorded when it carries no place of its own, as the shutter is pressed or a
+    /// picture is chosen. Read then and handed to `capture`, not read when the photo arrives: the camera can close in
+    /// between, and by then the coordinator describes whatever is on the Listen tab, not this photo.
+    struct Shutter: Equatable {
+        /// False for a photo taken with no run to take it (issue #191): it is on no run's list.
+        let onThisRun: Bool
+        /// The run's place, or with no run the place read for the open camera, if there was one yet.
+        let place: Coordinate?
+    }
+
+    /// What a shutter pressed now would record.
+    var shutter: Shutter { Shutter(onThisRun: !isCapturingOutsideRun, place: capturePlace) }
+
+    /// The shutter: writes `photo` to the album as an unnamed sighting, before any name, at the place the run has. Nothing is
+    /// announced, since nothing has been added: it sews no patch and tells nobody until it is named. Nil when it could not
+    /// be written, which is the only way a photo is lost. A photo chosen from the library goes the same way (issue #192),
+    /// at the place the picture itself carries when it carries one.
+    ///
+    /// With no run (issue #191: the camera opened from the idle Listen tab) the photo is recorded where the phone is now,
+    /// and is no run's: it waits in the Collection's "To name", and a run started afterwards knows nothing of it. A shutter
+    /// quicker than the first fix is not kept waiting: the photo is written at once, and given its place when the fix is in
+    /// (`placed`).
+    ///
+    /// The photo is the phone's, whichever microphones the run is listening with; the lens writes its own through the
+    /// run's ledger.
+    /// - Parameter pressed: what the shutter recorded when it was pressed, for a photo that arrives later (the camera's
+    ///   photo, a picture read from the library); nil for one written at the press.
+    @discardableResult
+    func capture(_ photo: CapturedPhoto, pressed: Shutter? = nil) -> UnnamedSighting? {
+        let now = shutter
+        let pressed = pressed ?? now
+        // The camera is still open as it was at the press: a fix that came in since is the photo's. Closed since, or
+        // opened again over something else, only what the press read is known of it.
+        let place = photo.place ?? pressed.place ?? (now.onThisRun == pressed.onThisRun ? now.place : nil)
+        do {
+            let unnamed = try sightings.capture(photo: photo.data, takenAt: photo.takenAt, location: place, source: .phone, onThisRun: pressed.onThisRun && isOfTheRun(photo))
+            keepLatePhoto()
+            if !pressed.onThisRun, isCapturingOutsideRun, unnamed.location == nil, placeOutsideRun.state == .requesting {
+                let answer = placeOutsideRun.firstAnswer()
+                latePlaces[unnamed.id] = Task { [weak self] in
+                    for await coordinate in answer {
+                        if let coordinate { return self?.place(unnamed, at: coordinate) }
+                    }
+                    return nil
+                }
+            }
+            return unnamed
+        } catch {
+            Self.logger.error("capture failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
+            return nil
+        }
+    }
+
+    /// Whether a photo written while a run is on its page is that run's. The camera's own always is. One chosen from the
+    /// library that carries a date from before the run started, or from after it ended, is not (issue #192): it was added
+    /// on this run and taken on another day, so it is in the album to name, on no run's list, counted in no recap, and
+    /// offered nothing this run heard. One with no date of its own takes the time it was chosen, and stays the run's.
+    private func isOfTheRun(_ photo: CapturedPhoto) -> Bool {
+        guard case .library(carriesDate: true) = photo.origin, let startedAt else { return true }
+        return photo.takenAt >= startedAt && photo.takenAt <= (endedAt ?? .now)
+    }
+
+    /// A photo was written: a review waiting to be seen is written down again with it. And a run that had ended with
+    /// nothing on its page, whose one photo was still on its way (from the lens, or the phone's camera closing as Stop
+    /// was tapped), has something now: it gets the review it would have had.
+    private func keepLatePhoto() {
+        if case .ended = state, endedAt != nil, !isReviewing, lastRunHasSomething { isReviewing = true }
+        keepEndedRun()
+    }
+
+    /// `unnamed` as it is once the place it was taken at is known: a photo taken with no run, before the first fix was in,
+    /// gets its place when the fix arrives, wherever the camera is by then. Nil when nothing changed: it had its place at
+    /// the shutter, no fix came, or it was named or deleted first.
+    func placed(_ unnamed: UnnamedSighting) async -> UnnamedSighting? {
+        await latePlaces[unnamed.id]?.value
+    }
+
+    private func place(_ unnamed: UnnamedSighting, at coordinate: Coordinate) -> UnnamedSighting? {
+        guard let capture = sightings.recorder.capture(unnamed.id), capture.location == nil else { return nil }
+        do {
+            try sightings.recorder.place(capture, at: coordinate)
+            return UnnamedSighting(capture)
+        } catch {
+            Self.logger.error("placing a capture failed: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
+
+    /// Names an unnamed sighting: the sighting of `bird` is written, Seen, with the photo as its original photo, at the
+    /// photo's own time and place, whenever and wherever it is named: on its run, in the run's review, or from the Collection
+    /// days later with no run at all. From there it is an add made on the phone like any other: the first in a placement sews
+    /// the patch and opens its ceremony there and then, a repeat ticks the count, and the acknowledgment carries Undo, which
+    /// takes the name back and leaves the photo waiting.
+    @discardableResult
+    func name(_ unnamed: UnnamedSighting, as bird: NameableBird) -> RunSightings.Addition? {
+        do {
+            let addition = try sightings.name(unnamed, as: bird)
+            announce(addition, commonName: bird.commonName)
+            return addition
+        } catch {
+            addFailed(error)
+            return nil
+        }
+    }
+
+    /// Deletes an unnamed sighting and its photo: what the birder confirmed. False when it could not be removed.
+    @discardableResult
+    func delete(_ unnamed: UnnamedSighting) -> Bool {
+        do {
+            try sightings.delete(unnamed)
+            keepEndedRun()
+            return true
+        } catch {
+            Self.logger.error("deleting an unnamed sighting failed: \(error.localizedDescription, privacy: .public)")
+            failedActions += 1
+            return false
+        }
+    }
+
+    /// A sighting's bird was changed on its page (issue #190). The run's list names it as the new bird; and whatever was
+    /// about the bird it was goes: the add's acknowledgment, its page if it is still up, and a ceremony the lens left
+    /// waiting, since a patch sewn by a change has no stitch-in. The sighting itself stays the run's, and can still be
+    /// removed from its page.
+    func birdChanged(of sighting: Sighting) {
+        let identifier = sighting.identifier
+        sightings.birdChanged(of: sighting)
+        pendingCeremonies.removeAll { $0 == identifier }
+        if reveal?.addition.identifier == identifier { reveal = nil }
+        if acknowledgment?.undo?.identifier == identifier {
+            acknowledgmentTask?.cancel()
+            acknowledgment = nil
+        }
+    }
+
+    /// The run's page offers to turn dictation on (issue #194): a photo taken on this run's lens could not be asked its
+    /// name, for want of the glasses' microphone permission. Only on a glasses run: the session keeps the fact until its
+    /// next start, and a phone-microphone run after it has no lens to say a name to.
+    var offersDictation: Bool { runSource == .glasses && glasses.dictationNeedsPermission }
+
+    /// The last run left something for its page: birds heard, birds seen, or photos still to name.
+    var lastRunHasSomething: Bool {
+        !(candidates.isEmpty && sightings.seen.isEmpty && sightings.unnamed.isEmpty)
+    }
+
+    /// What follows every add, once its sighting is saved: the ceremony of a new patch, or the count of one seen again, and
+    /// the acknowledgment with its Undo.
+    private func announce(_ addition: RunSightings.Addition, commonName: String) {
+        keepEndedRun()
+        if addition.sewsPatch {
+            let reveal = Reveal(addition: addition, commonName: commonName)
+            self.reveal = reveal
+            acknowledge(reveal.title, undo: addition)
+        } else {
+            acknowledge(
+                Self.seenAgainText(commonName, addition.placement, count: addition.patchCount),
+                ticksFrom: Self.seenAgainText(commonName, addition.placement, count: addition.patchCount - 1),
+                undo: addition
+            )
+        }
+    }
+
+    private func addFailed(_ error: any Error) {
+        Self.logger.error("add failed: \(error.localizedDescription, privacy: .public)")
+        failedActions += 1
+        acknowledge("Could not add the sighting: \(error.localizedDescription)", undo: nil)
     }
 
     /// The Sew it or Add on a bird's row (issue #150, L2): the review sheet's own add, with its reveal, count and Undo, as Heard,
@@ -446,7 +637,8 @@ final class ListeningCoordinator {
         if reveal.isFromGlasses {
             // Only now: killed part way through the stitch-in, it hasn't played.
             pendingCeremonies.removeAll { $0 == reveal.addition.identifier }
-        } else if sightings.entries.contains(where: { $0.id == reveal.addition.sightingID }) {
+        } else if sightings.canUndo(reveal.addition) {
+            // Not only this run's: a photo from an earlier run named now has its Undo too.
             acknowledge(reveal.title, undo: reveal.addition)
         }
     }
@@ -465,7 +657,8 @@ final class ListeningCoordinator {
         guard isReviewing, let archive, let startedAt, let endedAt, let runSource else { return }
         let run = EndedRun(
             source: runSource.rawValue, startedAt: startedAt, endedAt: endedAt, listened: clock.listened(from: startedAt, to: endedAt),
-            coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) }
+            coordinate: coordinate, birds: candidates.map(EndedRun.Bird.init), added: sightings.entries.map { .init(identifier: $0.identifier, bird: .init($0.candidate)) },
+            seen: sightings.seen.map(\.identifier), captures: sightings.unnamed.map(\.id)
         )
         archive.set(try? JSONEncoder().encode(run), forKey: Self.endedRunKey)
     }
@@ -477,7 +670,7 @@ final class ListeningCoordinator {
 
     /// At launch: the review a killed app was waiting to show, with what it had added.
     private func restoreEndedRun() {
-        guard let data = archive?.data(forKey: Self.endedRunKey), let run = try? JSONDecoder().decode(EndedRun.self, from: data), !run.birds.isEmpty else { return }
+        guard let data = archive?.data(forKey: Self.endedRunKey), let run = try? JSONDecoder().decode(EndedRun.self, from: data), run.hasSomething else { return }
         restored = run
         runSource = Source(rawValue: run.source)
         hasRun = true
@@ -485,6 +678,13 @@ final class ListeningCoordinator {
         endedAt = run.endedAt
         clock = ListeningClock(alreadyPaused: run.endedAt.timeIntervalSince(run.startedAt) - run.listened)
         sightings.restore(run.added.map { ($0.identifier, $0.bird.candidate) })
+        sightings.restoreSeen(run.seen ?? [])
+        sightings.restoreUnnamed(run.captures ?? [])
+        // A run of photos alone, each since removed or deleted from the Collection: there is nothing left to review.
+        guard lastRunHasSomething else {
+            dismissEnded()
+            return
+        }
         listOrder = currentOrder()
         isReviewing = true
     }
@@ -655,8 +855,14 @@ nonisolated struct EndedRun: Codable, Equatable, Sendable {
     let coordinate: Coordinate?
     let birds: [Bird]
     let added: [Added]
+    /// The sightings of birds seen and named on the run (issue #186); nil in a run written down before there were any.
+    var seen: [UUID]? = nil
+    /// The photos the run took that were still unnamed (issue #188); nil in a run written down before there were any.
+    var captures: [UUID]? = nil
 
     var candidates: [Candidate] { birds.map(\.candidate) }
+    /// Birds heard, birds seen or photos still to name: what a review is kept for.
+    var hasSomething: Bool { !birds.isEmpty || !(seen ?? []).isEmpty || !(captures ?? []).isEmpty }
 }
 
 extension GlassesListeningSession.PauseReason {
