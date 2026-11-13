@@ -2,7 +2,7 @@
   "id": "us-ca-bay",
   "name": "SF Bay Area",
   "region": "San Francisco Bay Area, California, US",
-  "version": 2,
+  "version": 3,
   "inat_place_id": 54321,
   "inat_created_before": "2026-09-27",
   "bounding_box": {
@@ -960,7 +960,7 @@
     {
       "scientific_name": "Troglodytes pacificus",
       "common_name": "Pacific Wren",
-      "inat_taxon_id": 144882,
+      "inat_taxon_id": 1720021,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Pacific_wren"
     },
     {

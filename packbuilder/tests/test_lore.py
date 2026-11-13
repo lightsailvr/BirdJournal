@@ -644,3 +644,97 @@ def test_a_hand_edited_title_that_fails_its_checks_stops_the_build(tmp_path):
     lock.write()
     with pytest.raises(InvalidLore, match="locked title fails its checks: the title names the bird \\(phoebe\\)"):
         writer(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+
+
+# Lore once per species (#58): a pack takes the lore another pack holds for the same species, and follows it.
+
+def other_pack(tmp_path, client=None, review_as=None):
+    """A sibling pack whose lock holds the phoebe's lore as its own; its lock's path."""
+    folder = tmp_path / "packs" / "us-ca-la"
+    folder.mkdir(parents=True, exist_ok=True)
+    LoreWriter(lock=LoreLock.load(folder / "lore.lock.json"), client_factory=lambda: client or StubClient(GOOD), sleep=lambda _: None).write(
+        PHOEBE, {"sayornis-nigricans": FACTS},
+    )
+    if review_as == "approved":
+        review(LoreLock.load(folder / "lore.lock.json"), approve_all=True, approve_all_titles=True)
+    return folder / "lore.lock.json"
+
+
+def sharing(tmp_path, client, pack="us-ca-sd", **kwargs):
+    folder = tmp_path / "packs" / pack
+    folder.mkdir(parents=True, exist_ok=True)
+    return LoreWriter(
+        lock=LoreLock.load(folder / "lore.lock.json"), client_factory=lambda: client, sleep=lambda _: None,
+        shared=lore_module.shared_lore(tmp_path / "packs", pack), **kwargs,
+    )
+
+
+def test_a_species_another_pack_has_lore_for_takes_it_with_its_review_and_makes_no_request(tmp_path):
+    source = other_pack(tmp_path, review_as="approved")
+
+    taking = sharing(tmp_path, NoRequests())
+    written = taking.write(PHOEBE, {"sayornis-nigricans": FACTS})
+
+    assert taking.requests == 0 and written["sayornis-nigricans"].ships and written["sayornis-nigricans"].shipped_title == "The Waterside Mason"
+    entry = json.loads((tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
+    original = json.loads(source.read_text())["species"]["sayornis-nigricans"]
+    assert entry == {**original, "shared_from": "us-ca-la"}
+    # A second run changes nothing, and a third pack takes the first pack's lore, not the copy.
+    before = (tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_bytes()
+    sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert (tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_bytes() == before
+    sharing(tmp_path, NoRequests(), pack="us-pnw").write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert json.loads((tmp_path / "packs" / "us-pnw" / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]["shared_from"] == "us-ca-la"
+
+
+def test_shared_lore_follows_the_pack_it_comes_from_and_is_reviewed_there(tmp_path):
+    source = other_pack(tmp_path)
+    taken = sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert taken["sayornis-nigricans"].review == PENDING
+
+    # It can't be reviewed in the pack that took it, and approve-all leaves it.
+    lock = LoreLock.load(tmp_path / "packs" / "us-ca-sd" / "lore.lock.json")
+    with pytest.raises(KeyError, match="shared from us-ca-la"):
+        review(lock, approve=["Black Phoebe"])
+    review(lock, approve_all=True, approve_all_titles=True)
+    assert lock.species["sayornis-nigricans"]["review"] == PENDING and lock.species["sayornis-nigricans"]["title"]["review"] == PENDING
+    sheet = review_sheet(lock, tmp_path / "review.md", "Test Pack").read_text()
+    assert "## Black Phoebe (pending, shared from us-ca-la)" in sheet and "Pending: Black Phoebe." not in sheet
+    assert "Pending in the pack they are shared from: Black Phoebe (us-ca-la)." in sheet
+
+    # The verdict in its own pack reaches the taker on its next run; a rejection is rewritten there, never here.
+    review(LoreLock.load(source), approve_all=True, approve_all_titles=True)
+    assert sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})["sayornis-nigricans"].ships
+    review(LoreLock.load(source), reject=["Black Phoebe"], why="too grand")
+    rejected = sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert not rejected["sayornis-nigricans"].ships
+    other_pack(tmp_path, client=StubClient({**GOOD, "tagline": {"text": "Builder in mud by the water.", "facts": ["f4"]}}))
+    again = sharing(tmp_path, NoRequests(), regenerate=frozenset({"sayornis-nigricans"})).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    assert again["sayornis-nigricans"].tagline["text"] == "Builder in mud by the water." and again["sayornis-nigricans"].review == PENDING
+
+
+def test_lore_is_shared_only_when_written_from_this_packs_article_facts_and_never_replaces_its_own(tmp_path):
+    other_pack(tmp_path, review_as="approved")
+    # Another revision of the article here: this pack's text credits would not cover the shared lore, so it writes its own.
+    moved = [Fact(fact.id, fact.text, fact.source.replace("oldid=", "oldid=9") if fact.source.startswith("http") else fact.source) for fact in FACTS]
+    assert _moved_revision(moved)
+    client = StubClient(GOOD)
+    own = sharing(tmp_path, client).write(PHOEBE, {"sayornis-nigricans": moved})
+    entry = json.loads((tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
+    assert len(client.prompts) == 1 and "shared_from" not in entry and own["sayornis-nigricans"].review == PENDING
+    # Its own lore stays its own on later runs, whatever the other pack holds.
+    sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": moved})
+    assert "shared_from" not in json.loads((tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
+
+
+def _moved_revision(facts):
+    return [fact.source for fact in facts if fact.source.startswith("http")] != [fact.source for fact in FACTS if fact.source.startswith("http")]
+
+
+def test_shared_lore_whose_pack_dropped_it_becomes_this_packs_own(tmp_path, caplog):
+    source = other_pack(tmp_path, review_as="approved")
+    sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    source.unlink()
+    kept = sharing(tmp_path, NoRequests()).write(PHOEBE, {"sayornis-nigricans": FACTS})
+    entry = json.loads((tmp_path / "packs" / "us-ca-sd" / "lore.lock.json").read_text())["species"]["sayornis-nigricans"]
+    assert kept["sayornis-nigricans"].ships and "shared_from" not in entry and "no longer holds its lore" in caplog.text

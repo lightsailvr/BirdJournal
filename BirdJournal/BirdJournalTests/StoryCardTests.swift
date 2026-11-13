@@ -300,12 +300,31 @@ struct PatchWordsTests {
 
     @Test("every edition has its own silhouette; Uncharted is the plain round; an unknown set too")
     func editions() {
-        let ids = ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"]
+        let ids = EditionTintTests.setIDs
         #expect(Set(ids.map { "\(PatchEdition.of(setID: $0).shape)" }).count == ids.count)
         #expect(PatchEdition.of(setID: nil).shape == .circle)
         #expect(PatchEdition.of(setID: nil) == PatchEdition.of(setID: "somewhere-new"))
         #expect(PatchEdition.of(setID: "us-ca-la").shape == .circle)
         #expect(PatchEdition.of(setID: "us-fl-orlando").shape == .shield)
+        #expect(PatchEdition.of(setID: "us-pnw").shape == .pentagon)
+        #expect(PatchEdition.of(setID: "us-ny-nyc").shape == .roundedSquare)
+        #expect(PatchEdition.of(setID: "us-la-south").shape == .diamond)
+        #expect(Set(ids.map { PatchEdition.of(setID: $0).cord }).count == ids.count, "and its own cord")
+        #expect(ids.prefix(5).allSatisfy { PatchEdition.of(setID: $0).shape.tagDrop == 0.1 }, "the first five blanks' tags hang where they did")
+        #expect(PatchEdition.of(setID: "us-la-south").shape.tagDrop > PatchEdition.of(setID: "us-pnw").shape.tagDrop, "lower under the sharper point")
+    }
+
+    @Test("an edition's outline fills the rectangle it's given, touching all four sides, so a blank is the size of a painting", arguments: EditionTintTests.setIDs.map(Optional.some) + [nil])
+    func outlineFillsItsRectangle(setID: String?) {
+        let edition = PatchEdition.of(setID: setID)
+        let rect = CGRect(x: 20, y: 30, width: 200 * edition.aspect, height: 200)
+        let path = PatchOutline(shape: edition.shape).path(in: rect)
+        let bounds = path.cgPath.boundingBoxOfPath
+        for (drawn, asked) in [(bounds.minX, rect.minX), (bounds.maxX, rect.maxX), (bounds.minY, rect.minY), (bounds.maxY, rect.maxY)] {
+            #expect(abs(drawn - asked) < 0.5, "\(edition.shape): \(bounds) in \(rect)")
+        }
+        #expect(path.contains(CGPoint(x: rect.midX, y: rect.midY)))
+        #expect(!path.contains(CGPoint(x: rect.minX + 1, y: rect.minY + 1)), "\(edition.shape): a corner is outside it")
     }
 
     @Test("a painting is only ever its own edition's")

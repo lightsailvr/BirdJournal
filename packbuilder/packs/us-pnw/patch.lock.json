@@ -1,0 +1,5274 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "accipiter-striatus": {
+      "common_name": "Sharp-shinned Hawk",
+      "seed": 964758482,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 7.8,
+        "dE_p95": 17.3,
+        "dL": -6.8,
+        "dC": -0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.956,
+      "sha256": "83f9e37ddd4d4ecf52deeff5edd4ae4f984a61f6f3e47bbd60f9d3140137a38e",
+      "photos": [
+        33116446
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is deep orange-red.",
+      "review": "approved",
+      "rejected_seeds": [
+        1317419846
+      ],
+      "why": "patch pass: the eye is black; the adult's eye is orange-red"
+    },
+    "actitis-macularius": {
+      "common_name": "Spotted Sandpiper",
+      "seed": 1754381595,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 10.0,
+        "dE_p95": 15.1,
+        "dL": -9.3,
+        "dC": 3.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0084,
+      "attempts": 2,
+      "shape_fit": 0.981,
+      "sha256": "bdcf0cbb879d859ed34674a19e11a71aba8f9cc7f4994d3a14e912193ccf7695",
+      "photos": [
+        696973881
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "aechmophorus-occidentalis": {
+      "common_name": "Western Grebe",
+      "seed": 373623892,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 15.8,
+        "dE_p95": 37.0,
+        "dL": 12.1,
+        "dC": 0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.921,
+      "sha256": "bf552e8d4457e2c344995c23685e4daa917478ae556119a3a39077e195b21607",
+      "photos": [
+        760402781
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The cap is black and sleek, reaching down to just above the eye, and runs down the back of the neck; the eye is red; the face, front of the neck and breast are white; the back and flanks are dark grey with no brown; the long thin bill is greenish-yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        1631730882
+      ],
+      "why": "patch pass: the cap is brown and fluffy, the body brown and the eye black (it is red)"
+    },
+    "agelaius-phoeniceus": {
+      "common_name": "Red-winged Blackbird",
+      "seed": 3675890567,
+      "dark": false,
+      "measure": {
+        "iou": 0.94,
+        "dE_mean": 8.5,
+        "dE_p95": 19.4,
+        "dL": -1.7,
+        "dC": -4.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.941,
+      "sha256": "62619058688ba155d96dfdeec97d15ba474453716ebf9f66e18f2fa28b8c960d",
+      "photos": [
+        735212361
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is matte black thread with no white, grey, blue or pale thread anywhere, the folded wing as black as the body; the only colour is the shoulder: a bright red patch at the bend of each wing with a narrow buff-yellow lower edge. The bill, legs and eye are black, with no pale ring round the eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        2887684881
+      ],
+      "why": "patch pass: grey-blue panels on the folded wing and a pale ring round the eye"
+    },
+    "aix-sponsa": {
+      "common_name": "Wood Duck",
+      "seed": 3899879897,
+      "dark": true,
+      "measure": {
+        "iou": 0.769,
+        "dE_mean": 15.4,
+        "dE_p95": 32.4,
+        "dL": 8.1,
+        "dC": -1.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.931,
+      "sha256": "77e04b177ee2633a203df66f6f73179f48fa2e4149051cc68b079822e546e49a",
+      "photos": [
+        759005016
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye and the ring around it are red.",
+      "review": "approved"
+    },
+    "anas-acuta": {
+      "common_name": "Northern Pintail",
+      "seed": 374627474,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 13.1,
+        "dE_p95": 24.6,
+        "dL": -11.9,
+        "dC": -1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.951,
+      "sha256": "05452faf93642d4cefc3819d5787742487aacba4ffd21620cd330e67a3a9c0dd",
+      "photos": [
+        615178795
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-crecca": {
+      "common_name": "Eurasian Teal",
+      "seed": 1413807465,
+      "dark": false,
+      "measure": {
+        "iou": 0.786,
+        "dE_mean": 21.2,
+        "dE_p95": 35.9,
+        "dL": -1.5,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.939,
+      "sha256": "ec3d37bb27bc95fd94aff4eed544fa9d20ed06b12ab54d68d9dcbd8b34995125",
+      "photos": [
+        749833930
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 3123050504,
+      "dark": false,
+      "measure": {
+        "iou": 0.851,
+        "dE_mean": 11.7,
+        "dE_p95": 32.0,
+        "dL": 4.6,
+        "dC": -0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "59498d5a9ae016ff66743737291e4017cc1a96838665888c93136b5a34bc758c",
+      "photos": [
+        756465499
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy green with a thin white ring round the neck; the breast is dark chestnut; the body pale grey; the tail end black with white tail feathers; the bill is yellow, short and flat, with nothing hanging from it.",
+      "review": "approved"
+    },
+    "anser-albifrons": {
+      "common_name": "Greater White-fronted Goose",
+      "seed": 1022988539,
+      "dark": false,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 12.7,
+        "dE_p95": 23.3,
+        "dL": -12.0,
+        "dC": -2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.948,
+      "sha256": "4d0255037c711596f895abea3082ca1b8bb458465dd0a7c3f9eebe02239f8e58",
+      "photos": [
+        637609406
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "anser-caerulescens": {
+      "common_name": "Snow Goose",
+      "seed": 417334105,
+      "dark": false,
+      "measure": {
+        "iou": 0.837,
+        "dE_mean": 23.7,
+        "dE_p95": 52.6,
+        "dL": 18.4,
+        "dC": -7.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.939,
+      "sha256": "6d740e0ce551869db1d00581074741c011f33c0953d9f7e7529c8040e403ed18",
+      "photos": [
+        490496091
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread with no beige, cream, rust or grey, except the black wingtips; the bill and the legs and feet are pink.",
+      "review": "approved",
+      "rejected_seeds": [
+        1877423055
+      ],
+      "why": "patch pass: the head and neck are stitched beige and the legs dark brown"
+    },
+    "antigone-canadensis": {
+      "common_name": "Sandhill Crane",
+      "seed": 841154145,
+      "dark": false,
+      "measure": {
+        "iou": 0.772,
+        "dE_mean": 14.1,
+        "dE_p95": 24.3,
+        "dL": -11.7,
+        "dC": -4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "76af038d3ca3f377a3fc105d9b881504acea1e197199480339b589b2cfcafc82",
+      "photos": [
+        108659215
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The forehead and crown are bare bright red skin; the cheeks and throat are white; the body and neck are grey, washed rusty-brown on the back.",
+      "review": "approved",
+      "rejected_seeds": [
+        1160105719
+      ],
+      "why": "patch pass: the red crown is lost"
+    },
+    "aphelocoma-californica": {
+      "common_name": "California Scrub Jay",
+      "seed": 2600932584,
+      "dark": false,
+      "measure": {
+        "iou": 0.892,
+        "dE_mean": 9.9,
+        "dE_p95": 21.3,
+        "dL": -3.8,
+        "dC": 3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "70e64178f8a39428827c3bba534736ea9e55accf32e627753c311b5977baf829",
+      "photos": [
+        728047791
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "ardea-alba": {
+      "common_name": "Great Egret",
+      "seed": 4248980853,
+      "dark": false,
+      "measure": {
+        "iou": 0.688,
+        "dE_mean": 21.8,
+        "dE_p95": 35.3,
+        "dL": 20.7,
+        "dC": 0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "0cbd003f91f29e98888a674c7d64504fcbaf3e09626e82d4a9be295294372305",
+      "photos": [
+        711191570
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The whole bird is pure bright white thread, with no grey, beige, cream or blue anywhere; the long bill is yellow; two long legs show, and the legs and feet are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2319810019
+      ],
+      "why": "patch pass: the white bird is stitched grey-beige with a blue wing patch and grey-brown legs"
+    },
+    "ardea-herodias": {
+      "common_name": "Great Blue Heron",
+      "seed": 4129850341,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 7.0,
+        "dE_p95": 15.7,
+        "dL": -6.4,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.971,
+      "sha256": "90d6a88bc219d918d4301b98cd259efd3f0532546e2e74ebb3f2fb62940d1c7f",
+      "photos": [
+        754005712
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "asio-flammeus": {
+      "common_name": "Short-eared Owl",
+      "seed": 2598279985,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 15.4,
+        "dE_p95": 24.0,
+        "dL": -14.2,
+        "dC": -3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "fc7092bdab588d722b701942800a5bc615fb7e68bfc18358ce37152f486362bd",
+      "photos": [
+        347736754
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eyes are yellow, set in black patches.",
+      "review": "approved"
+    },
+    "astur-cooperii": {
+      "common_name": "Cooper's Hawk",
+      "seed": 2004271654,
+      "dark": false,
+      "measure": {
+        "iou": 0.741,
+        "dE_mean": 18.4,
+        "dE_p95": 38.5,
+        "dL": 9.8,
+        "dC": 3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "f58b9596d4d66c9c6472675242807d44df757bca06f929dc5c9af12cc45accbe",
+      "photos": [
+        753570744
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is orange-red.",
+      "review": "approved"
+    },
+    "aythya-affinis": {
+      "common_name": "Lesser Scaup",
+      "seed": 3185569003,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 8.4,
+        "dE_p95": 21.3,
+        "dL": 0.1,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0069,
+      "attempts": 1,
+      "shape_fit": 0.952,
+      "sha256": "40c3c44e404cfa392690d905ffbd2951a55fda051af207e3280de4714496f353",
+      "photos": [
+        594304361
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright golden yellow. The head is black with a purple gloss; the bill is pale blue-grey with a small black tip; the back is finely barred grey and the flanks white.",
+      "review": "approved",
+      "rejected_seeds": [
+        3403209853
+      ],
+      "why": "patch pass: the eye is a small dull tan; it is bright yellow"
+    },
+    "aythya-collaris": {
+      "common_name": "Ring-necked Duck",
+      "seed": 3626468594,
+      "dark": true,
+      "measure": {
+        "iou": 0.904,
+        "dE_mean": 14.6,
+        "dE_p95": 37.0,
+        "dL": 9.6,
+        "dC": -0.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "86f1efbe6089374931fa2b3864fea8b27ff32d6f727b378b20969538ffb6e86c",
+      "photos": [
+        755805667
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head, neck, breast and back are glossy black with no white speckles or spots; the eye is yellow; the grey bill has a white ring near its black tip and a thin white edge at its base; the flanks are pale grey with a white wedge in front of them.",
+      "review": "approved",
+      "rejected_seeds": [
+        2938156132
+      ],
+      "why": "patch pass: white speckles all over the black head"
+    },
+    "bombycilla-cedrorum": {
+      "common_name": "Cedar Waxwing",
+      "seed": 212331732,
+      "dark": false,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 6.0,
+        "dE_p95": 13.9,
+        "dL": -1.5,
+        "dC": 1.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.946,
+      "sha256": "40a561b3bd11bd711abbb4f26f556d812adcff3e06408db561586c5fce20ffdb",
+      "photos": [
+        748483344
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "A black mask runs through the eye, edged with a thin white line; the short black bill is closed and holds nothing; the body is soft brown fading to pale yellow on the belly; the tail is grey with a bright yellow tip.",
+      "review": "approved",
+      "rejected_seeds": [
+        3802762744,
+        2511256942
+      ],
+      "why": "a blob on the bill again; the bill is closed and holds nothing"
+    },
+    "botaurus-lentiginosus": {
+      "common_name": "American Bittern",
+      "seed": 2799246530,
+      "dark": false,
+      "measure": {
+        "iou": 0.913,
+        "dE_mean": 11.2,
+        "dE_p95": 18.4,
+        "dL": -9.9,
+        "dC": -4.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.91,
+      "sha256": "ae5058eb02781e62b79c3d75f7722f154b80edecbe68355158334745bbd11ada",
+      "photos": [
+        362616015
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "branta-bernicla": {
+      "common_name": "Brant Goose",
+      "seed": 3019023929,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 6.7,
+        "dE_p95": 14.3,
+        "dL": -5.4,
+        "dC": 0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.952,
+      "sha256": "3e5ea97507c22021e29ef5b61a52c574d0d9858cf44decc54e77b4c558e7095e",
+      "photos": [
+        175175908
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "branta-canadensis": {
+      "common_name": "Canada Goose",
+      "seed": 2681229965,
+      "dark": false,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 7.1,
+        "dE_p95": 19.1,
+        "dL": 1.1,
+        "dC": 2.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.957,
+      "sha256": "07ddda7ee71951a368dd162ec0bbc85b3d5b6d18724536a8a5f98f615c7ab7fa",
+      "photos": [
+        756838606
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "branta-hutchinsii": {
+      "common_name": "Cackling Goose",
+      "seed": 2183664598,
+      "dark": true,
+      "measure": {
+        "iou": 0.858,
+        "dE_mean": 12.5,
+        "dE_p95": 38.6,
+        "dL": 9.1,
+        "dC": 1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.937,
+      "sha256": "79106d1d43fb669607af1fedb4c0157fc0c1f71af0d6bb0c54ee4a2a025ae449",
+      "photos": [
+        760515253
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "bubo-virginianus": {
+      "common_name": "Great Horned Owl",
+      "seed": 4255513512,
+      "dark": false,
+      "measure": {
+        "iou": 0.915,
+        "dE_mean": 19.4,
+        "dE_p95": 28.0,
+        "dL": -13.8,
+        "dC": 7.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "d2d60f407d0dfdba0a5b0164772ed693ef81642f1d8932641c66ea98f57ead28",
+      "photos": [
+        291059030
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The plumage is warm grey-brown mottled with dark brown, with no blue or blue-grey, finely barred across the breast; the facial disc is rusty-buff rimmed in black; a white throat patch; long ear tufts; the eyes are yellow.",
+      "review": "approved",
+      "rejected_seeds": [
+        2325924670
+      ],
+      "why": "patch pass: the owl is stitched grey-blue"
+    },
+    "bucephala-albeola": {
+      "common_name": "Bufflehead",
+      "seed": 1103022169,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 8.3,
+        "dE_p95": 20.6,
+        "dL": -1.0,
+        "dC": 1.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0148,
+      "attempts": 1,
+      "shape_fit": 0.914,
+      "sha256": "05f79a8c3b2fcebad0a2bf99d699e8ca065435409b426d04a60a565d7ab15da3",
+      "photos": [
+        622378788
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The bill is short, grey and closed; the eye is small and dark; a large white patch wraps the back of the head; the rest of the head is glossy black; the breast and flanks are white and the back black.",
+      "review": "approved",
+      "rejected_seeds": [
+        918157520
+      ],
+      "why": "patch pass: the bill is open and the eye large and glossy"
+    },
+    "bucephala-clangula": {
+      "common_name": "Common Goldeneye",
+      "seed": 411797001,
+      "dark": false,
+      "measure": {
+        "iou": 0.84,
+        "dE_mean": 11.2,
+        "dE_p95": 28.2,
+        "dL": -3.2,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.928,
+      "sha256": "ce15e5eb7efd9eb3b0f9288ed5affa5cadf911194322c48067c2cb2157374b1c",
+      "photos": [
+        618269765
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy black with a green sheen and a round white spot between the eye and the bill; the eye is bright yellow; the breast and flanks are white; the back is black with white stripes; there is no brown on the head.",
+      "review": "approved",
+      "rejected_seeds": [
+        1871492767
+      ],
+      "why": "patch pass: the male's head is brown (the female's colour) and the eye dark"
+    },
+    "bucephala-islandica": {
+      "common_name": "Barrow's Goldeneye",
+      "seed": 11451465,
+      "dark": true,
+      "measure": {
+        "iou": 0.919,
+        "dE_mean": 8.1,
+        "dE_p95": 22.9,
+        "dL": -2.7,
+        "dC": -3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.966,
+      "sha256": "48143f49309c8c99d3cbb34e5db3d4564e17fc0154cbb4c78648d7716ec12252",
+      "photos": [
+        612602126
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow.",
+      "review": "approved"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 1325449735,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 12.3,
+        "dE_p95": 23.1,
+        "dL": -10.2,
+        "dC": 1.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0036,
+      "attempts": 1,
+      "shape_fit": 0.942,
+      "sha256": "1be9af258558a67e25c8d442c13de5c84e89cadff251a3f57765855b8769e907",
+      "photos": [
+        753966738
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "buteo-lineatus": {
+      "common_name": "Red-shouldered Hawk",
+      "seed": 1838093151,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 5.0,
+        "dE_p95": 10.0,
+        "dL": 1.8,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0123,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "cdac0d2e70b1d956190cbb6f165be09658212a32221a5131d264ecc9b4c4f0c8",
+      "photos": [
+        38237398
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "butorides-virescens": {
+      "common_name": "Green Heron",
+      "seed": 1137445000,
+      "dark": false,
+      "measure": {
+        "iou": 0.953,
+        "dE_mean": 8.1,
+        "dE_p95": 15.4,
+        "dL": -7.5,
+        "dC": -0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.962,
+      "sha256": "bfd6dd414c9f5613d61df048e071328dae3caaca08c064b8116ff2fd36e92dd6",
+      "photos": [
+        613753074
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "calidris-alpina": {
+      "common_name": "Dunlin",
+      "seed": 3717702722,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 12.4,
+        "dE_p95": 20.4,
+        "dL": -12.1,
+        "dC": -0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.959,
+      "sha256": "290322947b6a083cd02b1722c5f48a784117db76de12dd385fe71224d6ef262f",
+      "photos": [
+        363518819
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-mauri": {
+      "common_name": "Western Sandpiper",
+      "seed": 1446543665,
+      "dark": false,
+      "measure": {
+        "iou": 0.901,
+        "dE_mean": 5.8,
+        "dE_p95": 12.2,
+        "dL": -1.2,
+        "dC": 2.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.936,
+      "sha256": "81accbe4cb39a685cd6404bce90fdc82041e62a2c2e05c76a017996598d1aadc",
+      "photos": [
+        49116398
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "calidris-minutilla": {
+      "common_name": "Least Sandpiper",
+      "seed": 65334311,
+      "dark": false,
+      "measure": {
+        "iou": 0.969,
+        "dE_mean": 7.2,
+        "dE_p95": 16.5,
+        "dL": -6.0,
+        "dC": 2.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.961,
+      "sha256": "3b6bea5473cfd409313d75891142d593a16a5def3838fcf0eea36575d0490f90",
+      "photos": [
+        754003875
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "callipepla-californica": {
+      "common_name": "California Quail",
+      "seed": 2390436868,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 12.6,
+        "dE_p95": 19.0,
+        "dL": -9.6,
+        "dC": -3.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.957,
+      "sha256": "558b9452c6cc7045044d93b355d428ffc8d12b0947cb1495c07452c6866148fa",
+      "photos": [
+        316903799
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "calypte-anna": {
+      "common_name": "Anna's Hummingbird",
+      "seed": 3428153755,
+      "dark": false,
+      "measure": {
+        "iou": 0.955,
+        "dE_mean": 16.8,
+        "dE_p95": 26.2,
+        "dL": -16.6,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0036,
+      "attempts": 1,
+      "shape_fit": 0.957,
+      "sha256": "977a7aaf2a9333c2a474dec5e4b7ecd70f98b80b07232e0d3d355511e5edaf76",
+      "photos": [
+        750993929
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cardellina-pusilla": {
+      "common_name": "Wilson's Warbler",
+      "seed": 969307934,
+      "dark": false,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 20.7,
+        "dE_p95": 28.2,
+        "dL": -16.9,
+        "dC": -9.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "46a0bf19b3b87dcf34e2dca57ef0343b0bb168166f1afcd56c51a4ebd00b1163",
+      "photos": [
+        380834421
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "cathartes-aura": {
+      "common_name": "Turkey Vulture",
+      "seed": 250411721,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 5.8,
+        "dE_p95": 14.5,
+        "dL": -2.4,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0133,
+      "attempts": 1,
+      "shape_fit": 0.937,
+      "sha256": "effc660fd71c78e1fb3bee3f8552f6ffd6dfc5b69f7527ad425000475267b817",
+      "photos": [
+        692559157
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole body, wings and tail are matte blackish-brown thread with no white, cream, grey or pale edges on any feather; the only exceptions are the small bare head and neck, which are red, the ivory-white bill and the pale pink legs.",
+      "review": "approved",
+      "rejected_seeds": [
+        2045495903
+      ],
+      "why": "patch pass: cream edges on the wing feathers and a pale pink-white head"
+    },
+    "catharus-guttatus": {
+      "common_name": "Hermit Thrush",
+      "seed": 1443923675,
+      "dark": false,
+      "measure": {
+        "iou": 0.856,
+        "dE_mean": 15.4,
+        "dE_p95": 25.2,
+        "dL": -8.6,
+        "dC": 5.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "9fcae2cec88aab766da348eaa2f66b2567b7656feefb1921c5008d273a9fd3ed",
+      "photos": [
+        356152536
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The breast is white with bold dark brown spots; the back and head are olive-brown; the tail is rufous; a thin white eye ring.",
+      "review": "approved",
+      "rejected_seeds": [
+        555202126
+      ],
+      "why": "patch pass: the breast spots are lost"
+    },
+    "catharus-ustulatus": {
+      "common_name": "Swainson's Thrush",
+      "seed": 3504724462,
+      "dark": false,
+      "measure": {
+        "iou": 0.786,
+        "dE_mean": 9.9,
+        "dE_p95": 17.0,
+        "dL": 5.7,
+        "dC": 5.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0037,
+      "attempts": 2,
+      "shape_fit": 0.93,
+      "sha256": "98920d35c4a9bddb11d3fcffea0e948443287b12d472ed688e596edc82c1c7a9",
+      "photos": [
+        301300689
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "cepphus-columba": {
+      "common_name": "Pigeon Guillemot",
+      "seed": 440835493,
+      "dark": false,
+      "measure": {
+        "iou": 0.891,
+        "dE_mean": 27.4,
+        "dE_p95": 48.5,
+        "dL": -27.0,
+        "dC": -2.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.973,
+      "sha256": "32e76214517c5feb442be9c950b615878b5647bc84282e1bb938bdff6269e8e5",
+      "photos": [
+        666682033
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is black except a large white patch on the folded wing crossed by a thin black bar; the feet are bright red; the thin bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        1833020723
+      ],
+      "why": "patch pass: the black bird is stitched dull brown-grey"
+    },
+    "cerorhinca-monocerata": {
+      "common_name": "Rhinoceros Auklet",
+      "seed": 515968627,
+      "dark": false,
+      "measure": {
+        "iou": 0.941,
+        "dE_mean": 10.7,
+        "dE_p95": 20.7,
+        "dL": -4.9,
+        "dC": 4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.937,
+      "sha256": "9483180fba036756900234bf02dc746bc90014db564b5958c8730bc3929c56e0",
+      "photos": [
+        729398736
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "certhia-americana": {
+      "common_name": "Brown Creeper",
+      "seed": 437348730,
+      "dark": false,
+      "measure": {
+        "iou": 0.884,
+        "dE_mean": 9.3,
+        "dE_p95": 16.5,
+        "dL": -8.1,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.932,
+      "sha256": "c34671e548e08ecc30d398a19a665b6771eea6f659f9bf92fc2eccd502830e16",
+      "photos": [
+        738998013
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "chaetura-vauxi": {
+      "common_name": "Vaux's Swift",
+      "seed": 2546598190,
+      "dark": false,
+      "measure": {
+        "iou": 0.672,
+        "dE_mean": 44.3,
+        "dE_p95": 63.6,
+        "dL": 43.6,
+        "dC": 0.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0083,
+      "attempts": 1,
+      "shape_fit": 0.929,
+      "sha256": "e32ce4c3f4af1f467de26adc1070f68fe0fc1cb739d9c857ab916464284a77e6",
+      "photos": [
+        540099394
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The whole bird is dark sooty grey-brown, a little paler on the throat; there is no white on the body, wings or tail.",
+      "review": "approved",
+      "rejected_seeds": [
+        3771543992
+      ],
+      "why": "patch pass: a white body and white wing bars invented on a dark bird"
+    },
+    "charadrius-vociferus": {
+      "common_name": "Killdeer",
+      "seed": 492305351,
+      "dark": false,
+      "measure": {
+        "iou": 0.885,
+        "dE_mean": 7.0,
+        "dE_p95": 12.8,
+        "dL": -1.6,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.956,
+      "sha256": "fa4823201236330c3c986c209503433da0018889766306b7cc171890c3483b15",
+      "photos": [
+        647254521
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "chroicocephalus-philadelphia": {
+      "common_name": "Bonaparte's Gull",
+      "seed": 4185587427,
+      "dark": false,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 25.2,
+        "dE_p95": 44.0,
+        "dL": -12.3,
+        "dC": -9.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "9c1f403f172e766ff703f2daf3c2b8e2061c538484f237a0a0148a6144710357",
+      "photos": [
+        647040002
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The hood is solid slate-black with thin white crescents above and below the eye; the neck, breast, belly and tail are pure white; the back and wings are pale grey with a white leading edge and black tips; the small bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2390609526
+      ],
+      "why": "patch pass: the hood is brownish and there is brown on the folded wing"
+    },
+    "cinclus-mexicanus": {
+      "common_name": "American Dipper",
+      "seed": 208597803,
+      "dark": false,
+      "measure": {
+        "iou": 0.97,
+        "dE_mean": 3.9,
+        "dE_p95": 7.7,
+        "dL": -0.8,
+        "dC": -0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "bd3bf2b10c2b45544b232904fc3606f06da751b5291cd6688b2683e629fd8269",
+      "photos": [
+        396334890
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "circus-hudsonius": {
+      "common_name": "Northern Harrier",
+      "seed": 1964571537,
+      "dark": false,
+      "measure": {
+        "iou": 0.871,
+        "dE_mean": 9.0,
+        "dE_p95": 18.7,
+        "dL": -6.6,
+        "dC": -3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.958,
+      "sha256": "5d079469494a5c6ca67eed988b4cf2d51aafca9a24cd07fbc341e9cd4c3cd289",
+      "photos": [
+        734393101
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "cistothorus-palustris": {
+      "common_name": "Marsh Wren",
+      "seed": 2284056892,
+      "dark": false,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 8.0,
+        "dE_p95": 16.4,
+        "dL": -6.1,
+        "dC": -1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.942,
+      "sha256": "292ef7d47f14787de417d5bf6b80640d5f887a4fbeee1d331018bc9de58366da",
+      "photos": [
+        635023492
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "coccothraustes-vespertinus": {
+      "common_name": "Evening Grosbeak",
+      "seed": 2376701417,
+      "dark": false,
+      "measure": {
+        "iou": 0.742,
+        "dE_mean": 14.0,
+        "dE_p95": 36.0,
+        "dL": -0.0,
+        "dC": -1.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.957,
+      "sha256": "92dc91f851f98d600a690f674ad3df614f795d95239144e8abbab9ad232d95d3",
+      "photos": [
+        186919687
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        4205749631
+      ],
+      "why": "maintainer: branch and feet should be connected"
+    },
+    "colaptes-auratus": {
+      "common_name": "Northern Flicker",
+      "seed": 711428286,
+      "dark": false,
+      "measure": {
+        "iou": 0.933,
+        "dE_mean": 8.3,
+        "dE_p95": 18.9,
+        "dL": -1.9,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.947,
+      "sha256": "61f71dec372c87955d3036bbe777f971e87daa9474ab9a92ec03b1b89987b48e",
+      "photos": [
+        741967777
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "columba-livia": {
+      "common_name": "Rock Dove",
+      "seed": 2849197439,
+      "dark": false,
+      "measure": {
+        "iou": 0.608,
+        "dE_mean": 14.3,
+        "dE_p95": 38.4,
+        "dL": 8.1,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.961,
+      "sha256": "3818d2e68911d70c82f96a7aec257bd80b63c7b5a913fbef4910e5c365b78aef",
+      "photos": [
+        753159682
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head and neck are dark blue-grey with a glossy green and purple patch on the side of the neck; the body and wings are blue-grey chequered with dark slate grey, never black and with no white streaks; the tail is grey with a dark tip; the eye is orange-red; the legs and feet are pink-red.",
+      "review": "approved",
+      "rejected_seeds": [
+        3738467817
+      ],
+      "why": "patch pass: the dark-bird clause turned a blue-grey pigeon black with white streaks"
+    },
+    "contopus-cooperi": {
+      "common_name": "Olive-sided Flycatcher",
+      "seed": 535266801,
+      "dark": false,
+      "measure": {
+        "iou": 0.872,
+        "dE_mean": 15.5,
+        "dE_p95": 26.8,
+        "dL": -14.1,
+        "dC": -2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.946,
+      "sha256": "092425888d3521de98ab9072a0c4d1404e18709545149cf2bb560b184349debf",
+      "photos": [
+        511004176
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "contopus-sordidulus": {
+      "common_name": "Western Wood Pewee",
+      "seed": 2324246091,
+      "dark": false,
+      "measure": {
+        "iou": 0.813,
+        "dE_mean": 21.3,
+        "dE_p95": 36.0,
+        "dL": 9.2,
+        "dC": -4.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.934,
+      "sha256": "33c96e6af5a90e24aa81b15a60fadfeabd564bcc81774727b41015126f77ea2c",
+      "photos": [
+        216377306
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The upperparts are dull grey-olive with no blue; the breast and flanks are washed grey, the throat and belly paler; two thin pale wing bars; the bill is dark. The bird is small in the frame: its tail tip ends well inside the border, clear of the cord.",
+      "review": "approved",
+      "rejected_seeds": [
+        327188466,
+        1686589287,
+        4253949661
+      ],
+      "why": "the tail crosses the border cord again"
+    },
+    "corthylio-calendula": {
+      "common_name": "Ruby-crowned Kinglet",
+      "seed": 3497413576,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 12.7,
+        "dE_p95": 20.0,
+        "dL": -11.5,
+        "dC": -1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.902,
+      "sha256": "78dd5e34483af303c24f2738c5d372a385c7d90f5b977a36a756138a7ec0d807",
+      "photos": [
+        634328253
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 1275185569,
+      "dark": false,
+      "measure": {
+        "iou": 0.951,
+        "dE_mean": 15.5,
+        "dE_p95": 28.6,
+        "dL": -11.7,
+        "dC": -9.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.004,
+      "attempts": 1,
+      "shape_fit": 0.952,
+      "sha256": "67f7b6dcce675a5d1fcf4d34e1c3799c7e4e89aa7f0e2345e36602a75b489542",
+      "photos": [
+        754797677
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is matte jet-black thread with no white, grey, blue or pale thread anywhere, the folded wing exactly as black as the body. The bill, legs and eye are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        990312759
+      ],
+      "why": "patch pass: blue thread on the folded wing"
+    },
+    "corvus-corax": {
+      "common_name": "Northern Raven",
+      "seed": 3966239008,
+      "dark": false,
+      "measure": {
+        "iou": 0.859,
+        "dE_mean": 10.4,
+        "dE_p95": 16.7,
+        "dL": -4.4,
+        "dC": -8.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.943,
+      "sha256": "6ff95fdd8bcfd0e352dcc484238cbcdb58a3d8aaabbae0f769a6aa753e790c37",
+      "photos": [
+        720673879
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere. The bird walks on open ground: both feet stand flat on the ground under it, with no branch.",
+      "review": "approved",
+      "rejected_seeds": [
+        2607755702
+      ],
+      "why": "maintainer: feet not on branch"
+    },
+    "cyanocitta-stelleri": {
+      "common_name": "Steller's Jay",
+      "seed": 1731525379,
+      "dark": false,
+      "measure": {
+        "iou": 0.533,
+        "dE_mean": 27.5,
+        "dE_p95": 48.2,
+        "dL": 2.9,
+        "dC": -5.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.958,
+      "sha256": "f431021dca76b4be0cd7be2bd63026a6bbba430120ebc6403f01384cc3fa4e3e",
+      "photos": [
+        753569121
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The head, crest, throat and upper breast are sooty black; the body, wings and tail are deep blue, darker on the back, with fine black bars on the wings and tail; there is no teal, green or grey.",
+      "review": "approved"
+    },
+    "cygnus-buccinator": {
+      "common_name": "Trumpeter Swan",
+      "seed": 3245177123,
+      "dark": false,
+      "measure": {
+        "iou": 0.846,
+        "dE_mean": 22.3,
+        "dE_p95": 33.9,
+        "dL": 12.1,
+        "dC": -7.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "842e88980308f7ea7f13d88ef38d4dbdc0e700676483e07d44bb1d613505cb54",
+      "photos": [
+        611331020
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread with no cream, beige or grey; the bill, the bare skin from the bill to the eye, the legs and the feet are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3060418998
+      ],
+      "why": "patch pass: the white swan is stitched cream-beige"
+    },
+    "cygnus-columbianus": {
+      "common_name": "Tundra Swan",
+      "seed": 3239401942,
+      "dark": false,
+      "measure": {
+        "iou": 0.908,
+        "dE_mean": 12.6,
+        "dE_p95": 34.0,
+        "dL": 2.7,
+        "dC": -0.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.963,
+      "sha256": "2e2d3a6a01307d5adec57a2a09173d04484161a8c2eb9f63a82dbee83d0830bc",
+      "photos": [
+        347736304
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is pure bright white thread with no grey, cream or beige; the bill, legs and feet are black, with a small yellow spot in front of the eye.",
+      "review": "approved",
+      "rejected_seeds": [
+        3054659904
+      ],
+      "why": "patch pass: the white swan is stitched grey-beige"
+    },
+    "dendragapus-fuliginosus": {
+      "common_name": "Sooty Grouse",
+      "seed": 2122659698,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 5.0,
+        "dE_p95": 12.9,
+        "dL": -3.9,
+        "dC": -0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.948,
+      "sha256": "be5da93c6b589302ab63032dc92ac76fa41ad0460931e869a537cd25ca1c1f49",
+      "photos": [
+        710127798
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 3100218386,
+      "dark": false,
+      "measure": {
+        "iou": 0.818,
+        "dE_mean": 30.8,
+        "dE_p95": 52.3,
+        "dL": 13.3,
+        "dC": -15.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.945,
+      "sha256": "77cbf76add7ed9a1df518c1eb510dfc9cce18d2af74fb53a43f08f4de3a11822",
+      "photos": [
+        661178955
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird is seen from the side, upright; both feet grip the branch beneath it and no foot or claw lies across the belly; the underparts are plain white, the wings black with white spots, the head striped black and white.",
+      "review": "approved",
+      "rejected_seeds": [
+        3486426244
+      ],
+      "why": "a foot lies across the belly"
+    },
+    "dryobates-villosus": {
+      "common_name": "Hairy Woodpecker",
+      "seed": 1007901036,
+      "dark": true,
+      "measure": {
+        "iou": 0.931,
+        "dE_mean": 6.4,
+        "dE_p95": 15.3,
+        "dL": 1.1,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.924,
+      "sha256": "08d1f72a2d515b8d8027ea9ec3b3fcce10203e1477edaab818d29bfe7a5c09c1",
+      "photos": [
+        691217341
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "dryocopus-pileatus": {
+      "common_name": "Pileated Woodpecker",
+      "seed": 2864511040,
+      "dark": false,
+      "measure": {
+        "iou": 0.917,
+        "dE_mean": 10.3,
+        "dE_p95": 19.8,
+        "dL": -2.7,
+        "dC": -3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0082,
+      "attempts": 1,
+      "shape_fit": 0.95,
+      "sha256": "2c22415dc47e8775eaafd4d9b511379182d95ec7cdae0ddf457b3c3d5b84caae",
+      "photos": [
+        710100527
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "approved"
+    },
+    "empidonax-difficilis": {
+      "common_name": "Western Flycatcher",
+      "seed": 4022155893,
+      "dark": false,
+      "measure": {
+        "iou": 0.937,
+        "dE_mean": 9.3,
+        "dE_p95": 20.2,
+        "dL": -5.0,
+        "dC": -3.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.935,
+      "sha256": "e5c4d2da0f587449909a2af7722f73132070c17dd3d93d186a20b336260873bc",
+      "photos": [
+        405272971
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "empidonax-traillii": {
+      "common_name": "Willow Flycatcher",
+      "seed": 1765098723,
+      "dark": false,
+      "measure": {
+        "iou": 0.862,
+        "dE_mean": 7.7,
+        "dE_p95": 14.6,
+        "dL": 0.9,
+        "dC": -3.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.925,
+      "sha256": "aec212c60e09991fa9d017aa3f92ca05cc646b8ae55469c90e8c52e2f81fbae2",
+      "photos": [
+        307890406
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "euphagus-cyanocephalus": {
+      "common_name": "Brewer's Blackbird",
+      "seed": 815439866,
+      "dark": false,
+      "measure": {
+        "iou": 0.884,
+        "dE_mean": 6.0,
+        "dE_p95": 10.9,
+        "dL": 3.9,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.941,
+      "sha256": "29745aa3fbdf77a3e4b4041506df47edfb8bab62f3b105e7b5b92d4d8155e629",
+      "photos": [
+        288380663
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is matte black thread with no white, grey, blue or pale thread anywhere; the only pale mark is the eye, which is pale yellow. The bill and legs are black.",
+      "review": "approved"
+    },
+    "falco-columbarius": {
+      "common_name": "Merlin",
+      "seed": 3948756378,
+      "dark": false,
+      "measure": {
+        "iou": 0.835,
+        "dE_mean": 6.0,
+        "dE_p95": 15.9,
+        "dL": -1.6,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.95,
+      "sha256": "a5b9bc648ed3960e5763a2d14d3c45bbf7d90135f8f777a9ce7ca509e2ae85d8",
+      "photos": [
+        148373306
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved",
+      "rejected_seeds": [
+        2623147280
+      ],
+      "why": "patch pass: the border cord is stitched pale slate-teal like the twill instead of dark spruce green"
+    },
+    "falco-peregrinus": {
+      "common_name": "Peregrine Falcon",
+      "seed": 1256036679,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 8.5,
+        "dE_p95": 13.9,
+        "dL": -6.7,
+        "dC": 1.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0099,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "31093cb6b0f5bb039a0755058262c3a692122023d054b2bb39e671aa4cb37a4f",
+      "photos": [
+        346099345
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird stands upright on top of a thick horizontal branch and both yellow feet grip the top of it. The branch runs across in front of the tail: the tail hangs straight down behind the branch, hidden where the branch crosses it, and its dark tip shows again below the branch. No part of the tail lies over the front of the branch, and there is no stump under the feet.",
+      "review": "approved",
+      "rejected_seeds": [
+        2765355115,
+        3553937661
+      ],
+      "why": "maintainer: the tail should be behind the branch"
+    },
+    "falco-sparverius": {
+      "common_name": "American Kestrel",
+      "seed": 2628813755,
+      "dark": false,
+      "measure": {
+        "iou": 0.943,
+        "dE_mean": 8.0,
+        "dE_p95": 16.3,
+        "dL": 3.9,
+        "dC": 2.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.942,
+      "sha256": "d06fe23e4fb752312296d625cead5f6e9c710dee4b10271ed3b9e2332e76f5a6",
+      "photos": [
+        636296889
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "fulica-americana": {
+      "common_name": "American Coot",
+      "seed": 3289603747,
+      "dark": false,
+      "measure": {
+        "iou": 0.876,
+        "dE_mean": 25.7,
+        "dE_p95": 43.1,
+        "dL": -23.6,
+        "dC": -6.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.946,
+      "sha256": "b64db43c95a4cf055fc8d4d529cac7b05678e4100470f33e5bb4f553be62ff4a",
+      "photos": [
+        761090337
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are solid black, the eye is red and the short white bill is closed, with a small dark red patch at its top; the body and wings are plain dark slate grey, with no white or pale patches.",
+      "review": "approved",
+      "rejected_seeds": [
+        3004460597
+      ],
+      "why": "patch pass: the eye is black (it is red) and the bill is open"
+    },
+    "gallinago-delicata": {
+      "common_name": "Wilson's Snipe",
+      "seed": 3150464610,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 8.9,
+        "dE_p95": 16.3,
+        "dL": -8.4,
+        "dC": 1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "c887ea01083b0518f311c00812598eb2b043242928d2ac434c2e76b45b9e2c57",
+      "photos": [
+        445433657
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "gavia-immer": {
+      "common_name": "Common Loon",
+      "seed": 856759717,
+      "dark": true,
+      "measure": {
+        "iou": 0.907,
+        "dE_mean": 11.3,
+        "dE_p95": 20.2,
+        "dL": -9.3,
+        "dC": -4.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.945,
+      "sha256": "dbdb45b179a906d3bb674dab0ef04db900ec0df224074c30742d5c8ea8b48611",
+      "photos": [
+        488130059
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is red.",
+      "review": "approved"
+    },
+    "geothlypis-trichas": {
+      "common_name": "Common Yellowthroat",
+      "seed": 3207685139,
+      "dark": false,
+      "measure": {
+        "iou": 0.916,
+        "dE_mean": 15.4,
+        "dE_p95": 27.9,
+        "dL": -6.1,
+        "dC": -9.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.969,
+      "sha256": "b8d2fe476e485659ad36e0e3bc940757e235b733bf95da2599ad2ee0cbe53c29",
+      "photos": [
+        652453724
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "glaucidium-gnoma": {
+      "common_name": "Mountain Pygmy Owl",
+      "seed": 3643101781,
+      "dark": false,
+      "measure": {
+        "iou": 0.848,
+        "dE_mean": 20.6,
+        "dE_p95": 37.1,
+        "dL": -2.1,
+        "dC": -4.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.94,
+      "sha256": "10d96b4134f3f95a4b7f7e3d3cb9069f6657c294f17da723b64a3407607cbfe9",
+      "photos": [
+        185591118
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eyes are yellow.",
+      "review": "approved"
+    },
+    "haemorhous-mexicanus": {
+      "common_name": "House Finch",
+      "seed": 3556895415,
+      "dark": false,
+      "measure": {
+        "iou": 0.935,
+        "dE_mean": 6.7,
+        "dE_p95": 14.3,
+        "dL": -5.1,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.936,
+      "sha256": "c108243cb4f56fb3884175915b82238894a9e60676a023e6a2f806af78453d2f",
+      "photos": [
+        723166329
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "haemorhous-purpureus": {
+      "common_name": "Purple Finch",
+      "seed": 3711533131,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 10.8,
+        "dE_p95": 17.5,
+        "dL": -6.3,
+        "dC": -6.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.972,
+      "sha256": "eaba7d3e7f373ab64b554f7ad7dab0a64789831d508348b94f6bc4d4d5f7672f",
+      "photos": [
+        695464672
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "haliaeetus-leucocephalus": {
+      "common_name": "Bald Eagle",
+      "seed": 2169030525,
+      "dark": true,
+      "measure": {
+        "iou": 0.932,
+        "dE_mean": 10.2,
+        "dE_p95": 20.5,
+        "dL": 2.4,
+        "dC": -2.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0069,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "e6378926627afa5fc857eb71362a04770f77fe716fc66b8c1251aeb3f24c37c8",
+      "photos": [
+        714245451
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "hirundo-rustica": {
+      "common_name": "Barn Swallow",
+      "seed": 2753293838,
+      "dark": false,
+      "measure": {
+        "iou": 0.937,
+        "dE_mean": 13.3,
+        "dE_p95": 22.2,
+        "dL": -0.0,
+        "dC": -6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.928,
+      "sha256": "8bb2cb7f26c89ebe3fdae8b820542f7dbf721fa43a55cf0bab36d00f1a0963c3",
+      "photos": [
+        697241360
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "histrionicus-histrionicus": {
+      "common_name": "Harlequin Duck",
+      "seed": 2037129100,
+      "dark": false,
+      "measure": {
+        "iou": 0.652,
+        "dE_mean": 19.8,
+        "dE_p95": 45.7,
+        "dL": -2.4,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0076,
+      "attempts": 1,
+      "shape_fit": 0.934,
+      "sha256": "5ae096584363b4664b9897ab10301cc7ffa632f0b52e9c91cb0a40b6d67a6faa",
+      "photos": [
+        612484314
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The body is dark slate blue and the flanks rich chestnut, with bold white crescents and stripes edged in black on the face, neck, breast and back; a chestnut stripe runs along the side of the crown.",
+      "review": "approved",
+      "rejected_seeds": [
+        241905434
+      ],
+      "why": "patch pass: black and white only, with no chestnut flanks or crown stripe"
+    },
+    "hydroprogne-caspia": {
+      "common_name": "Caspian Tern",
+      "seed": 2393976678,
+      "dark": false,
+      "measure": {
+        "iou": 0.727,
+        "dE_mean": 13.2,
+        "dE_p95": 30.1,
+        "dL": -8.5,
+        "dC": 0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0043,
+      "attempts": 1,
+      "shape_fit": 0.973,
+      "sha256": "e6895967dc05470375acf3f10ae3afb426a8ef515aedda150880f1b256570be8",
+      "photos": [
+        675109853
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The body and underwings are pure white, the back and upper wings pale grey and the wingtips dusky; the cap is black; the thick bill is bright red; there is no blue or dark patch on the body or at the base of the wings.",
+      "review": "approved",
+      "rejected_seeds": [
+        4189462512
+      ],
+      "why": "patch pass: a navy-blue blob at the base of the wing"
+    },
+    "ixoreus-naevius": {
+      "common_name": "Varied Thrush",
+      "seed": 2213074287,
+      "dark": false,
+      "measure": {
+        "iou": 0.89,
+        "dE_mean": 10.9,
+        "dE_p95": 22.0,
+        "dL": -8.7,
+        "dC": -2.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.957,
+      "sha256": "3b9c0b6cda3523ec4bb53a73d1fc4958067f93154ccdeb7bea249731ab28dc7d",
+      "photos": [
+        468906092
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "junco-hyemalis": {
+      "common_name": "Dark-eyed Junco",
+      "seed": 1475535274,
+      "dark": false,
+      "measure": {
+        "iou": 0.937,
+        "dE_mean": 8.4,
+        "dE_p95": 20.1,
+        "dL": 5.3,
+        "dC": 3.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0109,
+      "attempts": 2,
+      "shape_fit": 0.977,
+      "sha256": "15b9ca3364e400d3d72738cdd45e655b6d5cc48a1ecb0c6859aa46da3ac194cb",
+      "photos": [
+        755804775
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is dark, almost black, with no pale ring around it.",
+      "review": "approved",
+      "rejected_seeds": [
+        552980799
+      ],
+      "why": "patch pass: the eye has a pale tan ring; the eye is dark"
+    },
+    "larus-brachyrhynchus": {
+      "common_name": "Short-billed Gull",
+      "seed": 3992638768,
+      "dark": false,
+      "measure": {
+        "iou": 0.949,
+        "dE_mean": 18.2,
+        "dE_p95": 30.4,
+        "dL": -18.0,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.924,
+      "sha256": "2e527d64f12ba1744a714148ed52b17f101767931bd2a72cca0f99393dd82d9f",
+      "photos": [
+        741981066
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "markings": "The breast, belly and tail are pure white thread with no beige or cream; the head is white with only fine grey smudging on the crown and nape; the back and wings are mid grey with black wingtips spotted white; the short thin bill and the legs are yellow; the eye is dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        2600330662
+      ],
+      "why": "patch pass: the head and breast are stitched beige-grey and streaky"
+    },
+    "larus-californicus": {
+      "common_name": "California Gull",
+      "seed": 1810427908,
+      "dark": false,
+      "measure": {
+        "iou": 0.868,
+        "dE_mean": 11.4,
+        "dE_p95": 22.3,
+        "dL": 6.3,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.933,
+      "sha256": "5530c465c3c26f3178103183eca6629bd91f24c5c1cd94598aa854cf515df224",
+      "photos": [
+        593587693
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The head, breast, belly and tail are pure white; the back and wings are mid grey with black wingtips spotted white; the yellow bill has a red spot and a black spot near the tip; the legs and feet are greenish-yellow, not black; the eye is dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        485474453
+      ],
+      "why": "patch pass: the legs are black; they are greenish-yellow"
+    },
+    "larus-delawarensis": {
+      "common_name": "Ring-billed Gull",
+      "seed": 1507002259,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 16.7,
+        "dE_p95": 24.2,
+        "dL": -15.8,
+        "dC": 0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "38267d51932be9d428b84207f51cd9a54bb4bb94ff5c6c889522a851bf68599b",
+      "photos": [
+        739076697
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "shore",
+      "review": "approved"
+    },
+    "larus-glaucescens": {
+      "common_name": "Glaucous-winged Gull",
+      "seed": 3455104181,
+      "dark": false,
+      "measure": {
+        "iou": 0.946,
+        "dE_mean": 11.4,
+        "dE_p95": 16.9,
+        "dL": -3.0,
+        "dC": -8.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.917,
+      "sha256": "a1399b4a7e4b1ad3f2eecc2ca8f5819000d2f46f1b75a5b664a13c3dd948d995",
+      "photos": [
+        594440130
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "larus-heermanni": {
+      "common_name": "Heermann's Gull",
+      "seed": 3704624093,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 5.8,
+        "dE_p95": 15.2,
+        "dL": 0.1,
+        "dC": -1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0057,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "dddbb3bace855314e2d60b16a9fd804c47f77a20d99212c43f8fb8ea7a53f141",
+      "photos": [
+        328838775
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "markings": "The body and wings are dark slate grey with no brown or warm tone; the head is paler grey; the tail is black with a white tip; the bill is bright red with a black tip; the legs and feet are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        2883003211
+      ],
+      "why": "patch pass: the adult is stitched warm brown-grey like an immature"
+    },
+    "leiothlypis-celata": {
+      "common_name": "Orange-crowned Warbler",
+      "seed": 2421304750,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 17.1,
+        "dE_p95": 28.2,
+        "dL": 9.9,
+        "dC": -8.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.941,
+      "sha256": "697f3705a8bf16c6cfe4dfd88bf007a924959ebb323f0df1386dcf480186ae99",
+      "photos": [
+        369858250
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "limnodromus-scolopaceus": {
+      "common_name": "Long-billed Dowitcher",
+      "seed": 3637090884,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 6.6,
+        "dE_p95": 12.7,
+        "dL": -5.3,
+        "dC": 2.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.956,
+      "sha256": "0dc1652e18c36f711ece27c55e1c99fd928dbed072f8a6b79f9285842c7b41d5",
+      "photos": [
+        227348924
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "lophodytes-cucullatus": {
+      "common_name": "Hooded Merganser",
+      "seed": 285188930,
+      "dark": false,
+      "measure": {
+        "iou": 0.923,
+        "dE_mean": 15.0,
+        "dE_p95": 31.2,
+        "dL": 10.1,
+        "dC": 1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.941,
+      "sha256": "37a3eecf093a6b40a465450d8a636d2fe0685d8270c10c8a4fbd18eaf217141e",
+      "photos": [
+        759036502
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is bright yellow.",
+      "review": "approved"
+    },
+    "loxia-curvirostra": {
+      "common_name": "Red Crossbill",
+      "seed": 2600497086,
+      "dark": false,
+      "measure": {
+        "iou": 0.763,
+        "dE_mean": 19.3,
+        "dE_p95": 37.9,
+        "dL": -7.5,
+        "dC": -6.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.928,
+      "sha256": "29a74b3fc5837950706b473b9397d44e595f8fb916d4922bc89832ca76dd4ed2",
+      "photos": [
+        448305756
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The body is brick red to orange-red; the wings and tail are dark brown-black with no wing bars; the tips of the bill cross over each other.",
+      "review": "approved",
+      "rejected_seeds": [
+        3959906089
+      ],
+      "why": "patch pass: orange-yellow with an uncrossed bill"
+    },
+    "mareca-americana": {
+      "common_name": "American Wigeon",
+      "seed": 3812885317,
+      "dark": false,
+      "measure": {
+        "iou": 0.836,
+        "dE_mean": 17.3,
+        "dE_p95": 37.5,
+        "dL": -8.3,
+        "dC": -7.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.951,
+      "sha256": "18193429e4b2003719cc521fbf9278338de167d07503b26ae2585d0db805e1a1",
+      "photos": [
+        754013450
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The crown and forehead are white; a broad glossy green band sweeps back from the eye; the cheeks and neck are speckled grey; the breast and flanks are pinkish-brown; the rear end is black with a white patch in front of it; the bill is pale blue-grey with a black tip.",
+      "review": "approved",
+      "rejected_seeds": [
+        2487432148
+      ],
+      "why": "patch pass: the male's head is plain grey, with no white crown and no green band behind the eye"
+    },
+    "mareca-penelope": {
+      "common_name": "Eurasian Wigeon",
+      "seed": 34600430,
+      "dark": false,
+      "measure": {
+        "iou": 0.886,
+        "dE_mean": 7.2,
+        "dE_p95": 16.0,
+        "dL": -2.9,
+        "dC": 1.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.964,
+      "sha256": "c1aa1d2bc8cd4efb34dcf65e89b5adfebb9087a4b9228160b2df04631f23d9bf",
+      "photos": [
+        350396725
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved",
+      "rejected_seeds": [
+        1963509112
+      ],
+      "why": "patch pass: a standing duck painted with a muddle of legs; set to swim"
+    },
+    "mareca-strepera": {
+      "common_name": "Gadwall",
+      "seed": 1551964191,
+      "dark": false,
+      "measure": {
+        "iou": 0.9,
+        "dE_mean": 12.3,
+        "dE_p95": 24.5,
+        "dL": -11.3,
+        "dC": -1.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.951,
+      "sha256": "95435752993913709248e28655bdd1751db98edd39fc974ea4df658e64fee8bf",
+      "photos": [
+        761087337
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The body is finely barred grey, the head plain grey-brown, the tail end black and the bill dark grey; there are no orange, buff or brown stripes on the body.",
+      "review": "approved",
+      "rejected_seeds": [
+        730212489
+      ],
+      "why": "patch pass: the grey male is stitched brown with orange-buff stripes, like a female"
+    },
+    "megaceryle-alcyon": {
+      "common_name": "Belted Kingfisher",
+      "seed": 2299571682,
+      "dark": false,
+      "measure": {
+        "iou": 0.911,
+        "dE_mean": 11.1,
+        "dE_p95": 20.3,
+        "dL": -3.5,
+        "dC": -8.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.934,
+      "sha256": "3ff0e0e71ff628a6cc5f55ae7334cc4f71718ebc22979fa9f511d8b2590a19f3",
+      "photos": [
+        761717584
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "megascops-kennicottii": {
+      "common_name": "Western Screech Owl",
+      "seed": 3039104435,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 6.5,
+        "dE_p95": 12.2,
+        "dL": -6.0,
+        "dC": -0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.929,
+      "sha256": "1f7731fd9a084488762444cb3499928a7fa42ad32fb9cd1ea62887d4a80b16ec",
+      "photos": [
+        411877196
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The bird perches upright on a branch that passes under it; both feet grip the branch below its belly. The eyes are bright yellow with black centres.",
+      "review": "approved"
+    },
+    "melanerpes-formicivorus": {
+      "common_name": "Acorn Woodpecker",
+      "seed": 3164819214,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 18.3,
+        "dE_p95": 33.5,
+        "dL": 0.5,
+        "dC": -7.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.004,
+      "attempts": 1,
+      "shape_fit": 0.957,
+      "sha256": "59950e51a44ed92243863059b43552fe8201d3b73264c7158ffbdf2d67a017f5",
+      "photos": [
+        279187812
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown is bright red; the forehead and a band across the face are cream-white and the chin black; the eye is white; the back, wings and tail are matte black with no blue; the breast is black, streaked white into a white belly.",
+      "review": "approved",
+      "rejected_seeds": [
+        3416555416
+      ],
+      "why": "patch pass: the bird is stitched blue-black with no red crown"
+    },
+    "melanitta-perspicillata": {
+      "common_name": "Surf Scoter",
+      "seed": 817922425,
+      "dark": false,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 6.4,
+        "dE_p95": 18.4,
+        "dL": 2.7,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.934,
+      "sha256": "1b7a52afda63f3d292daf882457159cdc28c668034cc12f96b3a76f243e41184",
+      "photos": [
+        615936109
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole body is matte black with no white on the breast, flanks or wings; the only white is a patch on the forehead and a patch on the back of the neck; the large swollen bill is orange, white and black; the eye is white.",
+      "review": "approved",
+      "rejected_seeds": [
+        1204269551
+      ],
+      "why": "patch pass: a big white patch invented on the breast and flank"
+    },
+    "meleagris-gallopavo": {
+      "common_name": "Wild Turkey",
+      "seed": 3489496091,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 5.2,
+        "dE_p95": 15.4,
+        "dL": -1.1,
+        "dC": -0.7,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.942,
+      "sha256": "07f4b22992d055fdb8bd4bad3743486d787a5b5ee27401b9137749e00ffe31d2",
+      "photos": [
+        364340964
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "melospiza-lincolnii": {
+      "common_name": "Lincoln's Sparrow",
+      "seed": 2115425352,
+      "dark": false,
+      "measure": {
+        "iou": 0.966,
+        "dE_mean": 18.6,
+        "dE_p95": 24.0,
+        "dL": -17.0,
+        "dC": -0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.907,
+      "sha256": "c8955a9f71e409437ddeec15eee60ed0103c24d66dcc1bfdb21c1faa6dae7466",
+      "photos": [
+        174991609
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "melospiza-melodia": {
+      "common_name": "Song Sparrow",
+      "seed": 2505455435,
+      "dark": false,
+      "measure": {
+        "iou": 0.969,
+        "dE_mean": 8.2,
+        "dE_p95": 13.0,
+        "dL": -7.9,
+        "dC": 1.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.968,
+      "sha256": "e7624747f4ca39d04f44ea9fc622e2eeb345411af6cb50c41c0b9771bd42839c",
+      "photos": [
+        749855460
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "mergus-merganser": {
+      "common_name": "Common Merganser",
+      "seed": 1299165876,
+      "dark": false,
+      "measure": {
+        "iou": 0.858,
+        "dE_mean": 11.0,
+        "dE_p95": 25.7,
+        "dL": -6.4,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "sha256": "0028978a5c11eab91e7ce10bf8fba99b08a6a9361ead8c410291fb8c9e3d14ac",
+      "photos": [
+        615179559
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head is glossy blackish-green with a small dark eye and no pale ring round it; the thin bill is red; the breast and flanks are white and the back black.",
+      "review": "approved",
+      "rejected_seeds": [
+        979927586
+      ],
+      "why": "patch pass: the head is dull grey-brown and the eye oversized with a pale ring"
+    },
+    "mergus-serrator": {
+      "common_name": "Red-breasted Merganser",
+      "seed": 755381824,
+      "dark": true,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 10.8,
+        "dE_p95": 24.7,
+        "dL": 2.8,
+        "dC": -6.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.942,
+      "sha256": "f1cc4f032062350236c14e35eaad8202a7bf28dfb19509538ce5b1bd4a53e229",
+      "photos": [
+        473555058
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is red.",
+      "review": "approved"
+    },
+    "molothrus-ater": {
+      "common_name": "Brown-headed Cowbird",
+      "seed": 3029379089,
+      "dark": false,
+      "measure": {
+        "iou": 0.812,
+        "dE_mean": 4.7,
+        "dE_p95": 11.2,
+        "dL": 0.4,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.949,
+      "sha256": "4378cfb862fe557d9329b1559d289d886e434c83096025501944369981abcb36",
+      "photos": [
+        666226374
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head and neck are plain dark brown; the body, wings and tail are matte black thread with no white, grey, blue or pale thread anywhere. The short conical bill, the legs and the eye are dark. The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it.",
+      "review": "approved",
+      "rejected_seeds": [
+        3281492103
+      ],
+      "why": "maintainer: feet not on branch; redraw the branch to match"
+    },
+    "nannopterum-auritum": {
+      "common_name": "Double-crested Cormorant",
+      "seed": 2636422681,
+      "dark": false,
+      "measure": {
+        "iou": 0.851,
+        "dE_mean": 11.6,
+        "dE_p95": 22.4,
+        "dL": 7.9,
+        "dC": 0.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0104,
+      "attempts": 2,
+      "shape_fit": 0.954,
+      "sha256": "946aad473d0f4106d272d084a287801c8b8772cf4c1fe1c74a958bbbcd20e00e",
+      "photos": [
+        759004801
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The body, wings and tail are matte blackish-brown thread with no white, grey or pale patches anywhere; the bare skin at the base of the bill and on the throat is orange-yellow, the hooked bill is dark grey and the eye is green. Two legs show, and the legs and webbed feet are black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3928206991
+      ],
+      "why": "patch pass: the legs and feet are tan; they are black"
+    },
+    "oxyura-jamaicensis": {
+      "common_name": "Ruddy Duck",
+      "seed": 3088506304,
+      "dark": false,
+      "measure": {
+        "iou": 0.986,
+        "dE_mean": 7.8,
+        "dE_p95": 16.2,
+        "dL": -7.2,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.92,
+      "sha256": "716ca8c34fb452341f044d70f02c44d988761e0c281676842aa6147d6777343f",
+      "photos": [
+        267466878
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "pandion-haliaetus": {
+      "common_name": "Osprey",
+      "seed": 1355364693,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 5.1,
+        "dE_p95": 12.2,
+        "dL": -2.2,
+        "dC": 0.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.965,
+      "sha256": "ed9242a1a024f468b8e9d7969842536f27bf28a7cbe5f26cc7532024215133d4",
+      "photos": [
+        729928035
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passer-domesticus": {
+      "common_name": "House Sparrow",
+      "seed": 2157415790,
+      "dark": false,
+      "measure": {
+        "iou": 0.763,
+        "dE_mean": 12.7,
+        "dE_p95": 28.4,
+        "dL": -0.5,
+        "dC": -2.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.947,
+      "sha256": "fd76046e3448afc230d0463835201db7828f89d26ffeb26ae2c7686fa20baef7",
+      "photos": [
+        750492346
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The bird stands upright on two pinkish-brown legs with its body clear of the ground; the crown is grey, the nape chestnut, the cheeks pale grey and the bib black.",
+      "review": "approved",
+      "rejected_seeds": [
+        4153458168
+      ],
+      "why": "the bird crouches in a muddle of legs"
+    },
+    "passerculus-sandwichensis": {
+      "common_name": "Savannah Sparrow",
+      "seed": 3426277336,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 8.1,
+        "dE_p95": 14.5,
+        "dL": 3.6,
+        "dC": 3.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "15eb7ce6bc8e734e3f11b91299592fe8f357337f2021ea67232cd230953bd3d0",
+      "photos": [
+        736231422
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved",
+      "rejected_seeds": [
+        3141527374
+      ],
+      "why": "patch pass: the border cord is stitched pale slate-blue like the twill instead of dark spruce green"
+    },
+    "passerella-iliaca": {
+      "common_name": "Red Fox Sparrow",
+      "seed": 2297107941,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 11.3,
+        "dE_p95": 18.0,
+        "dL": -9.3,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.92,
+      "sha256": "1deda6ec67c21828c94ad9a938f5192e399dde6ad0a051145a7eac020302bf3d",
+      "photos": [
+        347058152
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "passerina-amoena": {
+      "common_name": "Lazuli Bunting",
+      "seed": 918278363,
+      "dark": false,
+      "measure": {
+        "iou": 0.834,
+        "dE_mean": 21.0,
+        "dE_p95": 43.9,
+        "dL": -10.5,
+        "dC": -3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.965,
+      "sha256": "5fc5efb7c7d4e3a4c0c95da9c109bd503996b19c802797cd6fc10e2f6f50cb3a",
+      "photos": [
+        417425399
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, back and rump are bright turquoise blue; the breast is orange-cinnamon; the belly white; one bold white bar and one thin white bar on each wing; the wings and tail are dark with blue edges.",
+      "review": "approved",
+      "rejected_seeds": [
+        1102897229
+      ],
+      "why": "patch pass: the belly is khaki, the back black and the white wing bar is missing"
+    },
+    "patagioenas-fasciata": {
+      "common_name": "Band-tailed Pigeon",
+      "seed": 2888205581,
+      "dark": false,
+      "measure": {
+        "iou": 0.956,
+        "dE_mean": 5.9,
+        "dE_p95": 14.1,
+        "dL": -4.0,
+        "dC": -1.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0037,
+      "attempts": 1,
+      "shape_fit": 0.937,
+      "sha256": "9cae4e2f2cc8c45da9d064768e3bd25f9346ed7af36745a7923e6e0c7358e9d6",
+      "photos": [
+        423196843
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pelecanus-erythrorhynchos": {
+      "common_name": "American White Pelican",
+      "seed": 1869041449,
+      "dark": false,
+      "measure": {
+        "iou": 0.443,
+        "dE_mean": 25.0,
+        "dE_p95": 43.8,
+        "dL": 1.0,
+        "dC": -3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0056,
+      "attempts": 1,
+      "shape_fit": 0.925,
+      "sha256": "605775a8fb461b750a5e52f20ee46f45b3988195d00ab788993cdb9b54895537",
+      "photos": [
+        383761313
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "flight",
+      "markings": "The head, neck, body and tail are bright pure white thread with no grey; the outer flight feathers along the back edge of each wing are black; the long bill and the feet are orange.",
+      "review": "approved"
+    },
+    "perisoreus-canadensis": {
+      "common_name": "Canada Jay",
+      "seed": 2852996317,
+      "dark": false,
+      "measure": {
+        "iou": 0.823,
+        "dE_mean": 12.8,
+        "dE_p95": 24.3,
+        "dL": -9.6,
+        "dC": 1.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0123,
+      "attempts": 1,
+      "shape_fit": 0.947,
+      "sha256": "2fc78a635e7acb568938a0188abad760967c36131c1a7fc98c4df3a1249e48f6",
+      "photos": [
+        737672241
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "petrochelidon-pyrrhonota": {
+      "common_name": "American Cliff Swallow",
+      "seed": 3793460112,
+      "dark": false,
+      "measure": {
+        "iou": 0.74,
+        "dE_mean": 18.6,
+        "dE_p95": 38.7,
+        "dL": -7.8,
+        "dC": -1.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0029,
+      "attempts": 2,
+      "shape_fit": 0.962,
+      "sha256": "fc685c7993ad100e35fc5fe0bd6f04a39c5b23194157ab3e05a1a498bfe47397",
+      "photos": [
+        144775783
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The back is dark blue-black with thin pale streaks; the forehead patch is pale buff-white; the throat and cheeks are deep chestnut; the rump is buff; the breast and belly are clean white; the wings and the square tail are dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        2501683993
+      ],
+      "why": "patch pass: the back is mottled grey-white and the colours are blotchy"
+    },
+    "pheucticus-melanocephalus": {
+      "common_name": "Black-headed Grosbeak",
+      "seed": 3618468491,
+      "dark": false,
+      "measure": {
+        "iou": 0.763,
+        "dE_mean": 21.9,
+        "dE_p95": 36.6,
+        "dL": 14.0,
+        "dC": -3.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.941,
+      "sha256": "958a7e775034cce7abddb71f138501caa2238a7ba1d228cf26737cb193cc2f05",
+      "photos": [
+        665441794
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "pipilo-maculatus": {
+      "common_name": "Spotted Towhee",
+      "seed": 2637922370,
+      "dark": true,
+      "measure": {
+        "iou": 0.905,
+        "dE_mean": 13.8,
+        "dE_p95": 42.6,
+        "dL": 7.9,
+        "dC": 1.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.931,
+      "sha256": "69495b8ee619aee35b09187d1256364d0663f70cb5ea452c44eac9505195eff9",
+      "photos": [
+        715721321
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole head, throat, upper breast and back are solid black, with no white on the face, cheek, throat or collar; white spots show only on the folded wings and shoulders; the flanks are bright rufous-orange and the centre of the belly is white; the eye is red.",
+      "review": "approved",
+      "rejected_seeds": [
+        3929845972
+      ],
+      "why": "white cheek and throat patches that the bird does not have; the flanks came out buff, not rufous"
+    },
+    "piranga-ludoviciana": {
+      "common_name": "Western Tanager",
+      "seed": 1668188930,
+      "dark": false,
+      "measure": {
+        "iou": 0.914,
+        "dE_mean": 11.5,
+        "dE_p95": 23.5,
+        "dL": -8.1,
+        "dC": -3.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "7b79380a874da7de7f89c7a3b269b0a68ee6c8a0f9cdb2a69f0800622d1107f5",
+      "photos": [
+        390813681
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "podiceps-auritus": {
+      "common_name": "Horned Grebe",
+      "seed": 1725790209,
+      "dark": false,
+      "measure": {
+        "iou": 0.942,
+        "dE_mean": 8.3,
+        "dE_p95": 16.0,
+        "dL": -1.0,
+        "dC": -3.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0043,
+      "attempts": 1,
+      "shape_fit": 0.941,
+      "sha256": "fc3f66a80843954b8aaeb40cd1c4a4df42692b24b5f8f3c5c0b2728762d1460d",
+      "photos": [
+        621378382
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The eye is red.",
+      "review": "approved"
+    },
+    "podiceps-grisegena": {
+      "common_name": "Red-necked Grebe",
+      "seed": 399898213,
+      "dark": false,
+      "measure": {
+        "iou": 0.851,
+        "dE_mean": 15.6,
+        "dE_p95": 32.6,
+        "dL": 0.8,
+        "dC": 3.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.954,
+      "sha256": "9a9dbfc1dd603af8d1da9092487898236f1e1e3f5f79a4b27fd7d1f9c8ec1c92",
+      "photos": [
+        342803888
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "review": "approved"
+    },
+    "podilymbus-podiceps": {
+      "common_name": "Pied-billed Grebe",
+      "seed": 3104672611,
+      "dark": false,
+      "measure": {
+        "iou": 0.944,
+        "dE_mean": 13.3,
+        "dE_p95": 20.4,
+        "dL": -9.9,
+        "dC": -5.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.962,
+      "sha256": "0aca996cf2f0a9407476df169e32e7fc92a7dba0025830c032694e27d024ecac",
+      "photos": [
+        753142615
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The body is dull grey-brown with no blue or purple thread anywhere; the chin and throat are black; the short pale bill has a black ring round its middle; the eye is dark.",
+      "review": "approved",
+      "rejected_seeds": [
+        3456809973
+      ],
+      "why": "the body is stitched blue and purple"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "seed": 1678602265,
+      "dark": false,
+      "measure": {
+        "iou": 0.875,
+        "dE_mean": 10.6,
+        "dE_p95": 23.8,
+        "dL": -7.3,
+        "dC": 1.5,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.947,
+      "sha256": "25e82db0e62722f4716f9466dba4bffe745002cc897c5cafb9f121487c56c67a",
+      "photos": [
+        759772649
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The cap and a large bib under the bill are solid black; the cheeks are white; the single dark eye sits inside the black cap, with no white spot on the crown; the back is grey and the flanks buff.",
+      "review": "approved",
+      "rejected_seeds": [
+        319438991
+      ],
+      "why": "patch pass: the black bib is missing (white throat) and a white dot on the crown reads as a second eye"
+    },
+    "poecile-rufescens": {
+      "common_name": "Chestnut-backed Chickadee",
+      "seed": 2846926756,
+      "dark": false,
+      "measure": {
+        "iou": 0.794,
+        "dE_mean": 16.4,
+        "dE_p95": 34.7,
+        "dL": 4.7,
+        "dC": -4.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.906,
+      "sha256": "f54798b235c60bcd7f2ea6be0f4ad06446dba244c28db6feb6af7dd2d0bf3bb8",
+      "photos": [
+        710600516
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The cap is dark sooty brown, almost black, and a black bib sits under the bill; the cheeks are white; the back and flanks are rich chestnut; the wings and tail are grey.",
+      "review": "approved",
+      "rejected_seeds": [
+        3736573746
+      ],
+      "why": "patch pass: the black bib is missing and the cap is warm brown"
+    },
+    "progne-subis": {
+      "common_name": "Purple Martin",
+      "seed": 1625309230,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 15.4,
+        "dE_p95": 24.0,
+        "dL": -14.4,
+        "dC": -3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 3,
+      "shape_fit": 0.95,
+      "sha256": "c0bad5dec0764aaea5028aa57d4a319a44d23c2968c4002ea7e98bc238919fc5",
+      "photos": [
+        666679390
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "psaltriparus-minimus": {
+      "common_name": "American Bushtit",
+      "seed": 955426074,
+      "dark": false,
+      "measure": {
+        "iou": 0.887,
+        "dE_mean": 9.4,
+        "dE_p95": 16.9,
+        "dL": 6.2,
+        "dC": 2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.936,
+      "sha256": "50851851ab4ae6d9eaca1779f0f9fa60f8b15318d5a0bf5190398e7f6d379cc1",
+      "photos": [
+        754270708
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "rallus-limicola": {
+      "common_name": "Virginia Rail",
+      "seed": 2993199943,
+      "dark": false,
+      "measure": {
+        "iou": 0.967,
+        "dE_mean": 7.5,
+        "dE_p95": 13.3,
+        "dL": -7.1,
+        "dC": -1.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.963,
+      "sha256": "29f688647e321c22a039c607ebcfe84ade6f840c5a4b1e276017a090c8b22d07",
+      "photos": [
+        285951304
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "regulus-satrapa": {
+      "common_name": "Golden-crowned Kinglet",
+      "seed": 3883911739,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 7.6,
+        "dE_p95": 14.6,
+        "dL": -6.3,
+        "dC": -2.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.949,
+      "sha256": "706c42a226b4cc8bd63a0582e5405bdd196ba694115362a30e935a341cc2dca9",
+      "photos": [
+        750600850
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sayornis-nigricans": {
+      "common_name": "Black Phoebe",
+      "seed": 3042254233,
+      "dark": false,
+      "measure": {
+        "iou": 0.643,
+        "dE_mean": 19.9,
+        "dE_p95": 61.3,
+        "dL": -12.7,
+        "dC": -1.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0132,
+      "attempts": 1,
+      "shape_fit": 0.944,
+      "sha256": "9ddb6889f926ecde10f17d01d05c43f6f1f8964d17a0f6c9562f721a6dfdae56",
+      "photos": [
+        749082660
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white.",
+      "review": "approved"
+    },
+    "selasphorus-rufus": {
+      "common_name": "Rufous Hummingbird",
+      "seed": 1851354334,
+      "dark": false,
+      "measure": {
+        "iou": 0.835,
+        "dE_mean": 33.9,
+        "dE_p95": 54.9,
+        "dL": 25.2,
+        "dC": 14.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.919,
+      "sha256": "04b9a042889d03fefeb48148d21b552d77611791ac950dd409148400ab2b295f",
+      "photos": [
+        555329642
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, back, flanks and tail are bright rufous orange-brown; the throat is a fiery orange-red gorget; the breast below it is white; the long straight bill is black; there is no black or white on the body except the white breast.",
+      "review": "approved",
+      "rejected_seeds": [
+        425614412
+      ],
+      "why": "patch pass: the dark-bird clause turned a rufous bird black and white"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 1158912561,
+      "dark": false,
+      "measure": {
+        "iou": 0.796,
+        "dE_mean": 60.4,
+        "dE_p95": 94.4,
+        "dL": -14.8,
+        "dC": -50.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.945,
+      "sha256": "fd45b03a600e968cf2b9ab2151fb84dae688edece5ed14fea407f2cda5cab859",
+      "photos": [
+        691844341
+      ],
+      "isolate_seed": 50,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, not mustard or ochre; the back and wings are yellow-olive with yellow edges; thin chestnut streaks on the breast; the eye is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        840215207
+      ],
+      "why": "patch pass: stitched mustard-ochre instead of bright yellow"
+    },
+    "setophaga-coronata": {
+      "common_name": "Myrtle Warbler",
+      "seed": 1963148856,
+      "dark": false,
+      "measure": {
+        "iou": 0.958,
+        "dE_mean": 6.7,
+        "dE_p95": 14.5,
+        "dL": -1.7,
+        "dC": -2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "ad8cc9042c39270456aaacadde629f97a8107477e5daf6d4b59aec87b72b9a3b",
+      "photos": [
+        637596259
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "setophaga-nigrescens": {
+      "common_name": "Black-throated Grey Warbler",
+      "seed": 983831394,
+      "dark": true,
+      "measure": {
+        "iou": 0.912,
+        "dE_mean": 24.7,
+        "dE_p95": 45.5,
+        "dL": 23.1,
+        "dC": -0.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.962,
+      "sha256": "8d15f5cbec47cd5e7b2902cc410d0fd6523012d9be6de16a30471c69c60192fd",
+      "photos": [
+        36900199
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eye is dark, almost black; a tiny yellow spot sits just in front of the eye; the crown and cheek are black with a white stripe above the cheek and another below it; the throat is black; the back is grey; the flanks are streaked black on white.",
+      "review": "approved",
+      "rejected_seeds": [
+        1302537205
+      ],
+      "why": "patch pass: the eye is ringed yellow (the yellow spot belongs in front of the eye)"
+    },
+    "setophaga-townsendi": {
+      "common_name": "Townsend's Warbler",
+      "seed": 4041553152,
+      "dark": false,
+      "measure": {
+        "iou": 0.925,
+        "dE_mean": 15.4,
+        "dE_p95": 26.3,
+        "dL": 8.3,
+        "dC": -9.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0062,
+      "attempts": 1,
+      "shape_fit": 0.931,
+      "sha256": "39e33e9bdc539492bd993b8af1cc8a35c7d0c725d64b5d383196ee1a13f1b128",
+      "photos": [
+        481368650
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sialia-mexicana": {
+      "common_name": "Western Bluebird",
+      "seed": 1042991558,
+      "dark": false,
+      "measure": {
+        "iou": 0.88,
+        "dE_mean": 9.5,
+        "dE_p95": 17.6,
+        "dL": 4.0,
+        "dC": 0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0105,
+      "attempts": 1,
+      "shape_fit": 0.956,
+      "sha256": "48a4ab74b09d1a85f1085283fef6dc9387d78159be8c9629680f612e5512b9a3",
+      "photos": [
+        189154916
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-canadensis": {
+      "common_name": "Red-breasted Nuthatch",
+      "seed": 4246326529,
+      "dark": false,
+      "measure": {
+        "iou": 0.93,
+        "dE_mean": 8.1,
+        "dE_p95": 16.1,
+        "dL": -3.5,
+        "dC": 0.6,
+        "faithful": true
+      },
+      "card_at_edge": 0.0056,
+      "attempts": 1,
+      "shape_fit": 0.967,
+      "sha256": "41ec2adb0ffadb18ce4b9cd30f0bfa776ebd0796c4039c7e18e54c0012403eda",
+      "photos": [
+        749076224
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "sitta-carolinensis": {
+      "common_name": "White-breasted Nuthatch",
+      "seed": 3072256078,
+      "dark": false,
+      "measure": {
+        "iou": 0.74,
+        "dE_mean": 23.3,
+        "dE_p95": 41.8,
+        "dL": -1.6,
+        "dC": -4.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0042,
+      "attempts": 2,
+      "shape_fit": 0.915,
+      "sha256": "bea62de7823b3afbd3e580d76cb861920d0a6e3473c8df660f35ae194944f3ae",
+      "photos": [
+        704608483
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spatula-clypeata": {
+      "common_name": "Northern Shoveler",
+      "seed": 1987068248,
+      "dark": false,
+      "measure": {
+        "iou": 0.821,
+        "dE_mean": 14.1,
+        "dE_p95": 32.4,
+        "dL": -2.1,
+        "dC": 5.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.934,
+      "sha256": "0da162a84fd54583778de5f16a189bdc062e4fa129c793a2f5ee10faa15f1bcc",
+      "photos": [
+        645588836
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are glossy dark green with no white spots; the eye is yellow; the long spoon-shaped bill is plain black; the breast is white and the flanks chestnut.",
+      "review": "approved",
+      "rejected_seeds": [
+        24605121
+      ],
+      "why": "patch pass: white specks on the head and bill, and the head is blue-black"
+    },
+    "spatula-cyanoptera": {
+      "common_name": "Cinnamon Teal",
+      "seed": 911449538,
+      "dark": false,
+      "measure": {
+        "iou": 0.782,
+        "dE_mean": 33.4,
+        "dE_p95": 51.3,
+        "dL": 1.1,
+        "dC": -3.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0031,
+      "attempts": 1,
+      "shape_fit": 0.948,
+      "sha256": "42d92b44d32db30a4f204786ff040f35b7d11a0b951e0a210a21943a51a0caed",
+      "photos": [
+        672494125
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The eye is bright red, stitched in red thread with a small black centre. The long flat bill is black and closed. The head, neck and body are deep cinnamon red, with no green on the face or bill. The two legs and webbed feet are orange-yellow, not black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3630038254,
+        2941963384
+      ],
+      "why": "black eye and black legs; the eye is red and the legs orange-yellow"
+    },
+    "sphyrapicus-ruber": {
+      "common_name": "Red-breasted Sapsucker",
+      "seed": 3100572762,
+      "dark": false,
+      "measure": {
+        "iou": 0.926,
+        "dE_mean": 8.6,
+        "dE_p95": 17.0,
+        "dL": -1.7,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.967,
+      "sha256": "05c42034eb65de297be4cbab85fde88ab3f6ff298fce1f9315245a74a28aefee",
+      "photos": [
+        605131970
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "markings": "The whole head, throat and breast are bright red; the back is black with pale yellowish-white spots; the folded wing is black with a long white stripe along it; the belly is pale yellow; there is no blue or grey thread. The tree trunk rises along the right side of the badge, in front of the bird's breast and belly; the bird faces it and both feet grip its bark on that side. Behind the bird's back there is only open background, no trunk.",
+      "review": "approved",
+      "rejected_seeds": [
+        1455463798,
+        566734308
+      ],
+      "why": "maintainer: bird is backwards; tree and legs should be on the other side, to match the reference"
+    },
+    "spinus-pinus": {
+      "common_name": "Pine Siskin",
+      "seed": 1521899702,
+      "dark": false,
+      "measure": {
+        "iou": 0.851,
+        "dE_mean": 16.0,
+        "dE_p95": 21.8,
+        "dL": -15.4,
+        "dC": 1.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.007,
+      "attempts": 1,
+      "shape_fit": 0.938,
+      "sha256": "85a60a7a17e15e79ad427fc40a73670ac9242843b97f03fc163eb6bfa54e52b4",
+      "photos": [
+        462384773
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "spinus-psaltria": {
+      "common_name": "Lesser Goldfinch",
+      "seed": 2219249120,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 14.5,
+        "dE_p95": 23.0,
+        "dL": -10.5,
+        "dC": -5.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.946,
+      "sha256": "dfae41216655b7b4519840f813196611d3909f7d47657f5c18f8c7577f740303",
+      "photos": [
+        651343353
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spinus-tristis": {
+      "common_name": "American Goldfinch",
+      "seed": 3786787667,
+      "dark": false,
+      "measure": {
+        "iou": 0.889,
+        "dE_mean": 10.8,
+        "dE_p95": 19.9,
+        "dL": 5.6,
+        "dC": -2.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.933,
+      "sha256": "10602dc10d5ce3295e899872062304889ceb1f585863b4599a9308e03a5d4a42",
+      "photos": [
+        679067125
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "spizella-passerina": {
+      "common_name": "Chipping Sparrow",
+      "seed": 708950856,
+      "dark": false,
+      "measure": {
+        "iou": 0.953,
+        "dE_mean": 5.6,
+        "dE_p95": 12.5,
+        "dL": -4.4,
+        "dC": 0.0,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "41fefc6464b805cec91da9216dc4f1b90657a7d3a17ec5066fa05fe5d8760cb3",
+      "photos": [
+        709362333
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "rock",
+      "review": "approved"
+    },
+    "streptopelia-decaocto": {
+      "common_name": "Eurasian Collared Dove",
+      "seed": 2219540489,
+      "dark": false,
+      "measure": {
+        "iou": 0.92,
+        "dE_mean": 11.6,
+        "dE_p95": 19.0,
+        "dL": -11.2,
+        "dC": 2.2,
+        "faithful": false
+      },
+      "card_at_edge": 0.0147,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "sha256": "2d218e20b2434d137dad998476b6a8b7d9375b27c88f78e60f776a829f32e4b5",
+      "photos": [
+        475372246
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "strix-varia": {
+      "common_name": "Barred Owl",
+      "seed": 1251629852,
+      "dark": false,
+      "measure": {
+        "iou": 0.936,
+        "dE_mean": 9.5,
+        "dE_p95": 15.5,
+        "dL": -2.5,
+        "dC": -3.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.939,
+      "sha256": "6ebe166db48085efdf2ab2fa77d2ad89667c63686506ca7f19259127189e057e",
+      "photos": [
+        694893588
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The eyes are dark brown, almost black, with no yellow.",
+      "review": "approved"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "seed": 1550998715,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 13.2,
+        "dE_p95": 23.8,
+        "dL": -8.4,
+        "dC": -4.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.97,
+      "sha256": "15493d46239c537372595798a1c2b1b3cb2dd74d935e6a4395ce00ce2ce4792e",
+      "photos": [
+        258735400
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "sturnus-vulgaris": {
+      "common_name": "Common Starling",
+      "seed": 480648803,
+      "dark": false,
+      "measure": {
+        "iou": 0.975,
+        "dE_mean": 4.3,
+        "dE_p95": 9.4,
+        "dL": -3.0,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.951,
+      "sha256": "f96efa9d7d4e2c449ea65adb58a9ee130cbf149966629ab8f2339d5ff059b47f",
+      "photos": [
+        734389029
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tachycineta-bicolor": {
+      "common_name": "Tree Swallow",
+      "seed": 1110333019,
+      "dark": false,
+      "measure": {
+        "iou": 0.952,
+        "dE_mean": 15.2,
+        "dE_p95": 35.2,
+        "dL": 9.9,
+        "dC": -4.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "566d3d126d09df93e2666d51e131122d1abf445365a7a56f926838fd3e516dbb",
+      "photos": [
+        702872174
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tachycineta-thalassina": {
+      "common_name": "Violet-green Swallow",
+      "seed": 1535723117,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 10.1,
+        "dE_p95": 21.5,
+        "dL": -4.6,
+        "dC": -0.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.923,
+      "sha256": "d2f429c6d81a18c95909669ac005aa14ada5ba3f0a37341a21ab8cc45ad7d79b",
+      "photos": [
+        686763606
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "thryomanes-bewickii": {
+      "common_name": "Bewick's Wren",
+      "seed": 707492931,
+      "dark": false,
+      "measure": {
+        "iou": 0.924,
+        "dE_mean": 5.1,
+        "dE_p95": 12.9,
+        "dL": -2.5,
+        "dC": -1.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.976,
+      "sha256": "8ef9a7c977d8892f227db061692f575b5b835a2d89cfb66045ca189fbdf71587",
+      "photos": [
+        716816697
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "tringa-melanoleuca": {
+      "common_name": "Greater Yellowlegs",
+      "seed": 1944489765,
+      "dark": false,
+      "measure": {
+        "iou": 0.959,
+        "dE_mean": 18.1,
+        "dE_p95": 24.1,
+        "dL": -17.6,
+        "dC": 3.3,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.985,
+      "sha256": "47f088d85d4c5cba86f12e2dc24f3cd6b4a1f98a6e2b7b1fbf664434c68340fd",
+      "photos": [
+        754007436
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "review": "approved"
+    },
+    "troglodytes-pacificus": {
+      "common_name": "Pacific Wren",
+      "seed": 799280497,
+      "dark": false,
+      "measure": {
+        "iou": 0.938,
+        "dE_mean": 4.0,
+        "dE_p95": 9.1,
+        "dL": -3.0,
+        "dC": -0.3,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.98,
+      "sha256": "044588cc5817da489e4c1552121e140ec007f37cf34d70b9b3f1c6d42348a9f1",
+      "photos": [
+        626189621
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 2586830823,
+      "dark": false,
+      "measure": {
+        "iou": 0.816,
+        "dE_mean": 24.1,
+        "dE_p95": 42.0,
+        "dL": 15.5,
+        "dC": -5.1,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.949,
+      "sha256": "388e710374e927b09bcad2c310a5163d7f9044740b79d24abfa4490672a09f36",
+      "photos": [
+        760138259
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "urile-pelagicus": {
+      "common_name": "Pelagic Cormorant",
+      "seed": 2570510722,
+      "dark": false,
+      "measure": {
+        "iou": 0.79,
+        "dE_mean": 15.1,
+        "dE_p95": 34.3,
+        "dL": -8.5,
+        "dC": -6.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.936,
+      "sha256": "4227504b7ee4ccb834147439343cbfff961c67e1bcecf9eb7f4a765c6d85aebb",
+      "photos": [
+        752109339
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The whole bird is matte black thread with no white, grey, blue or pale thread anywhere, with no pale flecks on the back; the thin bill is black.",
+      "review": "approved",
+      "rejected_seeds": [
+        3996242199
+      ],
+      "why": "patch pass: pale flecks on the back and a pale bill"
+    },
+    "vireo-gilvus": {
+      "common_name": "Warbling Vireo",
+      "seed": 229911258,
+      "dark": false,
+      "measure": {
+        "iou": 0.893,
+        "dE_mean": 11.4,
+        "dE_p95": 19.6,
+        "dL": -1.1,
+        "dC": -7.6,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.918,
+      "sha256": "7a2261fab8bbda0bd2c3cb131618338e8849dc8d363ad6080aa660dd989e03fc",
+      "photos": [
+        205246828
+      ],
+      "isolate_seed": 51,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "vireo-huttoni": {
+      "common_name": "Hutton's Vireo",
+      "seed": 3461593657,
+      "dark": false,
+      "measure": {
+        "iou": 0.857,
+        "dE_mean": 16.3,
+        "dE_p95": 23.6,
+        "dL": -15.4,
+        "dC": 2.4,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.965,
+      "sha256": "9894a49fef6d6255e46e2a5f29e835f5dc97eccaba1bccb324935dbd2c3e4c98",
+      "photos": [
+        752472381
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zenaida-macroura": {
+      "common_name": "Mourning Dove",
+      "seed": 392188704,
+      "dark": false,
+      "measure": {
+        "iou": 0.929,
+        "dE_mean": 5.7,
+        "dE_p95": 11.5,
+        "dL": -0.1,
+        "dC": -0.5,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.955,
+      "sha256": "61d03136f9359069ea2418dce9860890458488c3c432ea6f715f62c115ce0330",
+      "photos": [
+        645502947
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-albicollis": {
+      "common_name": "White-throated Sparrow",
+      "seed": 2376347901,
+      "dark": false,
+      "measure": {
+        "iou": 0.922,
+        "dE_mean": 10.5,
+        "dE_p95": 19.9,
+        "dL": -9.6,
+        "dC": -0.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.952,
+      "sha256": "b969797edce60e6ed19dab8867cf5c0bfe6d2f1d9f0a061265e5edf5cbbba544",
+      "photos": [
+        475463194
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-atricapilla": {
+      "common_name": "Golden-crowned Sparrow",
+      "seed": 168846478,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 9.5,
+        "dE_p95": 18.2,
+        "dL": 6.5,
+        "dC": 0.2,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.97,
+      "sha256": "57ce33f66aff98d72242fd870d2a112581da8db8061b31f46d63c385803c97a6",
+      "photos": [
+        760508725
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "review": "approved"
+    },
+    "zonotrichia-leucophrys": {
+      "common_name": "White-crowned Sparrow",
+      "seed": 1869175141,
+      "dark": false,
+      "measure": {
+        "iou": 0.853,
+        "dE_mean": 8.5,
+        "dE_p95": 16.9,
+        "dL": 5.6,
+        "dC": 0.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.962,
+      "sha256": "ebd33ae91f866bcb5a7dd897c4e37ea02a8ae3981a34b63d4bf38c6194a0e025",
+      "photos": [
+        713759997
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+        "cord": "dark spruce-green",
+        "twill": "pale slate-blue cotton twill",
+        "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "review": "approved"
+    }
+  }
+}

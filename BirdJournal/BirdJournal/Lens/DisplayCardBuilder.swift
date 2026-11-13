@@ -16,9 +16,16 @@ import UIKit
 enum DisplayCardBuilder {
     /// Padding around the card on the 600-pixel canvas; the pack's lens crops are cut to the width this leaves.
     nonisolated static let padding: CGFloat = 24
-    /// The box a viewfinder frame is scaled to fit: the card's width, and the height the name and hint leave.
-    nonisolated static let viewfinderSize = CGSize(width: 600 - 2 * padding, height: 420)
-    /// The box the photo on "Say the bird's name" is scaled to fit: a thumbnail, with room under it for the words heard.
+    /// The viewfinder's picture: the card's width, and the height the name and hint leave. Every picture the camera
+    /// gives is sent on a canvas of the card's full width (`canvas`), because `ImageSize` is only `.icon` or `.fill`
+    /// and the glasses stretch a `.fill` image to the width it is given: on 2026-11-12 the portrait frame, sent 236
+    /// pixels wide, came out over twice its size with its bottom off the lens. The mock lays an image out at its
+    /// pixel size, so a full-width canvas is the one shape both draw alike.
+    nonisolated static let viewfinderSize = CGSize(width: 600 - 2 * padding, height: 400)
+    /// How much of the viewfinder's height the journal's crop takes: the frame is shown as large as that allows, its
+    /// top and bottom past the canvas, since the crop is what the journal keeps.
+    nonisolated static let viewfinderCropShare: CGFloat = 0.92
+    /// The canvas of the photo on "Say the bird's name": a thumbnail's height, with room under it for the words heard.
     nonisolated static let capturedPhotoSize = CGSize(width: 600 - 2 * padding, height: 260)
 
     static func flexBox(
@@ -102,6 +109,11 @@ enum DisplayCardBuilder {
                 Image(image: viewfinder, sizePreset: .fill, cornerRadius: .medium)
             }
             .alignSelf(.center)
+        case .shutter:
+            return FlexBox(direction: .row) {
+                Image(image: shutterImage, sizePreset: .fill, cornerRadius: .none)
+            }
+            .alignSelf(.center)
         case .capturedPhoto:
             guard let capturedPhoto else { return nil }
             return FlexBox(direction: .row) {
@@ -117,18 +129,56 @@ enum DisplayCardBuilder {
         }
     }
 
-    /// The photo just taken, scaled down to fit `capturedPhotoSize` and cropped as the journal will show it
-    /// (`FrameCrop.albumZoom`): a bundled image is laid out at its pixel size, and the send carries no more than the lens
-    /// shows. Nil for data that is no picture. Safe to call off the main actor.
+    /// The photo just taken, cropped as the journal will show it (`FrameCrop.albumZoom`) and scaled down to the height
+    /// of `capturedPhotoSize`, in the middle of a canvas that size. Nil for data that is no picture. Safe to call off the
+    /// main actor.
     nonisolated static func capturedPhotoImage(_ photo: Data) -> UIImage? {
         guard let image = UIImage(data: photo), image.size.width > 0, image.size.height > 0 else { return nil }
         let crop = FrameCrop.centerRect(in: image.size)
         let scale = min(capturedPhotoSize.width / crop.width, capturedPhotoSize.height / crop.height, 1)
         let size = CGSize(width: (crop.width * scale).rounded(), height: (crop.height * scale).rounded())
+        return canvas(capturedPhotoSize) { bounds, context in
+            let picture = CGRect(x: ((bounds.width - size.width) / 2).rounded(), y: ((bounds.height - size.height) / 2).rounded(), width: size.width, height: size.height)
+            context.cgContext.clip(to: picture)
+            image.draw(in: CGRect(x: picture.minX - crop.minX * scale, y: picture.minY - crop.minY * scale, width: image.size.width * scale, height: image.size.height * scale))
+        }
+    }
+
+    /// The mark of a photo being taken: a frame's four corners in white, as wide as the card, with a ring at its
+    /// middle. Bright on the additive display and nothing like the pages around it, so the tap is seen to have been
+    /// taken the moment it is sent.
+    nonisolated static let shutterImage: UIImage = canvas(CGSize(width: 600 - 2 * padding, height: 300)) { bounds, context in
+        let cg = context.cgContext
+        let frame = bounds.insetBy(dx: 14, dy: 14)
+        let arm: CGFloat = 84
+        cg.setStrokeColor(UIColor.white.cgColor)
+        cg.setLineWidth(14)
+        cg.setLineCap(.round)
+        cg.setLineJoin(.round)
+        for (corner, dx, dy) in [
+            (CGPoint(x: frame.minX, y: frame.minY), 1.0, 1.0), (CGPoint(x: frame.maxX, y: frame.minY), -1.0, 1.0),
+            (CGPoint(x: frame.minX, y: frame.maxY), 1.0, -1.0), (CGPoint(x: frame.maxX, y: frame.maxY), -1.0, -1.0),
+        ] {
+            cg.move(to: CGPoint(x: corner.x + dx * arm, y: corner.y))
+            cg.addLine(to: corner)
+            cg.addLine(to: CGPoint(x: corner.x, y: corner.y + dy * arm))
+            cg.strokePath()
+        }
+        cg.setLineWidth(10)
+        cg.strokeEllipse(in: CGRect(x: bounds.midX - 34, y: bounds.midY - 34, width: 68, height: 68))
+    }
+
+    /// A picture for the lens on a canvas of `size`, black where `draw` leaves it: black is unlit on the additive
+    /// display, so the canvas does not show. One pixel a point, so the send carries no more than the lens shows.
+    private nonisolated static func canvas(_ size: CGSize, draw: (CGRect, UIGraphicsImageRendererContext) -> Void) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = 1
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
-            image.draw(in: CGRect(x: -crop.minX * scale, y: -crop.minY * scale, width: image.size.width * scale, height: image.size.height * scale))
+        format.opaque = true
+        return UIGraphicsImageRenderer(size: size, format: format).image { context in
+            let bounds = CGRect(origin: .zero, size: size)
+            UIColor.black.setFill()
+            context.fill(bounds)
+            draw(bounds, context)
         }
     }
 
@@ -152,21 +202,23 @@ enum DisplayCardBuilder {
         .background(row.isSelected ? .card : .none)
     }
 
-    /// The camera frame scaled down to fit `viewfinderSize`, so the send carries no more pixels than the lens shows,
-    /// with the album's crop marked: outside it dimmed, a frame around it, so the wearer composes the picture the
-    /// journal will show (`FrameCrop.albumZoom`). Safe to call off the main actor.
+    /// The camera frame on the viewfinder's canvas, with the album's crop marked: outside it dimmed, a frame around
+    /// it, so the wearer composes the picture the journal will show (`FrameCrop.albumZoom`). The frame is sized so
+    /// the crop takes `viewfinderCropShare` of the canvas, which for the stream's portrait frames is a little over
+    /// their own size, the top and bottom left off: the lens then shows the bird about twice as large as when the
+    /// whole frame was fitted in. Safe to call off the main actor.
     nonisolated static func viewfinderImage(_ frame: UIImage) -> UIImage {
-        let scale = min(viewfinderSize.width / frame.size.width, viewfinderSize.height / frame.size.height, 1)
-        let size = CGSize(width: (frame.size.width * scale).rounded(), height: (frame.size.height * scale).rounded())
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        return UIGraphicsImageRenderer(size: size, format: format).image { context in
-            let bounds = CGRect(origin: .zero, size: size)
-            frame.draw(in: bounds)
-            let crop = FrameCrop.centerRect(in: size)
+        canvas(viewfinderSize) { bounds, context in
+            guard frame.size.width > 0, frame.size.height > 0 else { return }
+            let kept = FrameCrop.centerRect(in: frame.size)
+            let scale = min(bounds.height * viewfinderCropShare / kept.height, bounds.width * viewfinderCropShare / kept.width)
+            let drawn = CGSize(width: (frame.size.width * scale).rounded(), height: (frame.size.height * scale).rounded())
+            let picture = CGRect(x: ((bounds.width - drawn.width) / 2).rounded(), y: ((bounds.height - drawn.height) / 2).rounded(), width: drawn.width, height: drawn.height)
+            frame.draw(in: picture)
+            let crop = FrameCrop.centerRect(in: drawn).offsetBy(dx: picture.minX, dy: picture.minY)
             let cg = context.cgContext
             cg.setFillColor(UIColor.black.withAlphaComponent(0.45).cgColor)
-            cg.addRect(bounds)
+            cg.addRect(picture.intersection(bounds))
             cg.addRect(crop)
             cg.fillPath(using: .evenOdd)
             cg.setStrokeColor(UIColor.white.cgColor)

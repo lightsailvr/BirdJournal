@@ -8,7 +8,8 @@ import Testing
 
 // Issue #186 (of #185): VoiceOver over the capture's screens, walked in process as `ScreenAccessibilityTests` walks the
 // rest (XCUITest lists views SwiftUI hides from VoiceOver): the button and "Seen this run" on the run's page, the camera in
-// each of its states, "Name this bird" with its results and its no-match state, and the page of a sighting the birder named.
+// each of its states, "Name this bird" with its results and its no-match state, its photo full screen, and the page of a
+// sighting the birder named.
 // Each at the default text size and at the largest accessibility size, where every element must still be reached, labelled,
 // and free of middle dots and match scores.
 @Suite("Capture accessibility", .serialized)
@@ -112,6 +113,29 @@ struct CaptureAccessibilityTests {
         #expect(labels.contains(NameBirdText.searchHint), "\(labels)")
         #expect(labels.contains("Add sighting"), "\(labels)")
         #expect(labels.contains("Choose the bird in your photo."), "\(labels)")
+    }
+
+    @Test("The photo full screen: Close photo, the picture by its name, and under a sighting's what it is", arguments: Screens.sizes)
+    func photoFullScreen(typeSize: DynamicTypeSize) async throws {
+        let harness = try Screens.Harness()
+        let unnamed = try #require(harness.run.capture(Self.photo()))
+        let viewer = OriginalPhotoView(path: unnamed.photoPath, name: "Your photo", note: OriginalPhotoView.evidenceNote)
+        let labels = try await Screens.walk(viewer, harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("Your photo") && labels.contains(OriginalPhotoView.evidenceNote)
+        }
+        Screens.expectClean(labels, screen: "Photo, full screen")
+        #expect(labels.contains("Close photo"), "the one way out: \(labels)")
+        let photo = try #require(labels.firstIndex(of: "Your photo"), "the picture is reached, by its name: \(labels)")
+        let note = try #require(labels.firstIndex(of: OriginalPhotoView.evidenceNote), "\(labels)")
+        #expect(photo < note, "the photo, then what it is: \(labels)")
+
+        // A photo whose file has gone says so, and can still be closed.
+        let gone = try await Screens.walk(OriginalPhotoView(path: "no-such-photo.jpg"), harness: harness, typeSize: typeSize, inStack: false) { labels in
+            labels.contains("Photo unavailable")
+        }
+        Screens.expectClean(gone, screen: "Photo gone")
+        #expect(gone.contains("Photo unavailable") && gone.contains("The file is no longer on this iPhone."), "\(gone)")
+        #expect(gone.contains("Close photo"), "\(gone)")
     }
 
     @Test("A search lists the field guides' birds, then all other birds as Uncharted; one nothing matches says so and offers to clear", arguments: Screens.sizes)

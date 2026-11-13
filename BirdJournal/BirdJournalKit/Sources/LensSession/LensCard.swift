@@ -152,6 +152,10 @@ public enum LensElement: Sendable, Equatable {
     case viewfinder
     /// The photo just taken, small, on "Say the bird's name" (issue #194); the adapter fills it, or leaves it out.
     case capturedPhoto
+    /// The mark of a photo being taken, from the tap until the glasses have it: a frame's four corners, drawn as large
+    /// as the lens, which the adapter draws. It is the wearer's cue that the tap was taken (2026-11-12: the glasses'
+    /// photo mode makes no sound, and a sound from the phone would come seconds late).
+    case shutter
     /// The rows a photo is named from: the birds the words heard may be, then "Say it again" and "Name it later".
     case choices([LensChoiceRow])
 }
@@ -193,7 +197,7 @@ extension LensElement {
         case .list(let rows): rows.reduce(0) { $0 + $1.words }
         case .sounds(let rows): rows.reduce(0) { $0 + $1.words }
         case .choices(let rows): rows.reduce(0) { $0 + $1.words }
-        case .photo, .viewfinder, .capturedPhoto: 0
+        case .photo, .viewfinder, .capturedPhoto, .shutter: 0
         }
     }
 }

@@ -2,8 +2,8 @@ import XCTest
 
 /// Issue #193 (of #185): a photo taken from the lens's "Capture a sighting" is on the phone as an unnamed sighting. A real
 /// glasses run on Mock Device Kit, the clip standing in for its stream and a drawn frame for its camera
-/// (`-autoGlassesCamera`), with the lens driven by the mock's inputs as a wearer would (`-autoLensCapture`): up to the row, a
-/// tap, a tap on the viewfinder. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
+/// (`-autoGlassesCamera`), with the lens driven by the mock's inputs as a wearer would (`-autoLensCapture`): up to the row and a
+/// tap on it, which is the shutter. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
 final class LensCaptureUITests: XCTestCase {
     private static func clip() throws -> String {
         let clip = URL(fileURLWithPath: #filePath)
@@ -22,7 +22,7 @@ final class LensCaptureUITests: XCTestCase {
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))",
             "-autoGlassesListening", try Self.clip(), "-autoGlassesCamera", "YES", "-autoLocation", "griffith", "-autoScreen", "glasses-run",
-            "-autoLensCapture", "1", "-autoLensSay", "annas humming bird", "-stitchInSeconds", "60",
+            "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", "annas humming bird", "-stitchInSeconds", "60",
         ]
         app.launch()
 
@@ -51,7 +51,7 @@ final class LensCaptureUITests: XCTestCase {
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))",
             "-autoGlassesListening", try Self.clip(), "-autoGlassesCamera", "YES", "-autoLocation", "griffith", "-autoScreen", "glasses-run",
-            "-autoGlassesMicrophone", "denied", "-autoLensCapture", "1", "-autoLensSay", "annas humming bird", "-reduceMotion", "YES",
+            "-autoGlassesMicrophone", "denied", "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", "annas humming bird", "-reduceMotion", "YES",
         ]
         app.launch()
 

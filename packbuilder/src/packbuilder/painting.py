@@ -5,6 +5,7 @@ pack and scene art paint from the bird and not from its perch."""
 
 from __future__ import annotations
 
+import hashlib
 import io
 import logging
 from dataclasses import dataclass
@@ -60,8 +61,12 @@ class Painter:
         target = self.cutouts / f"{name}.png" if self.cutouts is not None and name else None
         if target is not None and target.exists():
             return bird_mask(Image.open(target))
-        upload = f"cutout-{(name or 'image').replace('/', '-')}.png"
-        data = self.client.paint(self.cutout, images=[(upload, png(image))]).image
+        # Named by its contents: ComfyUI keeps one input per name, and two builds painting on the same server (#58: five
+        # packs at once) each overwrote the other's "cutout-image.png" before its turn in the queue, so a bird was
+        # measured, and its colours fitted, against another bird's mask: a vireo came back cyan from its sky.
+        picture = png(image)
+        upload = f"cutout-{hashlib.sha256(picture).hexdigest()[:20]}.png"
+        data = self.client.paint(self.cutout, images=[(upload, picture)]).image
         if target is not None:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
@@ -93,7 +98,8 @@ class Painter:
     def isolate(self, crop: Image.Image, crop_mask: np.ndarray, prompt: str, name: str, seed: int = ISOLATE_SEED, attempts: int = ATTEMPTS) -> Isolation:
         """The bird of a reference crop (3:4, multiples of 16) alone on white: bird-isolate at the crop's own size, so
         it stays where it is in the photo with its hidden parts completed, its colours fitted back to the photo's."""
-        best, attempts = self.best_of(self.isolate_workflow, [(f"isolate-{name}.png", png(crop))], prompt, seed, crop, crop_mask,
+        picture = png(crop)
+        best, attempts = self.best_of(self.isolate_workflow, [(f"isolate-{name}-{hashlib.sha256(picture).hexdigest()[:12]}.png", picture)], prompt, seed, crop, crop_mask,
                                       f"isolated/{name}", size=crop.size, attempts=attempts)
         return Isolation(image=on_white(best.fitted, best.mask), attempt=best, attempts=attempts)
 

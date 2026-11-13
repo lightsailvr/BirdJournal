@@ -18,7 +18,9 @@
    "motif": "sandstone sea cliffs, a few ribbons of kelp and a soft hazy sky"
   },
   "us-ca-bay": {
-   "shape": "a hexagon with a flat top and a flat bottom",
+   "shape": "a regular hexagon lying on one flat edge, with a flat edge along the top, a flat edge along the bottom and a point at the left and at the right",
+   "outline": [[0.25, 0], [0.75, 0], [1, 0.5], [0.75, 1], [0.25, 1], [0, 0.5]],
+   "shape_limit": 0.92,
    "cord": "silver-grey",
    "twill": "cool pale grey cotton twill",
    "motif": "banks of fog rolling over oak hills and a few tall redwoods"
@@ -34,6 +36,25 @@
    "cord": "deep teal",
    "twill": "pearl-white cotton twill",
    "motif": "cypress trees, saw palmetto fronds and a misty lagoon"
+  },
+  "us-pnw": {
+   "shape": "a five-sided pentagon standing on a flat bottom edge, with a single point at the very top",
+   "outline": [[0.5, 0], [1, 0.382], [0.809, 1], [0.191, 1], [0, 0.382]],
+   "cord": "dark spruce-green",
+   "twill": "pale slate-blue cotton twill",
+   "motif": "a few tall dark fir trees, a snow-capped mountain and drifting grey mist"
+  },
+  "us-ny-nyc": {
+   "shape": "a square with generously rounded corners",
+   "cord": "brick-red",
+   "twill": "warm cream cotton twill",
+   "motif": "a skyline of tall city skyscrapers rising close behind the leafy treetops of a city park, with a strip of park lawn below"
+  },
+  "us-la-south": {
+   "shape": "a diamond, a square stood on one corner, with softly rounded points",
+   "cord": "deep plum-purple",
+   "twill": "pale straw-gold cotton twill",
+   "motif": "tall bald cypress trees with flared trunks standing in dark swamp water, long grey-green curtains of Spanish moss draped from their branches"
   }
  },
  "settings": {

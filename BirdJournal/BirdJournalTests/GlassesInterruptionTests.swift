@@ -114,40 +114,40 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("a doff with the capture viewfinder open: the page waits with nothing saved, the viewfinder is back with the glasses, and a tap there still takes the photo (issue #193)")
+        @Test("a doff while a capture's photo is on its way: the page waits, the capture lets the camera go with the session and has it again on the new one, and the photo is saved when it arrives (issue #193)")
         func doffDuringCapture() async throws {
             try await withMockDisplay { glasses in
                 let source = ManualAudioSource()
                 try await Self.withRun(source: source) { run in
-                    // No bird yet, so "Capture a sighting" is the highlighted row: a tap opens its viewfinder.
+                    // No bird yet, so "Capture a sighting" is the highlighted row: a tap takes the photo, which is
+                    // held on its way here.
+                    let jpeg = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in
+                        UIColor.red.setFill()
+                        context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
+                    }.jpegData(compressionQuality: 0.9)
+                    source.photo = jpeg
+                    source.holdsPhoto = true
                     let input = glasses.services.input
                     input.select()
-                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .captureViewfinder }
-                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder"] }
+                    try await waitUntil(timeout: .seconds(1)) { run.lens.page == .captureSaving }
+                    try await waitUntil(timeout: .seconds(1)) { source.captureSteps == [true] }
 
                     glasses.doff()
                     try await waitUntil { Self.isDoffed(glasses) }
                     glasses.powerOff()
                     try await waitUntil { run.phase == .paused(.glassesOff) }
                     #expect(run.lens.phase == .suspended)
-                    #expect(run.lens.page == .captureViewfinder, "the page waits where the wearer left it")
+                    #expect(run.lens.page == .captureSaving, "the page waits where the wearer left it")
                     #expect(run.sightings.unnamed.isEmpty)
 
                     glasses.powerOn()
                     glasses.don()
                     try await waitUntil(timeout: .seconds(30)) { run.phase == .listening }
-                    #expect(run.lens.page == .captureViewfinder)
+                    #expect(run.lens.page == .captureSaving)
                     try await waitUntil { run.lens.inputsState == .active }
-                    // The viewfinder asks for the stream again on the new session, and shows its frames.
-                    try await waitUntil(timeout: .seconds(2)) { source.streamChecks == ["viewfinder", "viewfinder"] }
-                    let jpeg = UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64)).image { context in
-                        UIColor.red.setFill()
-                        context.fill(CGRect(x: 0, y: 0, width: 64, height: 64))
-                    }.jpegData(compressionQuality: 0.9)
-                    source.latestFrame = CameraFrame(jpegData: { jpeg })
-                    // The mock's doff and return can take less than the echo window that began when the viewfinder opened.
-                    try await Task.sleep(for: .milliseconds(1100))
-                    input.select()
+                    // The capture let the camera go with the session, and has it again on the new one.
+                    try await waitUntil(timeout: .seconds(2)) { source.captureSteps == [true, false, true] }
+                    source.deliverPhoto()
                     try await waitUntil(timeout: .seconds(5)) { run.lens.page == .captureSaved }
                     #expect(run.sightings.unnamed.count == 1)
                     #expect(run.sightings.unnamed.first?.source == .glasses)

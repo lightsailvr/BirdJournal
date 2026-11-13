@@ -22,7 +22,7 @@
 #                "navUp select wait select wait hear" holds that page for a minute
 #   --no-dictation  the lens cannot ask (as without the glasses' microphone permission): the photo goes straight to
 #                "Photo saved"
-#   --photo-seconds N  with --camera, hold the photo N seconds, so the lens stays on "Saving the photo…" that long
+#   --photo-seconds N  with --camera, hold the photo N seconds, so the lens stays on "Taking the photo…" that long
 #   --species N  hear N fake species instead of three (0 to 6; 0 is the empty list, 6 has a second page)
 #   --port 9001  another port (default 9000, the port the maintainer's tab has open)
 #   --no-build   reuse the last build in build/DerivedData

@@ -24,6 +24,7 @@ import hashlib
 import io
 import logging
 from dataclasses import dataclass, field
+from typing import Callable
 from pathlib import Path
 from typing import NamedTuple
 
@@ -116,8 +117,10 @@ class SilhouetteLock(ArtLock):
     )
 
 
-def derive(bird_on_white: Image.Image) -> Derived:
-    """The silhouette of a bird isolated on white. Raises ValueError when the picture is blank."""
+def derive(bird_on_white: Image.Image, fill_holes: bool = False) -> Derived:
+    """The silhouette of a bird isolated on white. `fill_holes` closes every hole in it, for a bird whose white marks on
+    dark plumage (a kinglet's eye ring and wing bars, a Gadwall's speculum) read as air. Raises ValueError when the
+    picture is blank."""
     rgb = np.asarray(bird_on_white.convert("RGB")).astype(int)
     darkest = rgb.min(-1)
     bird = darkest < PAPER
@@ -126,7 +129,7 @@ def derive(bird_on_white: Image.Image) -> Derived:
     labels, count = ndimage.label(bird)
     sizes = ndimage.sum(bird, labels, range(1, count + 1))
     bird = np.isin(labels, 1 + np.flatnonzero(sizes >= SPECK * sizes.max()))
-    bird, holes = _fill_plumage(bird, darkest)
+    bird, holes = _fill_plumage(bird, darkest, every=fill_holes)
     ys, xs = np.nonzero(bird)
     height, width = bird.shape
     cut = [side for side, reached in (("top", ys.min() == 0), ("bottom", ys.max() == height - 1), ("left", xs.min() == 0), ("right", xs.max() == width - 1)) if reached]
@@ -136,8 +139,9 @@ def derive(bird_on_white: Image.Image) -> Derived:
     return Derived(image, _png(image), int(longest), holes, cut)
 
 
-def _fill_plumage(bird: np.ndarray, darkest: np.ndarray) -> tuple[np.ndarray, int]:
-    """`bird` with its plumage holes filled and its air holes left open, and how many it filled."""
+def _fill_plumage(bird: np.ndarray, darkest: np.ndarray, every: bool = False) -> tuple[np.ndarray, int]:
+    """`bird` with its plumage holes filled and its air holes left open (`every`: all of them filled), and how many it
+    filled."""
     enclosed = ndimage.binary_fill_holes(bird) & ~bird
     labels, count = ndimage.label(enclosed)
     filled = bird.copy()
@@ -149,7 +153,7 @@ def _fill_plumage(bird: np.ndarray, darkest: np.ndarray) -> tuple[np.ndarray, in
         y0, y1 = max(window[0].start - margin, 0), window[0].stop + margin
         x0, x1 = max(window[1].start - margin, 0), window[1].stop + margin
         hole = labels[y0:y1, x0:x1] == number
-        if hole.sum() >= PINHOLE * area:
+        if not every and hole.sum() >= PINHOLE * area:
             near = ndimage.binary_dilation(hole, iterations=RING[0])
             far = ndimage.binary_dilation(near, iterations=RING[1] - RING[0])
             ring = far & ~near & bird[y0:y1, x0:x1]
@@ -191,6 +195,17 @@ def pins_in(definition: PackDefinition, overrides: dict) -> dict[str, int]:
     return pins
 
 
+def fills_in(definition: PackDefinition, overrides: dict) -> frozenset[str]:
+    """The species ids whose overrides set `art.silhouette.fill_holes`."""
+    found = set()
+    for entry in definition.species:
+        data = overrides.get(entry.scientific_name)
+        art = data.get("art") if isinstance(data, dict) else None
+        if ((art or {}).get("silhouette") or {}).get("fill_holes"):
+            found.add(entry.id)
+    return frozenset(found)
+
+
 def sources(patch_lock: ArtLock, art_lock: ArtLock, pins: dict[str, int]) -> dict[str, Source]:
     """Each species' bird: its pin, with whichever isolation is cached; else its patch's reference; else its pack art's.
     A species painted from text has no bird."""
@@ -212,9 +227,13 @@ class SilhouetteMaker:
 
     pack_id: str
     lock: SilhouetteLock
-    sources: dict[str, Source]
+    sources: dict[str, Source] | Callable[[], dict[str, Source]]
+    """Each species' bird, or what finds them when `make` starts: a build isolates its reference birds and paints its
+    patches before this step, and their locks name the birds."""
     cache_dir: Path
     version: str = VERSION
+    fill_holes: frozenset[str] = frozenset()
+    """The species whose silhouette has every hole filled (`art.silhouette.fill_holes`)."""
     derived: int = field(default=0, init=False)
 
     def __post_init__(self):
@@ -222,6 +241,8 @@ class SilhouetteMaker:
 
     def make(self, species_ids: list[str]) -> dict[str, Silhouette]:
         """Every species' silhouette, deriving only what the lock lacks; one species' failure never stops the rest."""
+        if callable(self.sources):
+            self.sources = self.sources()
         made = {}
         self.derived = 0
         for species_id in species_ids:
@@ -243,7 +264,8 @@ class SilhouetteMaker:
             raise KeyError(f"{species_id}: its art was painted from text, so there is no bird to take a shape from")
         photo_id, seed, name = self.sources[species_id]
         same_bird = entry is not None and entry["photos"] == [photo_id] and (seed is None or entry["isolate_seed"] == seed)
-        if same_bird and entry["workflow"] == self.version:
+        fill = species_id in self.fill_holes
+        if same_bird and entry["workflow"] == self.version and bool(entry.get("fill_holes")) == fill:
             if entry["review"] == REJECTED or self._file(entry["sha256"]).exists():
                 return Silhouette(species_id, entry["review"], self._file(entry["sha256"]), (photo_id,))
         isolations = cached_isolations(self.cache_dir, photo_id)
@@ -251,7 +273,7 @@ class SilhouetteMaker:
         if seed not in isolations:
             raise KeyError(f"{species_id}: no isolated bird for photo {photo_id} seed {seed} in {self.cache_dir / 'isolated'}")
         with Image.open(isolations[seed]) as bird:
-            made = derive(bird)
+            made = derive(bird, fill_holes=fill)
         digest = hashlib.sha256(made.png).hexdigest()
         target = self._file(digest)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -264,6 +286,7 @@ class SilhouetteMaker:
             "width": made.image.width, "height": made.image.height, "bytes": len(made.png),
             "measure": {"bird_pixels": made.bird_pixels, "holes_filled": made.holes_filled, "cut": made.cut},
             "review": review_state,
+            **({"fill_holes": True} if fill else {}),
             **({"why": entry["why"]} if review_state == REJECTED and entry.get("why") else {}),
         }
         return Silhouette(species_id, review_state, target, (photo_id,))

@@ -91,7 +91,7 @@ struct AtlasBookTests {
 
     // MARK: - A map marker
 
-    @Test("a marker is a flat picture in its edition's shape: the corners clear, the patch's own proportions", arguments: ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", nil as String?])
+    @Test("a marker is a flat picture in its edition's shape: the corners clear, the patch's own proportions", arguments: EditionTintTests.setIDs.map(Optional.some) + [nil])
     func markerShape(setID: String?) throws {
         let edition = PatchEdition.of(setID: setID)
         let image = MapPatchThumbnail.draw(painting: nil, edition: edition)

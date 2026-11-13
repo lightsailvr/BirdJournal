@@ -49,7 +49,7 @@ struct LensCardRendererTests {
     static let pages: [LensPage] = [
         .list, .species(index: 0), .species(index: 1), .details(index: 0), .details(index: 1),
         .problem(.noLocation), .problem(.connectionLost), .friend(Fakes.mayasPhoebe),
-        .captureViewfinder, .captureSaving, .captureSaved, .problem(.photoNotTaken), .problem(.photoGone),
+        .captureSaving, .captureCancel, .captureSaved, .problem(.photoNotTaken), .problem(.photoGone),
     ]
 
     @Test("every page is one screenful inside the word budget; the details page has the larger one of its small-style text", arguments: pages)
@@ -69,7 +69,7 @@ struct LensCardRendererTests {
     @Test("the list counts the species heard and has one row per species, newest last, with the selection marked")
     func list() {
         #expect(Self.render(.list, stack: CandidateStack(), at: Fakes.quiet, captureSelected: true).screenfuls == [[
-            .heading("No species yet"), .meta("Birds appear as they call."), Self.captureRow(selected: true),
+            .heading("No species yet"), .meta("Birds appear as they call. Tap: take a photo."), Self.captureRow(selected: true),
         ]])
         #expect(Self.render(.list, stack: Fakes.stack(1), at: Fakes.quiet).screenfuls[0][0] == .heading("1 species heard"))
         #expect(Self.render(.list, selection: 1).screenfuls == [[
@@ -116,6 +116,7 @@ struct LensCardRendererTests {
     func captureRow() {
         let chosen = Self.render(.list, selection: 0, captureSelected: true)
         #expect(chosen.elements[2] == Self.captureRow(selected: true))
+        #expect(chosen.elements[1] == .meta("Tap: take a photo."), "the hint says what a tap does on the row")
         #expect(Self.rows(chosen).map(\.isSelected) == [false, false, false])
 
         let species = (0..<12).map { Species(index: $0, scientificName: "Genus species\($0)", commonName: "Winded Bird \($0)", taxonomicClass: "Aves") }
@@ -131,21 +132,39 @@ struct LensCardRendererTests {
         #expect(Self.rows(top).first?.index == 0)
     }
 
-    @Test("the capture viewfinder is the camera's view, what it is for, and what a tap and a swipe do")
-    func captureViewfinderPage() {
-        #expect(Self.render(.captureViewfinder).elements == [
-            .viewfinder,
-            .heading("Capture a sighting"),
-            .meta("Tap: take the photo · swipe right: back"),
-        ])
-    }
-
-    @Test("after the tap the lens says the photo is being saved, then that it is saved and named on the phone")
+    @Test("after the tap the lens says the photo is being taken, then that the glasses have it, then that it is saved and named on the phone")
     func capturedPages() {
-        #expect(Self.render(.captureSaving).elements == [
-            .heading("Saving the photo…"),
-            .meta("Swipe right: all species"),
+        var machine = LensStateMachine()
+        let elements = { LensCardRenderer.render(machine, profile: Self.profile).elements }
+        _ = machine.apply(.tap)
+        #expect(elements() == [.shutter, .heading("Hold still"), .meta("Taking the photo…")])
+        _ = machine.shutterEnded()
+        #expect(elements() == [
+            .heading("Photo taken"),
+            .body("Waiting for it from the glasses…"),
+            .meta("Listening is paused until it arrives."),
+            .meta("Tap: another photo · down: stop · right: all species"),
         ])
+        _ = machine.captureTaken(1, sent: 0.5)
+        #expect(elements()[1] == .body("Sending it to your phone… 50%"))
+
+        // Another photo: the page counts them, and says which one is crossing.
+        _ = machine.apply(.tap)
+        _ = machine.shutterEnded()
+        #expect(elements()[0] == .heading("2 photos taken"))
+        #expect(elements()[1] == .body("Sending photo 1 of 2 to your phone… 50%"))
+        #expect(elements()[2] == .meta("Listening is paused until they arrive."))
+        _ = machine.apply(.swipeDown)
+        #expect(elements() == [
+            .heading("Stop sending?"),
+            .body("2 photos have not reached your phone and may be lost."),
+            .meta("Tap: stop and listen · swipe right: keep sending"),
+        ])
+        _ = machine.apply(.swipeRight)
+        _ = machine.captureSaved(1, dictation: false)
+        #expect(elements()[1] == .body("Waiting for photo 2 of 2 from the glasses…"))
+        _ = machine.captureSaved(2, dictation: false)
+        #expect(elements() == [.heading("2 photos saved"), .body("Name them on your phone."), .meta("Tap or swipe right: all species")])
         #expect(Self.render(.captureSaved).elements == [
             .heading("Photo saved"),
             .body("Name it on your phone."),
@@ -276,13 +295,12 @@ struct LensCardRendererTests {
     @Test("the card of a machine is the card of its page and its state: the list with the capture row highlighted, a saved bird's details, the birds a name may be, and \"Added\"")
     func cardOfAMachine() {
         var machine = LensStateMachine()
-        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements == [.heading("No species yet"), .meta("Birds appear as they call."), Self.captureRow(selected: true)])
+        #expect(LensCardRenderer.render(machine, profile: Self.profile).elements == [.heading("No species yet"), .meta("Birds appear as they call. Tap: take a photo."), Self.captureRow(selected: true)])
 
         machine.update(with: Fakes.stack(3), at: Fakes.quiet)
         _ = machine.apply(.swipeUp)
         #expect(LensCardRenderer.render(machine, profile: Self.profile).elements.contains(Self.captureRow(selected: true)))
 
-        _ = machine.apply(.tap)
         _ = machine.apply(.tap)
         _ = machine.captureSaved(1, dictation: true)
         machine.matched("black phoebe", Fakes.matches, dictation: 1)

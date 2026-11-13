@@ -160,6 +160,15 @@ def test_a_dark_bird_gets_the_black_thread_clause(tmp_path, comfy):
     assert is_dark(isolated_bird(((12, 12, 14), (20, 20, 24))), 22) and not is_dark(isolated_bird(), 22)
 
 
+def test_a_bird_that_is_black_all_over_can_be_pinned_to_go_without_the_clause(tmp_path, comfy):
+    painter = artist(tmp_path, comfy)
+    painter.pins = {RAVEN: PatchPin(markings="The whole bird is black.", dark_clause=False)}
+    painter.paint([RAVEN])
+    assert "the same contrast as the reference" not in comfy.paintings[0].prompt and "The whole bird is black." in comfy.paintings[0].prompt
+    assert PatchLock.load(tmp_path / "patch.lock.json").species[RAVEN]["dark"] is False
+    assert PatchPin.from_art({"patch": {"dark_clause": False}}).dark_clause is False and PatchPin.from_art({"patch": {}}).dark_clause
+
+
 def test_a_species_whose_pack_art_has_no_reference_is_left_unpainted(tmp_path, comfy):
     painter = artist(tmp_path, comfy)
     painter.art_lock.species["avis-textus"] = {"common_name": "Text Bird", "photos": [], "review": "approved"}
@@ -266,3 +275,81 @@ def test_peeled_measures_bare_card_in_the_patchs_edge():
     curled = clean.copy()
     ImageDraw.Draw(curled).polygon([(40, 300), (140, 400), (40, 400)], fill=(240, 239, 236, 255))
     assert peeled(curled) > 0.015
+
+
+def test_a_cream_twill_inside_its_cord_is_not_a_peeled_corner():
+    """New York's warm cream and Orlando's pearl twill are as pale as the card; only the cord's band is measured (#58)."""
+    from packbuilder.patch_art import CORD_DEPTH, peeled
+
+    patch = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(patch)
+    draw.rounded_rectangle((0, 0, 399, 399), radius=70, fill=(170, 60, 50, 255))
+    depth = int(CORD_DEPTH) + 2
+    draw.rounded_rectangle((depth, depth, 399 - depth, 399 - depth), radius=50, fill=(238, 232, 220, 255))
+    assert peeled(patch) < 0.015
+    ImageDraw.Draw(patch).rectangle((150, 380, 250, 399), fill=(240, 239, 236, 255))  # card showing through the cord along the bottom
+    assert peeled(patch) > 0.015
+
+
+def test_a_silver_cord_is_not_card_and_card_showing_through_it_still_is():
+    """The Bay Area's cord is light and unsaturated, like card; card is lighter still (#58)."""
+    from packbuilder.patch_art import peeled
+
+    patch = Image.new("RGBA", (400, 400), (0, 0, 0, 0))
+    ImageDraw.Draw(patch).ellipse((0, 0, 399, 399), fill=(205, 207, 210, 255))
+    ImageDraw.Draw(patch).ellipse((27, 27, 372, 372), fill=(218, 221, 221, 255))
+    assert peeled(patch) < 0.015
+    sheen = ImageDraw.Draw(patch)
+    for x in range(120, 280, 6):  # the thread's highlights: as light as card, a few pixels each
+        sheen.line((x, 4, x + 2, 12), fill=(252, 252, 250, 255), width=2)
+    assert peeled(patch) < 0.015
+    ImageDraw.Draw(patch).rectangle((150, 380, 250, 399), fill=(250, 250, 248, 255))
+    assert peeled(patch) > 0.015
+
+
+def test_shape_fit_tells_a_hexagon_on_its_flat_from_one_on_its_point_and_a_wrong_shape_is_painted_again(tmp_path, comfy, monkeypatch):
+    """FLUX.3 reads "a hexagon with a flat top" loosely: half the Bay Area's trial patches stood on a point (#58)."""
+    import dataclasses
+
+    import packbuilder.patch_art as patch_art
+    from packbuilder.patch_art import SHAPE_LIMIT, shape_fit
+
+    flat = [(0.25, 0), (0.75, 0), (1, 0.5), (0.75, 1), (0.25, 1), (0, 0.5)]
+
+    def drawn(points, size=(440, 380)):
+        image = Image.new("RGBA", (500, 500), (0, 0, 0, 0))
+        ImageDraw.Draw(image).polygon([(30 + x * size[0], 40 + y * size[1]) for x, y in points], fill=(200, 200, 205, 255))
+        return image
+
+    assert shape_fit(drawn(flat), tuple(flat)) > 0.97
+    assert shape_fit(drawn([(y, x) for x, y in flat], size=(380, 440)), tuple(flat)) < SHAPE_LIMIT, "the same hexagon on its point"
+
+    fits = iter([0.8, 0.96])
+    monkeypatch.setattr(patch_art, "shape_fit", lambda cut, outline: next(fits))
+    prompts = PatchPrompts.load()
+    hexagon = dataclasses.replace(prompts.editions["us-ca-la"], outline=tuple(flat))
+    painter = artist(tmp_path, comfy, prompts=dataclasses.replace(prompts, editions={**prompts.editions, "us-ca-la": hexagon}))
+    painter.paint([FINCH])
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["attempts"] == 2 and entry["shape_fit"] == 0.96
+    assert "outline" not in entry["edition"], "the outline is no painting input: adding one repaints nothing"
+
+
+def test_an_edition_sets_its_own_least_fit_and_of_the_wrong_shapes_the_nearest_is_kept(tmp_path, comfy, monkeypatch):
+    """#58: the Bay Area's octagons fit its hexagon at 0.88 to 0.915, over the general limit, and a patch that stood on
+    its point three times kept its first painting, not its best."""
+    import dataclasses
+
+    import packbuilder.patch_art as patch_art
+
+    flat = ((0.25, 0), (0.75, 0), (1, 0.5), (0.75, 1), (0.25, 1), (0, 0.5))
+    prompts = PatchPrompts.load()
+    assert prompts.editions["us-ca-bay"].least_fit == 0.92 and prompts.editions["us-pnw"].least_fit == patch_art.SHAPE_LIMIT
+    fits = iter([0.9, 0.81, 0.91])
+    monkeypatch.setattr(patch_art, "shape_fit", lambda cut, outline: next(fits))
+    hexagon = dataclasses.replace(prompts.editions["us-ca-la"], outline=flat, shape_limit=0.92)
+    painter = artist(tmp_path, comfy, prompts=dataclasses.replace(prompts, editions={**prompts.editions, "us-ca-la": hexagon}))
+    painter.paint([FINCH])
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["attempts"] == 3 and entry["shape_fit"] == 0.91, "every try was an octagon: the nearest one is kept"
+    assert "shape_limit" not in entry["edition"]

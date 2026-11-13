@@ -287,7 +287,7 @@ def test_the_app_bundles_every_approved_cover_and_only_those(tmp_path):
         entry = CoverLock.load(lock_path).cover
         if entry and entry.get("review") == APPROVED:
             approved[lock_path.parent.name] = entry
-    assert set(covers) == set(approved) and len(covers) == 5
+    assert set(covers) == set(approved) and len(covers) == 8
     total = 0
     for pack_id, cover in covers.items():
         entry = approved[pack_id]
@@ -298,7 +298,7 @@ def test_the_app_bundles_every_approved_cover_and_only_those(tmp_path):
         with Image.open(bundled / cover["file"]) as image:
             assert (image.format, image.size) == ("JPEG", COVER_SIZE)
         total += (bundled / cover["file"]).stat().st_size
-    assert total < 3_500_000, f"{total} bytes: about 3 MB together"
+    assert total < 4_500_000, f"{total} bytes: about 4 MB together, eight covers at under half a megabyte each"
 
 
 def test_bundling_a_cover_needs_its_approved_painting(tmp_path):

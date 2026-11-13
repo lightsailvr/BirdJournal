@@ -281,7 +281,7 @@ extension MockDeviceKitTests {
             }
         }
 
-        @Test("Capture a sighting on the lens: a swipe up from the first bird reaches the row, a tap opens the viewfinder, a swipe off it saves nothing, and a tap there puts the photo on the phone as an unnamed sighting of the run, from the glasses, with its time and the run's place, through the run and into its review (issue #193)")
+        @Test("Capture a sighting on the lens: a swipe up from the first bird reaches the row, and a tap on it takes the photo at once and puts it on the phone as an unnamed sighting of the run, from the glasses, with its time and the run's place, through the run and into its review (issue #193)")
         func captureFromTheLens() async throws {
             try await withMockDisplay { glasses in
                 let connection = GlassesConnection()
@@ -319,35 +319,18 @@ extension MockDeviceKitTests {
                     input.navUp()
                     try await waitUntil(timeout: .seconds(1)) { captureRow() == .capture(label: "Capture a sighting", isSelected: true) }
 
-                    // A tap opens the viewfinder, which makes sure the stream is up as the add's does (#46); a swipe
-                    // right is back to the list with nothing saved.
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
-                    #expect(lens.card.elements.first == .viewfinder)
-                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder"] }
-                    input.navRight()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
-                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["viewfinder", "species list"] }
-                    #expect(run.sightings.unnamed.isEmpty)
-                    #expect(try album.mainContext.fetchCount(FetchDescriptor<Capture>()) == 0)
-
-                    // Again. A tap right behind the one that opened the viewfinder is that press delivered twice, and
-                    // takes no photo; a deliberate one later does.
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
+                    // A tap on the row is the shutter (2026-11-12): no viewfinder, the photo is taken at once, and the
+                    // capture has the camera, so listening stops for it. A tap right behind it is that press delivered
+                    // twice: it takes no second photo and does not close "Photo saved" unread.
                     source.latestFrame = Self.frame(.red)
                     source.photo = Self.frame(.green).jpegData()
-                    let received = lens.inputRecords.count
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.inputRecords.count == received + 1 }
-                    try await Task.sleep(for: .milliseconds(300))
-                    #expect(lens.page == .captureViewfinder)
-                    #expect(run.sightings.unnamed.isEmpty)
-                    try await Task.sleep(for: .milliseconds(1100))
                     let before = Date.now
+                    input.select()
                     input.select()
                     try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
                     #expect(lens.card.elements == [.heading("Photo saved"), .body("Name it on your phone."), .meta("Tap or swipe right: all species")])
+                    try await Task.sleep(for: .milliseconds(400))
+                    #expect(lens.page == .captureSaved, "the doubled press closed nothing")
 
                     // On the phone: an unnamed sighting of this run, which is what "Seen this run" lists, and no sighting.
                     #expect(run.sightings.unnamed.count == 1)
@@ -366,17 +349,21 @@ extension MockDeviceKitTests {
                     #expect(run.reveal == nil)
                     #expect(!run.hasCeremonyWaiting)
 
-                    // A tap returns to the list with the highlight still on the row. With no photo from the camera, the
-                    // frame from the moment of the tap stands in.
+                    // The capture had the camera while the photo was taken, and nothing asks for a name here: it has
+                    // let the camera go, so listening is back.
+                    try await waitUntil(timeout: .seconds(1)) { source.captureSteps == [true, false] }
+
+                    // A tap returns to the list with the highlight still on the row (a beat first: a tap right behind
+                    // the one that took the photo is taken for it). With no photo from the camera, the frame from the
+                    // moment of the tap stands in.
+                    try await Task.sleep(for: .milliseconds(1100))
                     input.select()
                     try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                    try await waitUntil(timeout: .seconds(1)) { source.streamChecks == ["species list"] }
                     #expect(captureRow() == .capture(label: "Capture a sighting", isSelected: true))
                     source.photo = nil
                     input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
-                    try await Task.sleep(for: .milliseconds(1100))
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page != .captureViewfinder }
+                    try await waitUntil(timeout: .seconds(1)) { lens.page != .list }
                     source.latestFrame = Self.frame(.blue) // The stream moves on while the frame is encoded and written.
                     try await waitUntil(timeout: .seconds(5)) { lens.page == .captureSaved }
                     #expect(run.sightings.unnamed.count == 2)
@@ -388,8 +375,6 @@ extension MockDeviceKitTests {
                     input.navRight()
                     try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
                     source.latestFrame = nil
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
                     try await Task.sleep(for: .milliseconds(1100))
                     input.select()
                     try await waitUntil(timeout: .seconds(5)) { lens.page == .problem(.photoNotTaken) }
@@ -398,16 +383,32 @@ extension MockDeviceKitTests {
                     input.navRight()
                     try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
 
-                    // One more, whose photo is still on its way when the run is stopped.
+                    // A photo given up while it is on its way (2026-11-12): swipe down asks, a tap stops. Nothing is
+                    // written, not even the frame from the tap, the lens says nothing more of it, and the camera is
+                    // told to stop waiting.
                     source.latestFrame = Self.frame(.red)
                     source.photo = Self.frame(.green).jpegData()
                     source.holdsPhoto = true
-                    input.select()
-                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureViewfinder }
                     try await Task.sleep(for: .milliseconds(1100))
                     input.select()
                     try await waitUntil(timeout: .seconds(1)) { lens.page == .captureSaving }
-                    #expect(lens.card.elements == [.heading("Saving the photo…"), .meta("Swipe right: all species")])
+                    #expect(lens.card.elements == [.shutter, .heading("Hold still"), .meta("Taking the photo…")])
+                    input.navDown()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureCancel }
+                    #expect(lens.card.elements.first == .heading("Stop sending?"))
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .list }
+                    try await waitUntil(timeout: .seconds(1)) { source.cancels == 1 }
+                    try await Task.sleep(for: .milliseconds(300))
+                    #expect(run.sightings.unnamed.count == 2)
+                    #expect(lens.page == .list)
+
+                    // One more, whose photo is still on its way when the run is stopped.
+                    source.holdsPhoto = true
+                    try await Task.sleep(for: .milliseconds(1100))
+                    input.select()
+                    try await waitUntil(timeout: .seconds(1)) { lens.page == .captureSaving }
                 } catch {
                     source.deliverPhoto()
                     await run.stop()

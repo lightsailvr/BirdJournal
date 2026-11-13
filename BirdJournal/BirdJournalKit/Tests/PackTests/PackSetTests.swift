@@ -138,7 +138,7 @@ struct PackSetTests {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let shipped = BundledCovers.shipped.sets
-        #expect(Set(shipped.map(\.id)) == ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"])
+        #expect(Set(shipped.map(\.id)) == ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"])
         #expect(shipped.allSatisfy { !$0.regions.isEmpty && !$0.species.isEmpty }, "whole definitions, with boundaries and birds")
 
         let unreachable = PackLibrary(

@@ -2,35 +2,91 @@
   "_comment": "Manual overrides per species, keyed by scientific name: {\"include\": [inat photo ids, forced in first, in this order], \"exclude\": [inat photo ids never chosen], \"description\": {\"summary\", \"field_marks\", \"size\", \"habitat\": text written over the Wikipedia-derived fields}, \"limit\": N cleared candidates to consider instead of the build's --limit, \"trust_article\": true to take a Wikipedia article whose lead names neither the BirdNET binomial nor the BirdNET common name, \"sounds\": {\"song\": \"xc-<nr>\", \"call\": \"xc-<nr>\" pinned first, \"exclude\": [recording ids never chosen], \"xeno_canto_name\": the name xeno-canto files the species under, \"accept\": [species BirdNET may hear instead, the other half of a split]}}. Photo ids are in the pack's report.json and LICENSE.",
   "Pyrocephalus rubinus": {
     "trust_article": true,
-    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird here"
+    "_why": "BirdNET calls it Scarlet Flycatcher, Pyrocephalus rubinus; Wikipedia's Vermilion flycatcher article is Pyrocephalus obscurus after the split, and is the right bird here",
+    "art": {
+      "setting": "perch",
+      "reference": 345101854,
+      "_why": "the reference was an immature male with a patchy crown; an adult male"
+    },
+    "include": [
+      345101854
+    ]
   },
   "Bubo virginianus": {
     "limit": 200,
-    "_why": "a night bird: of the first 60 San Diego candidates six had a detectable owl and four of those were blurred"
+    "_why": "a night bird: of the first 60 San Diego candidates six had a detectable owl and four of those were blurred",
+    "art": {
+      "setting": "perch"
+    }
   },
   "Calypte anna": {
     "exclude": [
       740240999
     ],
-    "_why": "excluded: leucistic, nearly all white"
+    "_why": "excluded: leucistic, nearly all white",
+    "art": {
+      "setting": "perch",
+      "reference": 693700315,
+      "_why": "the reference's gorget was unlit and the patch's throat came out olive; an adult male with its magenta gorget and crown"
+    },
+    "include": [
+      693700315,
+      715370536
+    ],
+    "hero": {
+      "pinned": 693700315,
+      "_why": "a hovering female among leaves; an adult male perched; the second pass replaced that photo as the reference with a better bird, proposed here instead"
+    }
   },
   "Columba livia": {
     "exclude": [
       730799658
     ],
-    "_why": "excluded: a feather, no bird"
+    "_why": "excluded: a feather, no bird",
+    "art": {
+      "setting": "ground",
+      "reference": 677786425,
+      "_why": "the reference was a dark checkered bird and the patch black with white streaks; a typical blue-grey pigeon on sand"
+    },
+    "include": [
+      677786425
+    ]
   },
   "Pheucticus melanocephalus": {
     "exclude": [
       736111909
     ],
-    "_why": "excluded: dead on a shovel"
+    "_why": "excluded: dead on a shovel",
+    "art": {
+      "setting": "perch",
+      "reference": 660931123,
+      "_why": "the reference was a female behind a branch; an adult male in the open"
+    },
+    "include": [
+      660931123
+    ],
+    "hero": {
+      "pinned": 660931123,
+      "_why": "a female among twigs; an adult male"
+    }
   },
   "Thalasseus elegans": {
     "exclude": [
       715904123
     ],
-    "_why": "excluded: dead on a beach"
+    "_why": "excluded: dead on a beach",
+    "art": {
+      "setting": "flight",
+      "reference": 691003853,
+      "_why": "the isolated bird was crestless, grey and not faithful; an adult in flight"
+    },
+    "include": [
+      691003853
+    ],
+    "hero": {
+      "pinned": 691003853,
+      "_why": "a flock; one bird in flight"
+    }
   },
   "Setophaga aestiva": {
     "exclude": [
@@ -42,31 +98,64 @@
       "accept": [
         "Setophaga petechia"
       ]
-    }
+    },
+    "art": {
+      "setting": "perch",
+      "reference": 670458647,
+      "_why": "the reference was a dull female-type bird; a clear adult on a branch",
+      "patch": {
+        "markings": "The whole bird is bright lemon yellow, with olive-yellow wings and tail edged yellow; there is no tan, grey or brown on it."
+      }
+    },
+    "include": [
+      670458647
+    ]
   },
   "Phalaenoptilus nuttallii": {
     "exclude": [
       719227728
     ],
-    "_why": "excluded: held in a hand"
+    "_why": "excluded: held in a hand",
+    "art": {
+      "setting": "ground"
+    }
   },
   "Megascops kennicottii": {
     "exclude": [
       414714786
     ],
-    "_why": "excluded: feathers, no bird"
+    "_why": "excluded: feathers, no bird",
+    "art": {
+      "setting": "perch",
+      "reference": 154442455,
+      "_why": "the pack has no photo; the only cached photo with the whole owl in view, at a nest box"
+    },
+    "include": [
+      154442455
+    ]
   },
   "Catharus ustulatus": {
     "exclude": [
       735975789
     ],
-    "_why": "excluded: dead on the ground"
+    "_why": "excluded: dead on the ground",
+    "art": {
+      "setting": "perch"
+    }
   },
   "Callipepla californica": {
     "exclude": [
       711008211
     ],
-    "_why": "excluded: dead on the ground"
+    "_why": "excluded: dead on the ground",
+    "art": {
+      "setting": "ground",
+      "reference": 651685993,
+      "_why": "the reference was dark and the patch black and white; a male side-on in good light"
+    },
+    "include": [
+      651685993
+    ]
   },
   "Numenius hudsonicus": {
     "sounds": {
@@ -74,6 +163,1555 @@
         "Numenius phaeopus"
       ]
     },
-    "_why": "BirdNET+ carries both halves of the whimbrel split and hears American recordings as Numenius phaeopus (#41: six xeno-canto and two iNaturalist clips refused that way)"
+    "_why": "BirdNET+ carries both halves of the whimbrel split and hears American recordings as Numenius phaeopus (#41: six xeno-canto and two iNaturalist clips refused that way)",
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Larus occidentalis": {
+    "art": {
+      "setting": "shore",
+      "reference": 699153211,
+      "_why": "the reference was a brown juvenile in flight; an adult walking on sand"
+    },
+    "include": [
+      699153211
+    ],
+    "hero": {
+      "pinned": 699153211,
+      "_why": "a brown juvenile; an adult walking on sand"
+    }
+  },
+  "Haemorhous mexicanus": {
+    "art": {
+      "setting": "perch",
+      "reference": 667970158,
+      "_why": "the reference had its head down and blotchy plumage; an adult male head-up on a branch"
+    },
+    "hero": {
+      "pinned": 667970158,
+      "_why": "a streaky female behind twigs; the adult male on a branch; the second pass replaced that photo as the reference with a better bird, proposed here instead"
+    },
+    "include": [
+      667970158
+    ]
+  },
+  "Buteo jamaicensis": {
+    "art": {
+      "setting": "perch",
+      "reference": 725547102,
+      "_why": "the reference was a dark bird in flight and the patch came out pale; a well-lit adult perched on a post"
+    },
+    "include": [
+      725547102
+    ]
+  },
+  "Anas platyrhynchos": {
+    "art": {
+      "setting": "water",
+      "reference": 660370139,
+      "_why": "the reference was a female preening with her head hidden; a drake swimming"
+    },
+    "include": [
+      660370139
+    ],
+    "exclude": [
+      699797069,
+      702579663
+    ],
+    "_why": "excluded: domestic white ducks",
+    "hero": {
+      "pinned": 660370139,
+      "_why": "domestic white ducks; a drake swimming"
+    }
+  },
+  "Egretta thula": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Melozone crissalis": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Pelecanus occidentalis": {
+    "art": {
+      "setting": "rock",
+      "reference": 700282584,
+      "_why": "the reference was preening with its bill tucked into its chest; an adult with its head and bill showing"
+    },
+    "exclude": [
+      688896716
+    ],
+    "_why": "excluded: dead on a beach"
+  },
+  "Sayornis nigricans": {
+    "art": {
+      "setting": "perch",
+      "patch": {
+        "markings": "The head, neck, breast, back, wings and tail are all very dark sooty black thread; only the lower belly is white."
+      },
+      "reference": 704885867,
+      "_why": "the isolated reference had a blue colour cast; a side-on bird in true black and white"
+    },
+    "hero": {
+      "pinned": 704885867,
+      "_why": "small on a stump; a closer whole bird"
+    },
+    "include": [
+      704885867
+    ]
+  },
+  "Zenaida macroura": {
+    "art": {
+      "setting": "perch",
+      "reference": 715185306,
+      "_why": "the reference was a near-black silhouette and the patch a black-and-white bird; a soft-tan dove in good light"
+    },
+    "include": [
+      715185306
+    ]
+  },
+  "Melospiza melodia": {
+    "art": {
+      "setting": "perch",
+      "reference": 703483971,
+      "_why": "the isolated bird was not faithful (twigs across it); a whole bird on an open branch"
+    },
+    "include": [
+      703483971
+    ],
+    "hero": {
+      "pinned": 703483971,
+      "_why": "dark and dim; a whole bird on an open branch"
+    }
+  },
+  "Spinus psaltria": {
+    "art": {
+      "setting": "perch",
+      "reference": 468743210,
+      "_why": "the reference was a dim, backlit female; an adult male in good light"
+    },
+    "include": [
+      468743210
+    ],
+    "hero": {
+      "pinned": 468743210,
+      "_why": "a dim, backlit female; an adult male in good light"
+    }
+  },
+  "Fulica americana": {
+    "art": {
+      "setting": "water",
+      "patch": {
+        "markings": "The head and neck are solid black, the bill is white and the eye is red; the body and wings are plain dark slate grey, with no white or pale patches."
+      },
+      "reference": 613998200,
+      "_why": "maintainer's review 2026-11-11: the patch is to show the coot in water, as its new opening photo does"
+    },
+    "hero": {
+      "pinned": 613998200,
+      "_why": "two coots overlapping; one bird swimming"
+    },
+    "include": [
+      613998200,
+      607332560
+    ]
+  },
+  "Setophaga coronata": {
+    "art": {
+      "setting": "perch",
+      "reference": 618780041,
+      "_why": "the isolated bird was dull and unreadable; an adult on a stem showing its yellow patches"
+    },
+    "include": [
+      618780041
+    ],
+    "hero": {
+      "pinned": 618780041,
+      "_why": "flapping, wings blurred; an adult perched"
+    }
+  },
+  "Ardea herodias": {
+    "art": {
+      "setting": "ground",
+      "reference": 709378286,
+      "_why": "the isolated bird came out dull brown and odd; a whole adult standing on a dock"
+    },
+    "include": [
+      723724904,
+      709378286
+    ],
+    "hero": {
+      "pinned": 723724904,
+      "_why": "the slot shows only the head; a whole bird standing"
+    }
+  },
+  "Zonotrichia leucophrys": {
+    "art": {
+      "setting": "perch",
+      "reference": 615093220,
+      "_why": "maintainer's review 2026-11-11: the patch should be on a branch; an adult with its black and white crown perched"
+    },
+    "include": [
+      626895371,
+      615093220
+    ]
+  },
+  "Sialia mexicana": {
+    "art": {
+      "setting": "perch",
+      "reference": 667190197,
+      "_why": "the reference was a female; an adult male on an open branch"
+    },
+    "hero": {
+      "pinned": 667190197,
+      "_why": "a dim male among branches; a male on an open branch"
+    },
+    "include": [
+      667190197
+    ]
+  },
+  "Buteo lineatus": {
+    "art": {
+      "setting": "perch",
+      "reference": 706785692,
+      "_why": "the reference was a pale juvenile seen from behind; an adult with its rufous breast"
+    },
+    "include": [
+      706785692
+    ]
+  },
+  "Pandion haliaetus": {
+    "art": {
+      "setting": "perch",
+      "reference": 650471638,
+      "_why": "the flying bird's isolation was not faithful; a whole adult perched on a lamp"
+    },
+    "hero": {
+      "pinned": 650471638,
+      "_why": "backlit from below; a whole adult perched"
+    },
+    "include": [
+      650471638
+    ]
+  },
+  "Aphelocoma californica": {
+    "art": {
+      "setting": "ground",
+      "reference": 660369730,
+      "_why": "the reference's head was turned and dark, and the patch lost the blue head; a bright side-on bird"
+    },
+    "hero": {
+      "pinned": 717434940,
+      "_why": "a portrait frame, the slot cuts the head; a whole bird on a branch"
+    },
+    "include": [
+      717434940,
+      660369730
+    ]
+  },
+  "Ardea alba": {
+    "art": {
+      "setting": "rock",
+      "patch": {
+        "markings": "The whole bird is pure bright white thread, with no cream, beige, grey or blue anywhere; the bill is yellow and the legs and feet black."
+      }
+    },
+    "hero": {
+      "pinned": 692428034,
+      "_why": "a portrait frame, the slot cuts head and feet; a whole bird standing"
+    },
+    "include": [
+      692428034,
+      610901764
+    ]
+  },
+  "Mimus polyglottos": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 677864693,
+      "_why": "a spotted juvenile; an adult"
+    },
+    "include": [
+      677864693,
+      740038771
+    ]
+  },
+  "Corvus brachyrhynchos": {
+    "art": {
+      "setting": "ground",
+      "patch": {
+        "markings": "The whole bird is black from head to tail, bill and legs too, in matte black thread. Any sheen on its feathers is stitched in dark charcoal thread, never in white, grey, blue or pale thread; the folded wing has no pale patch, bar, streak or feather edge."
+      },
+      "reference": 645836179,
+      "_why": "maintainer's review 2026-11-11: white wing patches painted on a nearly black reference; an evenly lit bird side-on"
+    },
+    "include": [
+      713231736,
+      645836179
+    ]
+  },
+  "Astur cooperii": {
+    "art": {
+      "setting": "perch",
+      "reference": 708062321,
+      "_why": "the reference was a juvenile; an adult on a branch"
+    },
+    "include": [
+      708062321
+    ],
+    "hero": {
+      "pinned": 708062321,
+      "_why": "a juvenile; an adult on a branch"
+    }
+  },
+  "Urile penicillatus": {
+    "art": {
+      "setting": "rock",
+      "reference": 648753539,
+      "_why": "the reference was an immature and not faithful; an adult standing on rock"
+    },
+    "include": [
+      648753539
+    ],
+    "hero": {
+      "pinned": 648753539,
+      "_why": "a crowded colony; one adult on a rock"
+    }
+  },
+  "Tringa semipalmata": {
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Nannopterum auritum": {
+    "art": {
+      "setting": "shore",
+      "reference": 638268045,
+      "_why": "the isolated bird was the head and neck only; a whole adult on a bank",
+      "patch": {
+        "markings": "The whole body, wings and tail are black with a faint bronze sheen, with no white or silver on the wings; only the bare skin at the base of the bill is orange."
+      }
+    },
+    "include": [
+      638268045
+    ],
+    "hero": {
+      "pinned": 638268045,
+      "_why": "two birds, dim; one whole bird on a bank"
+    }
+  },
+  "Tyrannus vociferans": {
+    "art": {
+      "setting": "perch",
+      "reference": 708061256,
+      "_why": "the reference was in flight and not faithful; a whole bird perched"
+    },
+    "hero": {
+      "pinned": 708061256,
+      "_why": "two birds fighting in flight; one perched"
+    },
+    "include": [
+      708061256
+    ]
+  },
+  "Nycticorax nycticorax": {
+    "art": {
+      "setting": "ground"
+    },
+    "hero": {
+      "pinned": 665926113,
+      "_why": "a juvenile; an adult standing"
+    },
+    "include": [
+      665926113
+    ]
+  },
+  "Icterus cucullatus": {
+    "art": {
+      "setting": "perch",
+      "reference": 672356533,
+      "_why": "the reference was dark and the patch came out cream and black; a bright adult male"
+    },
+    "hero": {
+      "pinned": 672356533,
+      "_why": "flying and blurred; an adult male perched"
+    },
+    "include": [
+      672356533
+    ]
+  },
+  "Selasphorus sasin": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 714610043,
+      "_why": "hovering from below with the head blurred; a whole bird on a wire"
+    },
+    "include": [
+      714610043,
+      710719858
+    ]
+  },
+  "Melanerpes formicivorus": {
+    "art": {
+      "setting": "trunk"
+    }
+  },
+  "Mareca americana": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Sayornis saya": {
+    "art": {
+      "setting": "perch",
+      "reference": 618780085,
+      "_why": "the patch peeled at the card's edge and came out olive; a side-on bird on a wire"
+    }
+  },
+  "Psaltriparus minimus": {
+    "art": {
+      "setting": "perch",
+      "reference": 649632295,
+      "_why": "the isolated bird was not faithful; a clear whole bird on a branch"
+    },
+    "include": [
+      649632295
+    ]
+  },
+  "Corvus corax": {
+    "art": {
+      "setting": "ground",
+      "patch": {
+        "markings": "The whole bird is black from head to tail, with its bill and legs black too, in black thread with only a soft sheen; there is no white or grey anywhere."
+      }
+    },
+    "hero": {
+      "pinned": 740576537,
+      "_why": "two ravens among palm fronds; one bird in the open"
+    },
+    "include": [
+      740576537,
+      644330558
+    ]
+  },
+  "Leiothlypis celata": {
+    "art": {
+      "setting": "perch",
+      "reference": 477376315,
+      "_why": "the reference was foraging head-down; a side-on bird"
+    },
+    "hero": {
+      "pinned": 737333012,
+      "_why": "tiny among branches; a close whole bird"
+    },
+    "include": [
+      737333012,
+      477376315
+    ]
+  },
+  "Meleagris gallopavo": {
+    "art": {
+      "setting": "ground",
+      "reference": 625558453,
+      "_why": "the reference was a hen; a tom side-on"
+    },
+    "include": [
+      625558453
+    ]
+  },
+  "Larus heermanni": {
+    "art": {
+      "setting": "rock",
+      "reference": 707389333,
+      "_why": "the reference was a dark immature; an adult standing on a rock"
+    }
+  },
+  "Passer domesticus": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 647463024,
+      "_why": "a juvenile; an adult male on a branch"
+    },
+    "include": [
+      647463024,
+      679488672
+    ]
+  },
+  "Cathartes aura": {
+    "art": {
+      "setting": "flight"
+    }
+  },
+  "Quiscalus mexicanus": {
+    "art": {
+      "setting": "ground",
+      "patch": {
+        "markings": "The whole bird is black with a blue-purple gloss, in black and very dark blue thread. Any sheen on its feathers is stitched in dark blue-black thread, never in white, grey or pale thread; there are no pale spots, bars or patches on the wing or body. The eye is pale yellow."
+      },
+      "reference": 584086195,
+      "_why": "maintainer's review 2026-11-11: the white patches came from glare on the reference; a bird in even light"
+    },
+    "include": [
+      597817531,
+      584086195
+    ]
+  },
+  "Junco hyemalis": {
+    "art": {
+      "setting": "perch",
+      "reference": 653887742,
+      "_why": "the reference was behind twigs and not faithful; a clear male on a branch"
+    }
+  },
+  "Dryobates nuttallii": {
+    "art": {
+      "setting": "trunk",
+      "reference": 723725553,
+      "_why": "the reference showed the belly with no head pattern; a male on bark"
+    },
+    "hero": {
+      "pinned": 723725553,
+      "_why": "the slot cuts the head; a male on bark"
+    },
+    "include": [
+      723725553
+    ]
+  },
+  "Pipilo maculatus": {
+    "art": {
+      "setting": "ground",
+      "reference": 657778951,
+      "_why": "the isolated bird was a blurred blob; a sharp male on the ground",
+      "patch": {
+        "markings": "The head, breast and back are black, the black wings have small white spots, the sides are rich rufous orange and only the belly is white; the eye is red."
+      }
+    },
+    "hero": {
+      "pinned": 657778951,
+      "_why": "backlit with the head hidden among twigs; a male in the open"
+    },
+    "include": [
+      657778951
+    ]
+  },
+  "Toxostoma redivivum": {
+    "art": {
+      "setting": "ground",
+      "reference": 634906503,
+      "_why": "the reference was dull and the patch came out pale sandy; a whole bird side-on on grass"
+    },
+    "hero": {
+      "pinned": 634906503,
+      "_why": "a dark silhouette among branches; a whole bird on grass"
+    },
+    "include": [
+      634906503
+    ]
+  },
+  "Passerculus sandwichensis": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 691004117,
+      "_why": "stems across the face; a whole bird on a rock"
+    },
+    "include": [
+      691004117,
+      622203845
+    ]
+  },
+  "Limosa fedoa": {
+    "art": {
+      "setting": "wade"
+    }
+  },
+  "Falco sparverius": {
+    "art": {
+      "setting": "perch",
+      "reference": 577885443,
+      "_why": "maintainer's review 2026-11-11: the bird floated above its branch; a male gripping a bare branch"
+    }
+  },
+  "Lonchura punctulata": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Podilymbus podiceps": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Agelaius phoeniceus": {
+    "art": {
+      "setting": "perch",
+      "reference": 647464709,
+      "_why": "the reference was a dark silhouette and the patch had no red; a male with its full epaulet",
+      "patch": {
+        "markings": "The whole bird is black from bill to tail, in black thread, with no white, cream or grey anywhere on its head, breast, belly or wings; the only colour is one scarlet red patch on the shoulder of the folded wing, with a narrow yellow lower edge."
+      }
+    },
+    "include": [
+      647464709
+    ]
+  },
+  "Nyctanassa violacea": {
+    "art": {
+      "setting": "wade",
+      "reference": 632927072,
+      "_why": "the reference was hunched with its legs cut off; a whole adult wading"
+    },
+    "hero": {
+      "pinned": 632927072,
+      "_why": "a juvenile; an adult wading"
+    },
+    "include": [
+      632927072
+    ]
+  },
+  "Numenius americanus": {
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Branta canadensis": {
+    "art": {
+      "setting": "ground"
+    },
+    "hero": {
+      "pinned": 647460262,
+      "_why": "sitting with its head turned; a whole bird standing"
+    },
+    "include": [
+      647460262,
+      647460270
+    ]
+  },
+  "Oxyura jamaicensis": {
+    "art": {
+      "setting": "water",
+      "reference": 589232828,
+      "_why": "the reference was a female; a breeding male swimming",
+      "patch": {
+        "markings": "The body is rich chestnut red-brown, the cap black, the cheek bright white and the bill sky blue."
+      }
+    }
+  },
+  "Larus delawarensis": {
+    "art": {
+      "setting": "shore",
+      "patch": {
+        "markings": "The back and folded wings are pale silver grey, the head and body white, the wingtips black with small white spots; the bill is yellow with a black ring near its tip, the eye pale yellow and the legs yellow."
+      }
+    },
+    "hero": {
+      "pinned": 614236277,
+      "_why": "a mixed flock, the gull small; two gulls close on sand"
+    },
+    "include": [
+      614236277,
+      611369741
+    ]
+  },
+  "Geococcyx californianus": {
+    "art": {
+      "setting": "ground",
+      "patch": {
+        "markings": "The bird stands on open ground with both feet flat on the ground under its body and its long tail held out behind it; there is no branch or twig under its feet."
+      }
+    }
+  },
+  "Thalasseus maximus": {
+    "art": {
+      "setting": "shore"
+    },
+    "hero": {
+      "pinned": 648757096,
+      "_why": "a flock; a single bird"
+    },
+    "include": [
+      648757096,
+      621081166
+    ]
+  },
+  "Charadrius vociferus": {
+    "art": {
+      "setting": "ground",
+      "reference": 582260344,
+      "_why": "the reference was two birds displaying; one bird standing on grass"
+    }
+  },
+  "Sturnus vulgaris": {
+    "art": {
+      "setting": "perch",
+      "reference": 609106526,
+      "_why": "the reference was dark and the patch came out bright blue with white spots; a glossy adult on a snag"
+    },
+    "include": [
+      609106526
+    ]
+  },
+  "Thryomanes bewickii": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Actitis macularius": {
+    "art": {
+      "setting": "rock"
+    },
+    "hero": {
+      "pinned": 594546770,
+      "_why": "turned away; a whole bird side-on"
+    },
+    "include": [
+      594546770,
+      621081489
+    ]
+  },
+  "Bucephala albeola": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Phainopepla nitens": {
+    "art": {
+      "setting": "perch",
+      "reference": 635304375,
+      "_why": "the reference was a dim female; the adult male on a bare branch",
+      "patch": {
+        "markings": "The whole bird is black, in matte black thread: crest, head, body, folded wing and tail alike. Any sheen on its feathers is stitched in dark charcoal thread, never in white, grey or pale thread; there are no pale streaks, bars, spots or feather edges anywhere. The eye is red."
+      }
+    },
+    "hero": {
+      "pinned": 635304375,
+      "_why": "a dim female; the adult male"
+    },
+    "include": [
+      635304375
+    ]
+  },
+  "Aythya collaris": {
+    "art": {
+      "setting": "water",
+      "reference": 590620382,
+      "_why": "the reference had its head turned and a blotchy body; a male side-on swimming"
+    },
+    "hero": {
+      "pinned": 590620382,
+      "_why": "a female among coots; a male on open water"
+    },
+    "include": [
+      590620382
+    ]
+  },
+  "Egretta caerulea": {
+    "art": {
+      "setting": "wade"
+    }
+  },
+  "Troglodytes aedon": {
+    "art": {
+      "setting": "perch",
+      "reference": 664579165,
+      "_why": "the isolated bird had no feet and was not faithful; a whole bird on a stick"
+    }
+  },
+  "Larus californicus": {
+    "art": {
+      "setting": "shore",
+      "reference": 561112965,
+      "_why": "maintainer's review 2026-11-11: the right foot was missing; an adult standing on both feet",
+      "patch": {
+        "markings": "The head, neck, breast and belly are white; the back and folded wings are medium grey, not blue, with black wingtips; the bill is yellow with a clear red spot and a small black mark near the tip of the lower half; the legs are greenish yellow and it stands on both feet."
+      }
+    },
+    "include": [
+      648767917,
+      561112965
+    ],
+    "hero": {
+      "pinned": 648767917,
+      "_why": "a juvenile; an adult"
+    }
+  },
+  "Streptopelia decaocto": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Euphagus cyanocephalus": {
+    "art": {
+      "setting": "ground"
+    },
+    "hero": {
+      "pinned": 536658720,
+      "_why": "a dark female in a portrait frame, the slot cuts the head; a whole bird"
+    },
+    "include": [
+      536658720,
+      576888407
+    ]
+  },
+  "Aix sponsa": {
+    "art": {
+      "setting": "ground",
+      "reference": 605189875,
+      "_why": "the reference was a white domestic-type duck; an adult male standing",
+      "silhouette": {
+        "reference": 631230912,
+        "_why": "maintainer's review 2026-11-11: only one foot showed and the duck's shape was not clear; a male walking side-on"
+      }
+    },
+    "exclude": [
+      666702510
+    ],
+    "_why": "excluded: a white domestic-type duck",
+    "include": [
+      605189875,
+      631230912
+    ]
+  },
+  "Mareca strepera": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Geothlypis trichas": {
+    "art": {
+      "setting": "perch",
+      "reference": 707387250,
+      "_why": "the reference was a female or immature; an adult male with its black mask"
+    },
+    "include": [
+      707387250
+    ]
+  },
+  "Pelecanus erythrorhynchos": {
+    "art": {
+      "setting": "water",
+      "patch": {
+        "markings": "The whole bird is bright pure white thread, with no grey on the body, and the long bill is orange."
+      }
+    },
+    "hero": {
+      "pinned": 613269415,
+      "_why": "head hidden in a mixed flock; a whole bird"
+    },
+    "include": [
+      613269415,
+      611142850
+    ]
+  },
+  "Myiarchus cinerascens": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Aechmophorus occidentalis": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Pluvialis squatarola": {
+    "art": {
+      "setting": "shore",
+      "reference": 469787256,
+      "_why": "the reference had a strong orange colour cast; a bird in natural colour on the mud"
+    }
+  },
+  "Circus hudsonius": {
+    "art": {
+      "setting": "flight"
+    }
+  },
+  "Falco peregrinus": {
+    "art": {
+      "setting": "rock",
+      "reference": 595925349,
+      "_why": "the reference was stooping in flight and not faithful; an adult perched on rock",
+      "silhouette": {
+        "reference": 595923317,
+        "_why": "maintainer's review 2026-11-11: a better falcon shape: an adult standing side-on on a ledge"
+      }
+    },
+    "include": [
+      595925349,
+      595923317
+    ]
+  },
+  "Spatula clypeata": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Calidris minutilla": {
+    "art": {
+      "setting": "shore",
+      "patch": {
+        "markings": "The legs are yellowish green; it stands on both, and each foot has three slim toes pointing forward."
+      }
+    }
+  },
+  "Turdus migratorius": {
+    "art": {
+      "setting": "ground",
+      "reference": 473485931,
+      "_why": "the reference was turned away and the patch a grey bird with a thin orange strip; a side-on bird with its orange breast"
+    },
+    "hero": {
+      "pinned": 473485931,
+      "_why": "dark; a well-lit bird"
+    },
+    "include": [
+      473485931
+    ]
+  },
+  "Himantopus mexicanus": {
+    "art": {
+      "setting": "shore",
+      "reference": 539799332,
+      "_why": "photo 609091928 failed to isolate; a whole adult standing on mud"
+    },
+    "hero": {
+      "pinned": 648788210,
+      "_why": "a mixed flock; a single bird"
+    },
+    "include": [
+      648788210,
+      539799332
+    ]
+  },
+  "Spatula cyanoptera": {
+    "art": {
+      "setting": "water",
+      "reference": 599618225,
+      "_why": "the reference was a female; a male swimming"
+    },
+    "include": [
+      599618225
+    ],
+    "hero": {
+      "pinned": 599618225,
+      "_why": "a female; a male"
+    }
+  },
+  "Sitta carolinensis": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 741875687,
+      "_why": "dim and upside down; a whole bird in good light"
+    },
+    "include": [
+      741875687,
+      514313131
+    ]
+  },
+  "Calypte costae": {
+    "art": {
+      "setting": "perch",
+      "reference": 622214788,
+      "_why": "the reference was hovering with a false blue and pink cast; an adult male perched"
+    },
+    "include": [
+      622214788
+    ],
+    "hero": {
+      "pinned": 622214788,
+      "_why": "hovering with a colour cast; an adult male perched"
+    }
+  },
+  "Aythya affinis": {
+    "art": {
+      "setting": "water",
+      "reference": 461488926,
+      "_why": "the reference was a female; a male swimming",
+      "patch": {
+        "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre."
+      }
+    },
+    "hero": {
+      "pinned": 461488926,
+      "_why": "a female; a male"
+    },
+    "include": [
+      461488926
+    ]
+  },
+  "Gallinula galeata": {
+    "art": {
+      "setting": "water",
+      "reference": 619107919,
+      "_why": "the reference was twisted, seen from the rear, and the patch duck-like; an adult swimming side-on with its red shield"
+    },
+    "include": [
+      619107919
+    ]
+  },
+  "Chamaea fasciata": {
+    "art": {
+      "setting": "perch",
+      "reference": 591042051,
+      "_why": "a twig crossed the isolated bird's body; a clear bird on a branch"
+    }
+  },
+  "Megaceryle alcyon": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Sterna forsteri": {
+    "art": {
+      "setting": "flight",
+      "reference": 632927210,
+      "_why": "the isolated bird had a purple cast; an adult in flight"
+    }
+  },
+  "Podiceps nigricollis": {
+    "art": {
+      "setting": "water",
+      "reference": 460355294,
+      "_why": "the reference was a distant flock and the isolated bird is not a grebe; a grebe swimming"
+    }
+  },
+  "Setophaga townsendi": {
+    "art": {
+      "setting": "perch",
+      "reference": 740729003,
+      "_why": "the reference was a female or immature and the patch lost the black cheek; an adult male"
+    }
+  },
+  "Anas acuta": {
+    "art": {
+      "setting": "shore"
+    },
+    "hero": {
+      "pinned": 353246969,
+      "_why": "asleep; a male swimming"
+    },
+    "include": [
+      353246969,
+      602847078
+    ]
+  },
+  "Egretta rufescens": {
+    "art": {
+      "setting": "wade",
+      "reference": 622182931,
+      "_why": "the reference had its wings spread in a canopy, a poor shape; an adult wading"
+    }
+  },
+  "Empidonax difficilis": {
+    "art": {
+      "setting": "perch",
+      "reference": 740577995,
+      "_why": "the reference was bleached pale and the patch a grey crested bird; a side-on bird in natural colour"
+    },
+    "include": [
+      740577995
+    ]
+  },
+  "Tringa melanoleuca": {
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Corthylio calendula": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Melanitta perspicillata": {
+    "art": {
+      "setting": "water",
+      "patch": {
+        "markings": "The whole body and wings are black, with no white on the sides or wings; there is a white patch on the forehead and another on the nape, and the bill is orange, white and black."
+      }
+    }
+  },
+  "Petrochelidon pyrrhonota": {
+    "art": {
+      "setting": "perch",
+      "reference": 706232785,
+      "_why": "the reference had its wings raised; a whole bird perched"
+    }
+  },
+  "Calidris alba": {
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Piranga ludoviciana": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Anarhynchus nivosus": {
+    "art": {
+      "setting": "shore"
+    },
+    "hero": {
+      "pinned": 678722134,
+      "_why": "legs only, and banded; a whole bird"
+    },
+    "include": [
+      678722134,
+      532164286
+    ]
+  },
+  "Rallus obsoletus": {
+    "art": {
+      "setting": "wade"
+    }
+  },
+  "Chondestes grammacus": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Sturnella neglecta": {
+    "art": {
+      "setting": "perch",
+      "reference": 612650417,
+      "_why": "the reference was turned away and the patch showed little yellow; a bird showing its yellow breast and black V"
+    },
+    "hero": {
+      "pinned": 612650417,
+      "_why": "a portrait frame, the slot cuts head and post; a whole bird"
+    },
+    "include": [
+      612650417
+    ]
+  },
+  "Calidris mauri": {
+    "art": {
+      "setting": "shore",
+      "reference": 459144350,
+      "_why": "the isolated bird is the wrong bird (a dark bird from a flock); a sandpiper on sand"
+    },
+    "include": [
+      459144350
+    ],
+    "hero": {
+      "pinned": 459144350,
+      "_why": "tiny; a close bird on sand"
+    }
+  },
+  "Hydroprogne caspia": {
+    "art": {
+      "setting": "wade",
+      "reference": 422466919,
+      "_why": "maintainer's review 2026-11-11: a better reference: an adult from the front quarter with its black cap and red bill",
+      "patch": {
+        "markings": "The cap is black, the bill thick and red, the back and folded wings pale grey. The neck, breast and belly are one unbroken field of plain white thread: no line, seam, strap, stripe or shadow crosses them. The legs are black."
+      }
+    },
+    "include": [
+      627938906,
+      422466919
+    ]
+  },
+  "Polioptila californica": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 457954497,
+      "_why": "behind twigs; a whole bird in the open"
+    },
+    "include": [
+      457954497
+    ]
+  },
+  "Butorides virescens": {
+    "art": {
+      "setting": "shore"
+    },
+    "hero": {
+      "pinned": 666231369,
+      "_why": "a juvenile; an adult"
+    },
+    "include": [
+      666231369
+    ]
+  },
+  "Rynchops niger": {
+    "art": {
+      "setting": "flight"
+    }
+  },
+  "Elanus leucurus": {
+    "art": {
+      "setting": "perch",
+      "reference": 608023114,
+      "_why": "the patch in flight was a pale bird with no black shoulder; an adult perched"
+    }
+  },
+  "Molothrus ater": {
+    "art": {
+      "setting": "perch",
+      "reference": 642963931,
+      "_why": "maintainer's review 2026-11-11: white wing patches, twice, from the glare on 708060212's shoulder; an adult male side-on in soft light",
+      "patch": {
+        "dark_clause": false,
+        "markings": "The head and neck are chocolate brown. The rest of the bird, its back, shoulder, folded wing, belly and tail, is black, in matte black thread with no white, grey or pale thread anywhere on it: no pale patch, bar, streak or feather edge."
+      },
+      "silhouette": {
+        "reference": 708060212,
+        "_why": "the patch's bird has its legs behind a bush; the perched male whose silhouette the maintainer approved 2026-11-11"
+      }
+    },
+    "include": [
+      708060212,
+      642963931
+    ],
+    "hero": {
+      "pinned": 708060212,
+      "_why": "a female; an adult male"
+    }
+  },
+  "Branta bernicla": {
+    "art": {
+      "setting": "water"
+    }
+  },
+  "Colaptes auratus": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Bombycilla cedrorum": {
+    "art": {
+      "setting": "perch",
+      "reference": 351699034,
+      "_why": "the isolated bird was blurred and not faithful; a sharp adult on a branch"
+    }
+  },
+  "Tyrannus verticalis": {
+    "art": {
+      "setting": "perch",
+      "reference": 377413994,
+      "_why": "the reference was seen from below behind a wire and the patch a pale-headed bird; a side-on bird on a wire"
+    },
+    "hero": {
+      "pinned": 377413994,
+      "_why": "the slot cuts the head; a whole bird on a branch; the second pass replaced that photo as the reference with a better bird, proposed here instead"
+    },
+    "include": [
+      377413994
+    ]
+  },
+  "Arenaria melanocephala": {
+    "art": {
+      "setting": "rock"
+    }
+  },
+  "Polioptila caerulea": {
+    "art": {
+      "setting": "perch",
+      "reference": 470364994,
+      "_why": "the reference was the bird's back from below; a whole bird side-on"
+    },
+    "include": [
+      470364994
+    ],
+    "hero": {
+      "pinned": 470364994,
+      "_why": "among leaves; a whole bird"
+    }
+  },
+  "Haematopus bachmani": {
+    "art": {
+      "setting": "rock",
+      "patch": {
+        "markings": "The whole body, wings and head are very dark blackish thread, with no tan or light brown; the long bill is orange-red, the iris bright yellow with a red eye-ring."
+      },
+      "reference": 667475548,
+      "_why": "the reference was two birds; one bird on rock"
+    },
+    "include": [
+      667475548
+    ],
+    "hero": {
+      "pinned": 667475548,
+      "_why": "feet cut off; a whole bird"
+    }
+  },
+  "Spatula discors": {
+    "art": {
+      "setting": "water",
+      "reference": 355665742,
+      "_why": "the reference's face crescent was faint and the patch lost it; a male with a bold white crescent"
+    }
+  },
+  "Eremophila alpestris": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Charadrius semipalmatus": {
+    "art": {
+      "setting": "shore"
+    }
+  },
+  "Cyanocitta stelleri": {
+    "art": {
+      "setting": "ground",
+      "reference": 142023829,
+      "_why": "maintainer's review 2026-11-11: the head was painted brown from a washed-out reference; a bird with its sooty black head",
+      "patch": {
+        "markings": "The head, crest and upper back are sooty black, not brown; the wings, tail and belly are deep blue."
+      }
+    },
+    "hero": {
+      "pinned": 260137630,
+      "_why": "an odd sprawl; a bird standing"
+    },
+    "include": [
+      260137630,
+      142023829
+    ]
+  },
+  "Poecile gambeli": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Cardellina pusilla": {
+    "art": {
+      "setting": "perch",
+      "reference": 735719853,
+      "_why": "the reference was dim and the patch dull tan; a male with its black cap"
+    }
+  },
+  "Recurvirostra americana": {
+    "art": {
+      "setting": "wade",
+      "reference": 363899623,
+      "_why": "the reference was swimming in non-breeding plumage with no legs; a breeding adult standing",
+      "patch": {
+        "markings": "The bird wades in shallow water: two long, thin, straight blue-grey legs go down side by side from the belly into the water, which covers both feet; no leg is bent back or raised."
+      }
+    },
+    "hero": {
+      "pinned": 363899623,
+      "_why": "a flock; a breeding adult standing"
+    },
+    "include": [
+      363899623
+    ]
+  },
+  "Anthus rubescens": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Amphispiza bilineata": {
+    "art": {
+      "setting": "perch",
+      "patch": {
+        "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it. Two thin dark legs show under the belly, and no leaf or twig lies across the bird's body."
+      }
+    }
+  },
+  "Baeolophus inornatus": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Aythya americana": {
+    "art": {
+      "setting": "water",
+      "reference": 467229832,
+      "_why": "the reference was a female; a male swimming",
+      "patch": {
+        "markings": "The eye is bright yellow, stitched in yellow thread with a small black centre."
+      }
+    }
+  },
+  "Stelgidopteryx serripennis": {
+    "art": {
+      "setting": "perch",
+      "patch": {
+        "markings": "The bird sits on a branch that passes directly under its body; both feet are closed around that branch, side by side, with no foot raised, dangling or reaching away from it. The branch runs level under the bird's belly, not below or beside it."
+      }
+    }
+  },
+  "Plegadis chihi": {
+    "art": {
+      "setting": "ground"
+    }
+  },
+  "Zenaida asiatica": {
+    "art": {
+      "setting": "ground",
+      "reference": 619654620,
+      "_why": "the reference was dark and backlit and the patch black and white; a bird walking in good light",
+      "patch": {
+        "markings": "The plumage is smooth, plain greyish brown, with no stripes or bars on the body or wing; a bold white band runs along the lower edge of the folded wing, above blackish flight feathers. The eye is small and orange-red, in a thin ring of bare blue skin; it is not a large black eye."
+      }
+    },
+    "hero": {
+      "pinned": 262671517,
+      "_why": "in shade with the tail cut; a whole bird in the open"
+    },
+    "include": [
+      262671517,
+      619654620
+    ]
+  },
+  "Mergus serrator": {
+    "art": {
+      "setting": "water",
+      "reference": 596764170,
+      "_why": "the reference was flapping its wings; a bird swimming with its crest"
+    },
+    "include": [
+      596764170
+    ]
+  },
+  "Spinus lawrencei": {
+    "art": {
+      "setting": "perch",
+      "reference": 379063759,
+      "_why": "the reference was a dull female; an adult male"
+    },
+    "hero": {
+      "pinned": 379063759,
+      "_why": "a dim female; an adult male"
+    },
+    "include": [
+      379063759
+    ]
+  },
+  "Anas crecca": {
+    "art": {
+      "setting": "water",
+      "reference": 474050267,
+      "_why": "the reference was a female; a male swimming"
+    }
+  },
+  "Salpinctes obsoletus": {
+    "art": {
+      "setting": "ground"
+    },
+    "hero": {
+      "pinned": 335036547,
+      "_why": "a phone in the frame; a bird on rocks"
+    },
+    "include": [
+      335036547,
+      461168653
+    ]
+  },
+  "Catharus guttatus": {
+    "art": {
+      "setting": "ground",
+      "reference": 461977777,
+      "_why": "the reference was seen from behind and the patch lost the breast spots; a side-on bird"
+    },
+    "hero": {
+      "pinned": 461977777,
+      "_why": "blurred; a sharp bird"
+    },
+    "include": [
+      461977777
+    ]
+  },
+  "Icterus bullockii": {
+    "art": {
+      "setting": "perch"
+    },
+    "hero": {
+      "pinned": 365595093,
+      "_why": "behind branches; a whole bird"
+    },
+    "include": [
+      365595093,
+      454461254
+    ]
+  },
+  "Contopus sordidulus": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Vireo huttoni": {
+    "art": {
+      "setting": "perch",
+      "reference": 734081799,
+      "_why": "maintainer's review 2026-11-11: the right leg was missing; the whole bird on a branch",
+      "patch": {
+        "markings": "The bird is plain olive-grey above and paler greyish olive below, with a broken white ring around the eye and two narrow white bars on the wing; there is no blue, black or bright white elsewhere on it. It perches on both feet."
+      }
+    },
+    "hero": {
+      "pinned": 734081799,
+      "_why": "dim and backlit with the tail cut; a whole bird on a branch"
+    },
+    "include": [
+      734081799,
+      238352171
+    ]
+  },
+  "Vireo bellii": {
+    "art": {
+      "setting": "perch",
+      "reference": 696683444,
+      "_why": "the reference was seen from behind; a side-on bird"
+    },
+    "include": [
+      696683444,
+      696683337
+    ],
+    "hero": {
+      "pinned": 696683444,
+      "_why": "behind leaves; a clear bird; the second pass replaced that photo as the reference with a better bird, proposed here instead"
+    }
+  },
+  "Campylorhynchus brunneicapillus": {
+    "art": {
+      "setting": "perch"
+    }
+  },
+  "Catherpes mexicanus": {
+    "art": {
+      "setting": "rock"
+    }
+  },
+  "Rallus limicola": {
+    "art": {
+      "setting": "shore",
+      "patch": {
+        "markings": "Its plumage is dull and earthy: the back dark brown with blackish streaks, the breast and neck rusty cinnamon, the cheek grey, the flanks barred blackish and white. There is no blue, pink or purple thread on it. It stands on both of its long dull reddish-brown legs, each foot with long slim toes on the ground."
+      }
+    }
+  },
+  "Porzana carolina": {
+    "art": {
+      "setting": "wade",
+      "reference": 24531594,
+      "_why": "the reference had its head down and tail up; an adult side-on with its black face and yellow bill"
+    },
+    "hero": {
+      "pinned": 346595541,
+      "_why": "behind stems; a whole bird on mud"
+    },
+    "include": [
+      346595541,
+      24531594
+    ]
   }
 }

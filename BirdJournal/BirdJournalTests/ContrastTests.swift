@@ -294,7 +294,7 @@ struct TokenPairingTests {
                 let ratio = Self.worst(try DesignTokenTests.color(tint, light), on: extremes)
                 #expect(ratio >= 3, "\(tint)'s stitch on a plate, \(variant.name): \(String(format: "%.2f", ratio)):1")
             }
-            for setID in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando"] {
+            for setID in EditionTintTests.setIDs {
                 let ratio = Self.worst(UIColor(PatchEdition.paperThread(setID: setID)), on: extremes)
                 #expect(ratio >= 3, "\(setID)'s printed stitch, \(variant.name): \(String(format: "%.2f", ratio)):1")
             }
@@ -424,7 +424,11 @@ struct TokenPairingTests {
 @Suite("Edition tints")
 @MainActor
 struct EditionTintTests {
-    nonisolated static let tints = ["EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionUncharted"]
+    nonisolated static let tints = [
+        "EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionEvergreen", "EditionBorough", "EditionBayou", "EditionUncharted",
+    ]
+    /// The sets with an edition of their own, by pack id.
+    nonisolated static let setIDs = ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"]
 
     @Test("4.5:1 on the page and a raised surface, and the accent's words 4.5:1 on its fill", arguments: tints + ["ThreadTogether"])
     func onThePage(_ tint: String) throws {

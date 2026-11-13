@@ -105,8 +105,8 @@ extension LensPage {
         case .details(let index): "Species \(index + 1) · details"
         case .sounds(let index): "Species \(index + 1) · sounds"
         case .viewfinder(let index): "Species \(index + 1) · viewfinder"
-        case .captureViewfinder: "Capture a sighting · viewfinder"
-        case .captureSaving: "Capture a sighting · saving the photo"
+        case .captureSaving: "Capture a sighting · photos crossing"
+        case .captureCancel: "Capture a sighting · stop sending?"
         case .captureSaved: "Capture a sighting · photo saved"
         case .captureNaming: "Capture a sighting · say the bird's name"
         case .captureMatches: "Capture a sighting · the birds it may be"
@@ -197,6 +197,8 @@ private struct LensElementView: View {
                 Label("Camera view", systemImage: "camera.viewfinder").font(.caption).foregroundStyle(.secondary)
             case .capturedPhoto:
                 Label("The photo", systemImage: "photo").font(.caption).foregroundStyle(.secondary)
+            case .shutter:
+                Label("Taking the photo", systemImage: "viewfinder").font(.caption).foregroundStyle(.secondary)
             case .choices(let rows):
                 ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     HStack {

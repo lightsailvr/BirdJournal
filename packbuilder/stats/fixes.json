@@ -5,6 +5,10 @@
       "name": "Charadrius nivosus",
       "why": "Snowy Plover moved to Anarhynchus (Clements 2023); AVONET follows Clements 2021"
     },
+    "Anarhynchus wilsonia": {
+      "name": "Charadrius wilsonia",
+      "why": "Wilson's Plover moved to Anarhynchus (Clements 2023); AVONET follows Clements 2021"
+    },
     "Ardea ibis": {
       "name": "Bubulcus ibis",
       "why": "Western Cattle Egret moved to Ardea (Clements 2023)"
@@ -39,6 +43,7 @@
   "known_gaps": {},
   "threatened": {
     "Anarhynchus nivosus": "the Pacific coast population of the Western Snowy Plover is listed as Threatened under the US Endangered Species Act",
+    "Charadrius melodus": "the Atlantic coast and Northern Great Plains Piping Plovers are listed as Threatened under the US Endangered Species Act, and the Great Lakes population as Endangered",
     "Dryobates borealis": "the Red-cockaded Woodpecker is listed as Threatened under the US Endangered Species Act",
     "Mycteria americana": "the Wood Stork is listed as Threatened under the US Endangered Species Act",
     "Polioptila californica": "the coastal California Gnatcatcher is listed as Threatened under the US Endangered Species Act",
