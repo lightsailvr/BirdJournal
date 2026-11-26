@@ -1,0 +1,86 @@
+{
+ "version": 1,
+ "comment": "CANDIDATES, not an edition (issue #213, of #206): looks for the Continental edition's patch, painted on two birds for the maintainer's pick. Nothing here ships, and no pack or app code reads it; `scripts/continental-samples.py` does. Each candidate has what an entry of `editions` in patch-prompts.json has (`shape`, `cord`, `twill`, `motif`, and the `outline` and `shape_limit` the cut is measured against), so the pick is copied there under `north-america` as it stands (#214). Beside those: its letter on the contact sheet, a working `name`, `aspect` (the shape's width over its height, which `shape_fit` cannot see, since it measures in the patch's own bounding box), an optional `canvas` (where the shape wants one other than the card's 864 x 1152: A's wide rectangle came out 1.26 to 1.41 wide on the card's canvas and 1.43 to 1.59 on 1152 x 864; the patch step has no canvas of its own per edition yet, so the script passes it) and `cord_hex` and `twill_hex`, the colours proposed for the app's `PatchEdition`: design values read off the painted samples in the eight editions' own convention, lighter than a measurement of the thread (New York's cord is #9B2F27 in the app and measures about #701A12 in its paintings). The template, the settings and the dark clause are patch-prompts.json's own, unchanged. E is the maintainer's mix after the first sheet (2026-11-26): A's shape and canvas with C's cord, twill and motif, wording unchanged. A candidate's own `markings`, by species id, are added to that bird's for this candidate alone, as `art.patch.markings` in a pack's overrides.json would be: beside E's gold cord and sun the first bird's breast was stitched in gold four paintings running. No prompt names a species: `birds` are the reference birds, by the photo each was isolated from in another pack's approved patch (the isolated bird is in the builder's art cache), with that patch's setting and markings.",
+ "birds": {
+  "turdus-migratorius": {
+   "common_name": "American Robin",
+   "photo": 620298651,
+   "isolate_seed": 49,
+   "from_pack": "us-ca-desert",
+   "setting": "ground"
+  },
+  "corvus-brachyrhynchos": {
+   "common_name": "American Crow",
+   "photo": 754797677,
+   "isolate_seed": 49,
+   "from_pack": "us-pnw",
+   "setting": "ground",
+   "dark_clause": false,
+   "markings": "The whole bird is matte jet-black thread with no white, grey, blue or pale thread anywhere, the folded wing exactly as black as the body. The bill, legs and eye are black."
+  }
+ },
+ "candidates": {
+  "A": {
+   "name": "Sea to Sea",
+   "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+   "outline": [[0, 0], [1, 0], [1, 1], [0, 1]],
+   "aspect": 1.5,
+   "cord": "deep midnight-navy",
+   "cord_hex": "#1B2A4A",
+   "twill": "pale blush-pink cotton twill",
+   "twill_hex": "#E6BBA8",
+   "motif": "a whole continent's horizon: a far range of snow-tipped blue mountains at one side, a wide golden prairie in the middle, and a line of dark forest running down to a strip of blue sea at the other side",
+   "canvas": [1152, 864]
+  },
+  "B": {
+   "name": "Maple & Oak",
+   "shape": "a pointed oval standing upright, like an almond or a simple leaf: two curved sides that meet in a point at the very top and a point at the very bottom",
+   "outline": [[0.5, 0], [0.705, 0.084], [0.864, 0.202], [0.965, 0.345], [1.0, 0.5], [0.965, 0.655], [0.864, 0.798], [0.705, 0.916], [0.5, 1], [0.295, 0.916], [0.136, 0.798], [0.035, 0.655], [0.0, 0.5], [0.035, 0.345], [0.136, 0.202], [0.295, 0.084]],
+   "aspect": 0.65,
+   "cord": "burnt-orange",
+   "cord_hex": "#C2501A",
+   "twill": "pale sage-green cotton twill",
+   "twill_hex": "#B6C19E",
+   "motif": "one large red maple leaf and one large green oak leaf with an acorn, side by side"
+  },
+  "C": {
+   "name": "Daybreak",
+   "shape": "a triangle standing on a flat bottom edge, with a single point at the very top and softly rounded corners",
+   "shape_limit": 0.78,
+   "outline": [[0.5, 0], [1, 1], [0, 1]],
+   "aspect": 1.08,
+   "cord": "rich golden-yellow",
+   "cord_hex": "#C98F2A",
+   "twill": "pale lavender-grey cotton twill",
+   "twill_hex": "#BFB3C4",
+   "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky"
+  },
+  "D": {
+   "name": "Compass",
+   "shape": "a regular octagon with eight straight sides of equal length, a flat edge along the top, along the bottom, at the left and at the right",
+   "outline": [[0.293, 0], [0.707, 0], [1, 0.293], [1, 0.707], [0.707, 1], [0.293, 1], [0, 0.707], [0, 0.293]],
+   "shape_limit": 0.955,
+   "aspect": 1.0,
+   "cord": "charcoal-black",
+   "cord_hex": "#2B2B2E",
+   "twill": "pale parchment-yellow cotton twill",
+   "twill_hex": "#EBDCB2",
+   "motif": "a large, pale eight-pointed compass star, with a few fine curved lines of latitude and longitude like an old map"
+  },
+  "E": {
+   "name": "Daybreak, wide",
+   "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+   "outline": [[0, 0], [1, 0], [1, 1], [0, 1]],
+   "aspect": 1.5,
+   "canvas": [1152, 864],
+   "cord": "rich golden-yellow",
+   "cord_hex": "#C98F2A",
+   "twill": "pale lavender-grey cotton twill",
+   "twill_hex": "#BFB3C4",
+   "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+   "markings": {
+    "turdus-migratorius": "The breast and belly are stitched in rusty red-orange thread, the warm orange-red of the bird in <ref_image_0>, clearly redder than the golden border and the sun; there is no gold or yellow thread on the bird except its bill."
+   }
+  }
+ }
+}

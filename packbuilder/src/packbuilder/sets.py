@@ -8,6 +8,8 @@ downloaded.
   Coachella Valley, Anza-Borrego Desert State Park). Each part is simplified with Douglas–Peucker and its islets
   dropped, so all five sets fit the index. The phone gives a sighting to the smallest part that contains it, which
   is why parts stay separate rather than being merged.
+- A part can also be countries (issue #210: the United States and Canada, from Natural Earth, public domain), merged,
+  pushed a little offshore and simplified far more coarsely; `countries.py` draws it.
 - The species are in the taxonomic order of the IOC World Bird List (CC BY 3.0), the pinned version below; a
   collector number is a species' position in it. BirdNET's names follow eBird/Clements, so the few IOC names that
   differ are mapped in `TAXONOMY_FIXES`, and a build fails on a species the list lacks.
@@ -25,6 +27,7 @@ from pathlib import Path
 from typing import Protocol
 from urllib.parse import urlencode
 
+from packbuilder import countries
 from packbuilder.definition import PackDefinition, SpeciesEntry
 from packbuilder.download import fetch
 from packbuilder.metadata_api import USER_AGENT
@@ -89,13 +92,19 @@ class BoundaryPart:
     """The park's NPS unit code, e.g. "JOTR"."""
     polygon: str | None = None
     """A GeoJSON file beside pack.json holding a hand-drawn Polygon or MultiPolygon."""
+    natural_earth_countries: tuple[str, ...] = ()
+    """Countries merged into one outline and pushed offshore, by Natural Earth `ADM0_A3` code, e.g. ("USA", "CAN");
+    `countries.py`."""
 
     @classmethod
     def from_mapping(cls, data: dict) -> "BoundaryPart":
-        part = cls(name=data["name"], census_county=data.get("census_county"), nps_park=data.get("nps_park"), polygon=data.get("polygon"))
-        sources = [s for s in (part.census_county, part.nps_park, part.polygon) if s]
+        part = cls(
+            name=data["name"], census_county=data.get("census_county"), nps_park=data.get("nps_park"), polygon=data.get("polygon"),
+            natural_earth_countries=tuple(data.get("natural_earth_countries", ())),
+        )
+        sources = [s for s in (part.census_county, part.nps_park, part.polygon, part.natural_earth_countries) if s]
         if len(sources) != 1:
-            raise ValueError(f"boundary part {part.name!r} needs exactly one of census_county, nps_park or polygon")
+            raise ValueError(f"boundary part {part.name!r} needs exactly one of census_county, nps_park, polygon or natural_earth_countries")
         return part
 
     @property
@@ -104,6 +113,8 @@ class BoundaryPart:
             return f"US Census Bureau TIGER county {self.census_county} (public domain)"
         if self.nps_park:
             return f"National Park Service boundary of {self.nps_park} (public domain)"
+        if self.natural_earth_countries:
+            return countries.source_text(self.natural_earth_countries)
         return f"hand-drawn polygon committed with the pack definition ({self.polygon})"
 
 
@@ -179,11 +190,11 @@ def simplify_ring(ring: Ring, tolerance_km: float) -> Ring:
     return simplified if len(simplified) >= 4 else ring
 
 
-def _rounded(ring: Ring) -> Ring:
-    """Four decimals (about 11 m), without the repeated points rounding makes."""
+def _rounded(ring: Ring, decimals: int = 4) -> Ring:
+    """Four decimals by default (about 11 m), without the repeated points rounding makes."""
     rounded: Ring = []
     for lon, lat in ring:
-        point = [round(lon, 4), round(lat, 4)]
+        point = [round(lon, decimals), round(lat, decimals)]
         if not rounded or rounded[-1] != point:
             rounded.append(point)
     return rounded
@@ -264,13 +275,20 @@ class Taxonomy:
 class BoundarySource(Protocol):
     def polygons_for(self, part: BoundaryPart, definition_dir: Path) -> list[Polygon]: ...
 
+    def natural_earth(self) -> countries.Land:
+        """Natural Earth's land, for a part bounded by countries."""
+        ...
+
 
 class PublicBoundaries:
-    """Census counties and NPS parks from their public ArcGIS services, cached as GeoJSON; hand-drawn polygons from
-    the definition folder."""
+    """Census counties and NPS parks from their public ArcGIS services and the countries from Natural Earth, cached as
+    GeoJSON; hand-drawn polygons from the definition folder."""
 
     def __init__(self, cache_dir: Path):
         self.directory = Path(cache_dir) / "boundaries"
+
+    def natural_earth(self) -> countries.Land:
+        return countries.load(self.directory)
 
     def polygons_for(self, part: BoundaryPart, definition_dir: Path) -> list[Polygon]:
         if part.polygon:
@@ -300,7 +318,10 @@ def build_set(
         raise ValueError(f"{definition.id}: pack.json has no set section")
     regions = []
     for part in definition.set.boundary:
-        polygons = simplify_polygons(boundaries.polygons_for(part, definition_dir), tolerance_km, min_area_km2)
+        if part.natural_earth_countries:
+            polygons = _country_polygons(part, boundaries.natural_earth(), min_area_km2)
+        else:
+            polygons = simplify_polygons(boundaries.polygons_for(part, definition_dir), tolerance_km, min_area_km2)
         if not polygons:
             raise ValueError(f"{part.name}: nothing left of the boundary after simplification")
         regions.append({"name": part.name, "source": part.source_text, "polygons": polygons})
@@ -312,6 +333,24 @@ def build_set(
         "regions": regions,
         "species": [{"scientificName": s.scientific_name, "commonName": s.common_name} for s in taxonomy.ordered(definition.species)],
     }
+
+
+def _country_polygons(part: BoundaryPart, land: countries.Land, min_area_km2: float) -> list[Polygon]:
+    """The part's countries as one outline pushed offshore (`countries.py`), every other country being a neighbour
+    whose land stays out. It has its own tolerances, far coarser than a county's."""
+    missing = [code for code in part.natural_earth_countries if code not in land.by_code]
+    if missing:
+        raise ValueError(f"{part.name}: no country {', '.join(missing)} in Natural Earth (the codes are its ADM0_A3)")
+    own = [polygon for code in part.natural_earth_countries for polygon in land.by_code[code]]
+    foreign = [polygon for code, polygons in land.by_code.items() if code not in part.natural_earth_countries for polygon in polygons]
+    finished: list[Polygon] = []
+    for polygon in countries.outline(own, foreign, land.islets):
+        outer, *holes = (_rounded(ring, countries.DECIMALS) for ring in polygon)
+        if len(outer) < 4 or polygon_area_km2([outer]) < min_area_km2:
+            continue
+        latitude = _middle_latitude(outer)
+        finished.append([outer] + [hole for hole in holes if len(hole) >= 4 and _ring_area_km2(hole, latitude) >= min_area_km2])
+    return finished
 
 
 def check_set(document: dict, definition: PackDefinition) -> None:
