@@ -60,7 +60,7 @@ let package = Package(
         .testTarget(name: "PackTests", dependencies: ["Pack"], resources: [.copy("Fixtures")]),
 
         .target(name: "Album"),
-        .testTarget(name: "AlbumTests", dependencies: ["Album"]),
+        .testTarget(name: "AlbumTests", dependencies: ["Album"], resources: [.copy("Fixtures")]),
     ],
     swiftLanguageModes: [.v6]
 )

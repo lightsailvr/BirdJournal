@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
-    set_command.add_argument("--tolerance-km", type=float, default=None, help="boundary simplification tolerance in km (default sets.DEFAULT_TOLERANCE_KM)")
+    set_command.add_argument("--tolerance-km", type=float, default=None, help="simplification tolerance in km for counties, parks and hand-drawn parts (default sets.DEFAULT_TOLERANCE_KM); a part bounded by countries has its own in countries.py")
     index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
     index_command.add_argument("--out", type=Path, required=True, help="index file to write")
     index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
@@ -847,6 +847,8 @@ def _thumbnails(args: argparse.Namespace) -> int:
 
 
 def _set(args: argparse.Namespace) -> int:
+    import json
+
     from packbuilder.sets import DEFAULT_TOLERANCE_KM, PublicBoundaries, Taxonomy, build_set, dump_set, polygon_area_km2
 
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -857,7 +859,8 @@ def _set(args: argparse.Namespace) -> int:
     for region in document["regions"]:
         points = sum(len(ring) for polygon in region["polygons"] for ring in polygon)
         area = sum(polygon_area_km2(polygon) for polygon in region["polygons"])
-        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km²", file=sys.stderr)
+        size = len(json.dumps(region, ensure_ascii=False, separators=(",", ":")))
+        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km², {size:,} bytes in the index", file=sys.stderr)
     print(f"wrote {args.definition / 'set.json'}: {len(document['species'])} species, {len(text):,} bytes", file=sys.stderr)
     return 0
 
