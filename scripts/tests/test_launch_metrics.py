@@ -94,6 +94,18 @@ class SummaryTests(unittest.TestCase):
         self.assertFalse(any("Build collection" in line for line in table), "a row no launch has is left out")
         self.assertIn("- before, context: sightings: 0; packs: us-ca-la:12", table)
 
+    def test_launches_taken_under_load_can_be_left_out(self):
+        with tempfile.TemporaryDirectory() as folder:
+            lines = [{"process_to_interactive_ms": time, "load_average": load} for time, load in [(700.0, 4.0), (720.0, 30.0), (2900.0, 310.0)]]
+            (Path(folder) / "before.jsonl").write_text("".join(json.dumps(line) + "\n" for line in lines))
+            printed = io.StringIO()
+            with contextlib.redirect_stdout(printed):
+                self.assertEqual(launch_metrics.main(["summary", "--max-load", "30", os.path.join(folder, "before.jsonl")]), 0)
+        table = printed.getvalue().splitlines()
+        self.assertEqual(table[0], "| ms, median (lowest to highest) | before, 2 launches |")
+        self.assertIn('| Process start to "Journal interactive" | 710.0 (700.0 to 720.0) |', table)
+        self.assertIn("- before: 1 of 3 launches left out, taken at a load average over 30", table)
+
 
 class StartTimeTests(unittest.TestCase):
     def test_this_process_started_before_now_and_not_long_ago(self):

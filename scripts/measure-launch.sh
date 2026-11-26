@@ -5,7 +5,8 @@
 #
 #   BIRDJOURNAL_SIMULATOR=BJ-208 scripts/measure-launch.sh [--configuration Debug|Release] [--runs 10] [--label before]
 #       [--app <BirdJournal.app> --built-from <commit>] [--sightings <n>] [-- <more launch arguments>]
-#   scripts/measure-launch.sh --summary before-Debug after-Debug     the table again, a column per label
+#   scripts/measure-launch.sh --summary [--max-load 30] before-Debug after-Debug
+#       the table again, a column per label; with --max-load, over the launches taken at that load average or less
 #
 # What a launch is here: `simctl launch` of a terminated app. The clock starts when the process starts (`proc_pidinfo`) and
 # stops at the "Journal interactive" signpost, which the root emits when it appears with the stores loaded (the same proxy
@@ -18,7 +19,8 @@
 #   Debug   launches with `-freshPackStorage YES -packIndexURL http://127.0.0.1:9/index.json`, so the index is never read
 #           and nothing depends on the network; `--sightings <n>` fills an album file with n sightings first (`-seedLarge`).
 #   Release has no debug flags: it reads the pack index from the network after its first launch and caches it, so its later
-#           launches decode that index too (`Read cached index and sets`), as a birder's do.
+#           launches decode that index too (`Read cached index and sets`), as a birder's do. The unmeasured launches wait
+#           for that file, and every launch's line says whether it was there (`index_cached`).
 #
 # Comparing two builds: build each, keep its app (`--app`), and alternate short series of both under the same label
 # (`--label before`, `--label after`, twice or more each), since the load on this Mac moves the numbers more than most
@@ -52,9 +54,10 @@ while (($#)); do
         --sightings) sightings="${2:?--sightings needs a number}"; shift ;;
         --summary)
             shift
-            files=()
+            files=() filter=()
+            if [[ "${1:-}" == --max-load ]]; then filter=(--max-load "${2:?--max-load needs a load average}"); shift 2; fi
             for name in "$@"; do files+=("$out/$name.jsonl"); done
-            exec python3 "$metrics" summary "${files[@]}"
+            exec python3 "$metrics" summary ${filter[@]+"${filter[@]}"} "${files[@]}"
             ;;
         --) shift; extra=("$@"); break ;;
         *) echo "error: unknown argument $1" >&2; exit 2 ;;
@@ -133,17 +136,25 @@ cleanup() {
 trap cleanup EXIT
 sleep 3  # the stream misses what is logged before it attaches
 
-# One launch: prints its JSON line once the app is interactive (a minute at most), then lets it settle and ends it.
+# Whether the app has kept a pack index from the network (PackStorage's `index.json`), which a launch then decodes.
+index_cached() {
+    local data
+    data="$(xcrun simctl get_app_container "$udid" "$bundle" data 2>/dev/null)" || return 1
+    [[ -f "$data/Library/Application Support/Packs/index.json" ]]
+}
+
+# One launch: prints its JSON line once the app is interactive (a minute at most), then lets it settle. The next one ends it.
 launch() {  # settle seconds
-    local settle="$1" pid started line="" status
+    local settle="$1" pid started line="" status cached=no
     xcrun simctl terminate "$udid" "$bundle" >/dev/null 2>&1 || true
     sleep 2
+    index_cached && cached=yes
     pid="$(xcrun simctl launch "$udid" "$bundle" "${arguments[@]}" | sed -n 's/.*: \([0-9][0-9]*\)$/\1/p')"
     [[ -n "$pid" ]] || { echo "error: the app didn't launch" >&2; return 1; }
     started="$(python3 "$metrics" start-time "$pid")"
     for _ in $(seq 1 300); do
         status=0
-        line="$(python3 "$metrics" run "$stream" "$pid" "$started" "configuration=$configuration" "commit=$commit")" || status=$?
+        line="$(python3 "$metrics" run "$stream" "$pid" "$started" "configuration=$configuration" "commit=$commit" "index_cached=$cached")" || status=$?
         ((status == 0)) && break
         ((status == 3)) || return 1
         sleep 0.2
@@ -157,6 +168,14 @@ launch() {  # settle seconds
 for _ in $(seq 1 "$warmups"); do
     launch $((sightings > 0 ? 20 : 6)) >/dev/null
 done
+if [[ "$configuration" == Release ]]; then
+    # Still running from the last unmeasured launch: give its index read a minute, so every measured launch starts alike.
+    for _ in $(seq 1 60); do
+        index_cached && break
+        sleep 1
+    done
+    index_cached || echo "warning: the pack index never arrived, so these launches decode no cached index" >&2
+fi
 for run in $(seq 1 "$runs"); do
     line="$(launch 3)"
     echo "$line" >>"$out/$label.jsonl"
