@@ -304,14 +304,14 @@ struct FindPageContent: View {
 
     /// "Citrus edition, No. 021", when this phone knows the find's set and the bird's place in it.
     private var editionLine: String? {
-        guard let set = library.cardSets.first(where: { $0.id == item.edition }) else { return nil }
+        guard let set = library.knownCardSets.first(where: { $0.id == item.edition }) else { return nil }
         guard let number = set.number(of: item.scientificName) else { return set.edition }
         return PatchText.editionLine(.numbered(setID: set.id, setName: set.name, edition: set.edition, number: number, total: set.species.count))
     }
 
     /// "Citrus edition", when this phone knows the find's set.
     private var editionLabel: String? {
-        library.cardSets.first { $0.id == item.edition }?.edition
+        library.knownCardSets.first { $0.id == item.edition }?.edition
     }
 
     /// As on a patch's own page: the state, not the animation, decides which face is readable, and VoiceOver's focus goes to Turn

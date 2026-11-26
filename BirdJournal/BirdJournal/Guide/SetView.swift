@@ -22,14 +22,14 @@ struct SetView: View {
     /// With no index entry there's no Download to offer yet, so this doesn't promise one.
     static func notOnPhoneText(canDownload: Bool) -> String {
         canDownload
-            ? "This set's field guide isn't on your iPhone yet: downloading it adds photos, sounds and field notes, not birds. Patches you sew here count toward the set either way."
-            : "This set's field guide isn't on your iPhone yet. It can download once the list of sets comes through, adding photos, sounds and field notes, not birds. Patches you sew here count toward the set either way."
+            ? "This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set. Download it and they become its patches, with its photos, sounds and field notes."
+            : "This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set. It can download once the list of sets comes through; then they become its patches."
     }
 
     var body: some View {
         if let set = library.set(id: id) {
             let collection = collectionStore.collection
-            let progress = collection.progress(of: set.id)
+            let progress = collection.progress(of: set)
             let pack = library.pack(id: set.id)
             // By species, wherever you found it: a friend's face says "you haven't found this bird", not "not in this edition".
             let yours = Set(collection.patches.map(\.scientificName))
