@@ -32,7 +32,7 @@ struct CaptureWhenIdleScreenTests {
             Screens.expectOneWordPerThing(labels, screen: "Listen, idle")
             let start = try #require(labels.firstIndex(of: "Start listening"), "\(labels)")
             let capture = try #require(labels.firstIndex(of: "Capture a sighting"), "\(labels)")
-            let local = try #require(labels.firstIndex(of: "Your local set, Los Angeles"), "\(labels)")
+            let local = try #require(labels.firstIndex(of: "Your local set, \(BundledPack.setName)"), "\(labels)")
             #expect(start < capture && capture < local, "Start first, then the capture, then the set: \(labels)")
             #expect(labels.count { $0 == "Capture a sighting" } == 1, "\(labels)")
 
@@ -89,9 +89,9 @@ struct CaptureWhenIdleScreenTests {
         let harness = try Screens.Harness(location: [Self.griffith])
         defer { harness.run.isCapturing = false }
         // Birds the run would have heard, were there one: nothing of theirs may reach the sheet.
-        harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1, admittedAt: 1)])
+        harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: BundledPack.finch.scientificName, commonName: BundledPack.finch.name, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1, admittedAt: 1)])
         harness.run.isCapturing = true
-        let geomodel = ScriptedOccurrence(["Selasphorus sasin": 0.75])
+        let geomodel = ScriptedOccurrence([BundledPack.otherHummingbird.scientificName: 0.75])
 
         try await Hosted.onScreen(CaptureSightingView(), harness: harness, photos: StandInPhotosLibrary(access: .allowed), libraryPhoto: nil, geomodel: geomodel) { elements in
             let camera = try await Controls.settled(elements) { Controls.element("Take photo", in: $0)?.accessibilityTraits.contains(.notEnabled) == false && harness.run.capturePlace != nil }
@@ -101,15 +101,15 @@ struct CaptureWhenIdleScreenTests {
             #expect(!onCamera.contains { $0.localizedCaseInsensitiveContains("listening") }, "no run, nothing said of one: \(onCamera)")
             #expect(try #require(Controls.element("Take photo", in: camera)).accessibilityActivate())
 
-            let naming = try await Controls.settled(elements) { Controls.labels($0).contains("Likely here now") && Controls.labels($0).contains { $0.hasPrefix("Allen's Hummingbird, ") } }
+            let naming = try await Controls.settled(elements) { Controls.labels($0).contains("Likely here now") && Controls.labels($0).contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") } }
             let labels = Controls.labels(naming)
             Screens.expectClean(labels, screen: "Name this bird, no run")
             let header = try #require(labels.first { $0.hasPrefix("Your photo, Today, ") }, "\(labels)")
             #expect(header.contains(", Near "), "the phone's place: \(header)")
             #expect(!labels.contains(NameBirdText.heardTitle), "no run, no Heard this run: \(labels)")
-            #expect(!labels.contains { $0.hasPrefix("House Finch") }, "\(labels)")
+            #expect(!labels.contains { $0.hasPrefix(BundledPack.finch.name) }, "\(labels)")
             #expect(labels.contains("Likely here now"), "\(labels)")
-            #expect(labels.contains("Allen's Hummingbird, Los Angeles, New to you here"), "placed where the phone is: \(labels)")
+            #expect(labels.contains("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), New to you here"), "placed where the phone is: \(labels)")
             let asked = try #require(geomodel.asked.first, "the geomodel was not read")
             #expect((asked.latitude * 10_000).rounded() == 341_365 && (asked.longitude * 10_000).rounded() == -1_182_942, "\(asked)")
 
@@ -117,15 +117,15 @@ struct CaptureWhenIdleScreenTests {
             #expect(capture.location == Self.griffithPlace)
             #expect(harness.run.sightings.unnamed.isEmpty && !harness.run.showsRun, "no run's photo")
 
-            let row = try #require(Controls.element("Allen's Hummingbird, Los Angeles, New to you here", in: naming))
+            let row = try #require(Controls.element("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), New to you here", in: naming))
             #expect(row.accessibilityActivate())
             let chosen = try await Controls.settled(elements) { Controls.element("Add and sew patch", in: $0)?.accessibilityTraits.contains(.notEnabled) == false }
             #expect(try #require(Controls.element("Add and sew patch", in: chosen), "\(Controls.labels(chosen))").accessibilityActivate())
 
             let sighting = try #require(harness.newest)
-            #expect(sighting.scientificName == "Selasphorus sasin" && sighting.method == .seen && sighting.namedByBirder)
+            #expect(sighting.scientificName == BundledPack.otherHummingbird.scientificName && sighting.method == .seen && sighting.namedByBirder)
             #expect(sighting.location == Self.griffithPlace)
-            #expect(harness.run.reveal?.commonName == "Allen's Hummingbird", "its new patch's page")
+            #expect(harness.run.reveal?.commonName == BundledPack.otherHummingbird.name, "its new patch's page")
             #expect(harness.run.acknowledgment?.undo != nil, "and Undo")
             #expect(harness.run.sightings.seen.isEmpty && !harness.run.showsRun)
         }
@@ -141,11 +141,11 @@ struct CaptureWhenIdleScreenTests {
             let camera = try await Controls.settled(elements) { Controls.element("Take photo", in: $0)?.accessibilityTraits.contains(.notEnabled) == false && harness.run.placeOutsideRun.state == .settled(.denied) }
             #expect(try #require(Controls.element("Take photo", in: camera)).accessibilityActivate())
 
-            let naming = try await Controls.settled(elements) { Controls.labels($0).contains("In your field guides") && Controls.labels($0).contains { $0.hasPrefix("Allen's Hummingbird, ") } }
+            let naming = try await Controls.settled(elements) { Controls.labels($0).contains("In your field guides") && Controls.labels($0).contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") } }
             let labels = Controls.labels(naming)
             Screens.expectClean(labels, screen: "Name this bird, no place")
             #expect(labels.contains { $0.hasPrefix("Your photo, Today, ") && $0.hasSuffix(", Place not recorded") }, "\(labels)")
-            #expect(labels.contains("Allen's Hummingbird, Uncharted, New to you here"), "\(labels)")
+            #expect(labels.contains("\(BundledPack.otherHummingbird.name), Uncharted, New to you here"), "\(labels)")
             #expect(!labels.contains("Likely here now") && !labels.contains(NameBirdText.heardTitle), "\(labels)")
             #expect(try #require(Hosted.captures(harness).first).location == nil)
         }
@@ -161,22 +161,22 @@ struct CaptureWhenIdleScreenTests {
         )
         defer { run.isCapturing = false }
         run.isCapturing = true
-        let geomodel = ScriptedOccurrence(["Selasphorus sasin": 0.75])
+        let geomodel = ScriptedOccurrence([BundledPack.otherHummingbird.scientificName: 0.75])
 
         try await Hosted.onScreen(CaptureSightingView().environment(run), harness: harness, photos: StandInPhotosLibrary(access: .allowed), libraryPhoto: nil, geomodel: geomodel) { elements in
             let camera = try await Controls.settled(elements) { Controls.element("Take photo", in: $0)?.accessibilityTraits.contains(.notEnabled) == false }
             #expect(try #require(Controls.element("Take photo", in: camera)).accessibilityActivate())
-            let before = try await Controls.settled(elements) { Controls.labels($0).contains { $0.hasPrefix("Allen's Hummingbird, ") } }
+            let before = try await Controls.settled(elements) { Controls.labels($0).contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") } }
             #expect(Controls.labels(before).contains { $0.hasSuffix(", Place not recorded") }, "nothing known yet: \(Controls.labels(before))")
-            #expect(Controls.labels(before).contains("Allen's Hummingbird, Uncharted, New to you here"), "\(Controls.labels(before))")
+            #expect(Controls.labels(before).contains("\(BundledPack.otherHummingbird.name), Uncharted, New to you here"), "\(Controls.labels(before))")
 
             location.send(Self.griffith)
 
-            let after = try await Controls.settled(elements) { Controls.labels($0).contains("Likely here now") && Controls.labels($0).contains("Allen's Hummingbird, Los Angeles, New to you here") }
+            let after = try await Controls.settled(elements) { Controls.labels($0).contains("Likely here now") && Controls.labels($0).contains("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), New to you here") }
             let labels = Controls.labels(after)
             #expect(labels.contains { $0.hasPrefix("Your photo, Today, ") && $0.contains(", Near ") }, "\(labels)")
             #expect(!labels.contains { $0.hasSuffix(", Place not recorded") }, "\(labels)")
-            #expect(labels.contains("Allen's Hummingbird, Los Angeles, New to you here"), "\(labels)")
+            #expect(labels.contains("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), New to you here"), "\(labels)")
             #expect(labels.contains("Likely here now"), "what is likely there, now that there is a there: \(labels)")
             #expect(try #require(Hosted.captures(harness).first).location == Self.griffithPlace)
         }

@@ -17,8 +17,8 @@ import Testing
 struct CaptureAccessibilityTests {
     typealias Screens = ScreenAccessibilityTests
 
-    static let allens = NameableBird(speciesID: "Selasphorus sasin_Allen's Hummingbird", scientificName: "Selasphorus sasin", commonName: "Allen's Hummingbird", isInFieldGuide: true)
-    static let annas = NameableBird(speciesID: "Calypte anna_Anna's Hummingbird", scientificName: "Calypte anna", commonName: "Anna's Hummingbird", isInFieldGuide: true)
+    static let allens = NameableBird(speciesID: BundledPack.otherHummingbird.label, scientificName: BundledPack.otherHummingbird.scientificName, commonName: BundledPack.otherHummingbird.name, isInFieldGuide: true)
+    static let annas = NameableBird(speciesID: BundledPack.hummingbird.label, scientificName: BundledPack.hummingbird.scientificName, commonName: BundledPack.hummingbird.name, isInFieldGuide: true)
 
     static func photo() -> CapturedPhoto { CapturedPhoto(data: DebugSeeds.frameJPEG(), takenAt: .now) }
 
@@ -30,13 +30,13 @@ struct CaptureAccessibilityTests {
     func runPage(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
         await harness.run.start()
-        // The seeds have an Uncharted Anna's Hummingbird and no Allen's: with no place, one adds to a patch and one sews one.
+        // The seeds have an Uncharted hummingbird and not the other one: with no place, one adds to a patch and one sews one.
         try #require(harness.run.addSeen(Self.allens, photo: Self.photo()))
         harness.run.dismissReveal()
         try #require(harness.run.addSeen(Self.annas, photo: Self.photo()))
 
         let labels = try await Screens.walk(ActiveListeningView(), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Seen this run") && labels.contains { $0.hasPrefix("Anna's Hummingbird, ") }
+            labels.contains("Seen this run") && labels.contains { $0.hasPrefix("\(BundledPack.hummingbird.name), ") }
         }
         await harness.run.stop()
 
@@ -45,8 +45,8 @@ struct CaptureAccessibilityTests {
         Self.expectNoScore(labels, screen: "Run with seen birds")
         #expect(labels.contains("Capture a sighting"), "\(labels)")
         #expect(labels.contains("Seen this run"), "\(labels)")
-        #expect(labels.contains("Allen's Hummingbird, Seen, your photo, New patch"), "\(labels)")
-        #expect(labels.contains("Anna's Hummingbird, Seen 2 times here, your photo"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.otherHummingbird.name), Seen, your photo, New patch"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.hummingbird.name), Seen 2 times here, your photo"), "\(labels)")
         let section = try #require(labels.firstIndex(of: "Seen this run"))
         let listening = try #require(labels.firstIndex(of: "Listening for birds…"))
         #expect(section < listening, "above what was heard: \(labels)")
@@ -95,7 +95,7 @@ struct CaptureAccessibilityTests {
     func nameThisBird(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
         let labels = try await Screens.walk(NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}, harness: harness, typeSize: typeSize, inStack: false) { labels in
-            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Allen's Hummingbird, ") }
+            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") }
         }
         Screens.expectClean(labels, screen: "Name this bird")
         Screens.expectOneWordPerThing(labels, screen: "Name this bird")
@@ -108,7 +108,7 @@ struct CaptureAccessibilityTests {
         #expect(labels.contains { $0.hasPrefix("Your photo, Today, ") && $0.hasSuffix(", Place not recorded") }, "\(labels)")
         #expect(labels.contains("In your field guides"), "\(labels)")
         // No run, so no place: every add here would be Uncharted.
-        #expect(labels.contains("Allen's Hummingbird, Uncharted, New to you here"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.otherHummingbird.name), Uncharted, New to you here"), "\(labels)")
         #expect(!labels.contains("All birds"), "the rest are found by typing: \(labels)")
         #expect(labels.contains(NameBirdText.searchHint), "\(labels)")
         #expect(labels.contains("Add sighting"), "\(labels)")
@@ -149,8 +149,8 @@ struct CaptureAccessibilityTests {
         }
         Screens.expectClean(found, screen: "Name this bird, searched")
         #expect(found.contains("In your field guides") && found.contains("All birds"), "\(found)")
-        #expect(found.contains("Allen's Hummingbird, Uncharted, New to you here"), "\(found)")
-        #expect(found.contains("Anna's Hummingbird, Uncharted, Seen once here"), "the seeds have one, with no place: \(found)")
+        #expect(found.contains("\(BundledPack.otherHummingbird.name), Uncharted, New to you here"), "\(found)")
+        #expect(found.contains("\(BundledPack.hummingbird.name), Uncharted, Seen once here"), "the seeds have one, with no place: \(found)")
         #expect(found.contains("Amazilia Hummingbird, Uncharted"), "a bird no field guide here describes: \(found)")
         let guides = try #require(found.firstIndex(of: "In your field guides"))
         let all = try #require(found.firstIndex(of: "All birds"))

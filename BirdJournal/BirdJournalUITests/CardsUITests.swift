@@ -25,7 +25,7 @@ final class CardsUITests: XCTestCase {
         // The first species heard, reviewed and added.
         let review = app.buttons["candidate-row-0"]
         XCTAssertTrue(review.waitForExistence(timeout: 60), "no species to review; screen: \(app.debugDescription.prefix(3000))")
-        // "House Finch, calling now, new patch waiting".
+        // "<the finch>, calling now, new patch waiting".
         let name = String(review.label.prefix { $0 != "," })
         review.tap()
         let add = app.buttons["Add and sew patch"]

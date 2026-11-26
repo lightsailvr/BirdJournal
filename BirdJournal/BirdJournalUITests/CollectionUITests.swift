@@ -2,7 +2,7 @@ import XCTest
 
 /// Issues #117 and #134: the board opens on the set you're in and shows only your patches; a patch's page hides
 /// the tab bar; returning from a page keeps the current position, while switching modes starts at the top (#180).
-/// Real taps on the seeded journal: three birds in Los Angeles, and two outside every set (`-seedBoard`: 30, enough to scroll).
+/// Real taps on the seeded journal: three birds in the bundled pack's set, and two outside every set (`-seedBoard`: 30, enough to scroll).
 final class CollectionUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String] = []) -> XCUIApplication {
@@ -17,19 +17,19 @@ final class CollectionUITests: XCTestCase {
         let app = launch()
         let sewn = app.buttons.matching(identifier: "board-patch")
         XCTAssertTrue(sewn.firstMatch.waitForExistence(timeout: 15), "no patches on the board; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(sewn.count, 3, "the three birds found in Los Angeles; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(sewn.count, 3, "the three birds found in \(BundledPack.setName); screen: \(app.debugDescription.prefix(4000))")
         let names = sewn.allElementsBoundByIndex.map { $0.label.split(separator: ",").first.map(String.init) ?? "" }
-        XCTAssertEqual(names, ["Mourning Dove", "Black Phoebe", "House Finch"], "collector order")
+        XCTAssertEqual(names, [BundledPack.dove.name, BundledPack.phoebe.name, BundledPack.finch.name], "collector order")
         XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS 'not yet found'")).firstMatch.exists, "a bird you haven't found has no patch")
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Canada Goose'")).firstMatch.exists)
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.goose.name)'")).firstMatch.exists)
     }
 
     @MainActor
     func testASearchReadsEveryBoardAndKeepsWhatMatches() throws {
-        let app = launch(["-autoQuery", "House Finch"])
-        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch, seen 2 times'")).firstMatch
+        let app = launch(["-autoQuery", BundledPack.finch.name])
+        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), \(BundledPack.editionName) patch, seen 2 times'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.dove.name)'")).firstMatch.exists, "the search kept only the match")
     }
 
     /// Search sits in the title's row as a magnifier, opens to a field, and leaves the picker where it was.
@@ -63,15 +63,15 @@ final class CollectionUITests: XCTestCase {
         let field = app.descendants(matching: .any)["collection-search"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10), "no field: \(app.debugDescription.prefix(3000))")
         field.typeText("House")
-        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch'")).firstMatch
+        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), \(BundledPack.editionName) patch'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mourning Dove'")).firstMatch.exists, "the search kept only the match")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.dove.name)'")).firstMatch.exists, "the search kept only the match")
         XCTAssertGreaterThan(correlation(before, pickerWords(in: app.screenshot(), at: frame)), 0.8, "the picker moved")
     }
 
     @MainActor
     func testASearchForABirdYouHaventFoundSaysSo() throws {
-        let app = launch(["-autoQuery", "Canada Goose"])
+        let app = launch(["-autoQuery", BundledPack.goose.name])
         XCTAssertTrue(app.descendants(matching: .any)["no-search-match"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
     }
 
@@ -169,8 +169,8 @@ final class CollectionUITests: XCTestCase {
         let field = app.descendants(matching: .any)["collection-search"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10))
         XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5), "it comes up on opening")
-        field.typeText("Mallard\n")
-        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        field.typeText("\(BundledPack.mallard.name)\n")
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.mallard.name), '")).firstMatch
         XCTAssertTrue(mallard.waitForExistence(timeout: 10))
         let lowered = expectation(for: NSPredicate(format: "exists == NO"), evaluatedWith: app.keyboards.firstMatch)
         wait(for: [lowered], timeout: 5)
@@ -221,7 +221,7 @@ final class CollectionUITests: XCTestCase {
         let leftAt = Self.settledMinY(of: left) - modes.frame.minY
         let search = app.buttons["collection-search-open"]
         let field = app.descendants(matching: .any)["collection-search"].firstMatch
-        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.mallard.name), '")).firstMatch
 
         func expectClosed(_ how: String, line: UInt = #line) {
             XCTAssertTrue(search.waitForExistence(timeout: 5), "\(how): the field's still open: \(app.debugDescription.prefix(2000))", line: line)
@@ -242,7 +242,7 @@ final class CollectionUITests: XCTestCase {
         // Keyboard up, typed.
         search.tap()
         XCTAssertTrue(field.waitForExistence(timeout: 10))
-        field.typeText("Mallard")
+        field.typeText(BundledPack.mallard.name)
         XCTAssertTrue(mallard.waitForExistence(timeout: 10))
         app.buttons["collection-search-close"].tap()
         expectClosed("keyboard up, typed")
@@ -250,7 +250,7 @@ final class CollectionUITests: XCTestCase {
         // Keyboard down, typed: the keyboard's Search key lowers it.
         search.tap()
         XCTAssertTrue(field.waitForExistence(timeout: 10))
-        field.typeText("Mallard\n")
+        field.typeText("\(BundledPack.mallard.name)\n")
         XCTAssertTrue(mallard.waitForExistence(timeout: 10))
         let lowered = NSPredicate(format: "exists == NO")
         wait(for: [expectation(for: lowered, evaluatedWith: app.keyboards.firstMatch)], timeout: 5)
@@ -278,8 +278,8 @@ final class CollectionUITests: XCTestCase {
             app.buttons["collection-search-open"].tap()
             let field = app.descendants(matching: .any)["collection-search"].firstMatch
             XCTAssertTrue(field.waitForExistence(timeout: 10))
-            field.typeText("Mallard")
-            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch.waitForExistence(timeout: 10))
+            field.typeText(BundledPack.mallard.name)
+            XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.mallard.name), '")).firstMatch.waitForExistence(timeout: 10))
         }
         let patch = app.buttons["revealed-patch"]
         XCTAssertTrue(patch.waitForExistence(timeout: 40), "no reveal: \(app.debugDescription.prefix(3000))")
@@ -290,7 +290,7 @@ final class CollectionUITests: XCTestCase {
         Thread.sleep(forTimeInterval: 2)
         XCTAssertFalse(patch.exists, "the page closed")
         XCTAssertFalse(app.descendants(matching: .any)["collection-search"].firstMatch.exists, "the search is over")
-        let first = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH 'Canada Goose'")).firstMatch
+        let first = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH '\(BundledPack.goose.name)'")).firstMatch
         XCTAssertTrue(first.waitForExistence(timeout: 10), "not at the top of the board: \(app.debugDescription.prefix(3000))")
         XCTAssertLessThan(Self.settledMinY(of: first), 500, "not at the top of the board")
         XCTAssertGreaterThan(first.frame.minY, 200)
@@ -325,8 +325,8 @@ final class CollectionUITests: XCTestCase {
         search.tap()
         let field = app.descendants(matching: .any)["collection-search"].firstMatch
         XCTAssertTrue(field.waitForExistence(timeout: 10))
-        field.typeText("Mallard")
-        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mallard, '")).firstMatch
+        field.typeText(BundledPack.mallard.name)
+        let mallard = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.mallard.name), '")).firstMatch
         XCTAssertTrue(mallard.waitForExistence(timeout: 10), "\(app.debugDescription.prefix(3000))")
         XCTAssertGreaterThanOrEqual(Self.settledMinY(of: mallard), modes.frame.maxY - 1, "the first result's above the bar")
 

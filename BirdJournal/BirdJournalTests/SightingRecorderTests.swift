@@ -146,7 +146,7 @@ extension RarityCalibration {
 @MainActor
 struct SightingRecorderSetTests {
     static let losAngeles = CardSet(
-        id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition",
+        id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition",
         species: ["Branta canadensis", "Haemorhous mexicanus"],
         regions: [CardSet.Region(name: "Los Angeles County", polygons: [[[
             CardSet.Point(longitude: -118.95, latitude: 33.7), CardSet.Point(longitude: -117.65, latitude: 33.7),
@@ -182,7 +182,7 @@ struct SightingRecorderSetTests {
 @Suite("Bundled set placement")
 @MainActor
 struct BundledSetPlacementTests {
-    @Test("a Griffith Park House Finch gets its Los Angeles number from the shipped boundary; Balboa Park is outside it")
+    @Test("a Griffith Park House Finch gets its Los Angeles number from the shipped boundary; Balboa Park is outside it", .tags(.losAngelesContent))
     func shippedBoundary() throws {
         let packSet = try #require(try SpeciesPack.bundled().set)
         let set = CardSet(packSet)
@@ -193,8 +193,8 @@ struct BundledSetPlacementTests {
         let catalina = Coordinate(latitude: 33.3879, longitude: -118.4163, accuracy: 15)
 
         let placed = CardSet.placement(speciesID: finch, at: griffithPark, in: [set])
-        #expect(placed == .numbered(setID: "us-ca-la", setName: "Los Angeles", edition: packSet.edition.name, number: number, total: packSet.species.count))
-        #expect(CardSet.placement(speciesID: finch, at: catalina, in: [set]).setID == "us-ca-la", "Santa Catalina Island is part of the county")
+        #expect(placed == .numbered(setID: BundledPack.id, setName: "Los Angeles", edition: packSet.edition.name, number: number, total: packSet.species.count))
+        #expect(CardSet.placement(speciesID: finch, at: catalina, in: [set]).setID == BundledPack.id, "Santa Catalina Island is part of the county")
         #expect(CardSet.placement(speciesID: finch, at: balboaPark, in: [set]) == .uncharted)
     }
 }

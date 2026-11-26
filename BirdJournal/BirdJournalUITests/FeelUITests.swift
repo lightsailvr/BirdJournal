@@ -63,17 +63,17 @@ final class FeelUITests: XCTestCase {
     @MainActor
     func testAPatchPageGoesBackToTheTileItWasOpenedFromEvenAfterASwipe() {
         let app = board()
-        let phoebe = tile(app, "Black Phoebe")
+        let phoebe = tile(app, BundledPack.phoebe.name)
         XCTAssertTrue(phoebe.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        let dove = tile(app, "Mourning Dove")
-        let finch = tile(app, "House Finch")
+        let dove = tile(app, BundledPack.dove.name)
+        let finch = tile(app, BundledPack.finch.name)
         let frames = [settledFrame(of: phoebe), settledFrame(of: dove), settledFrame(of: finch)]
         phoebe.tap()
 
         let face = element(app, "patch-face")
         XCTAssertTrue(face.waitForExistence(timeout: 10), "the patch did not open: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(face.label.hasPrefix("Black Phoebe"), face.label)
-        let swiped = app.buttons.matching(NSPredicate(format: "identifier == 'patch-face' AND label BEGINSWITH 'House Finch'")).firstMatch
+        XCTAssertTrue(face.label.hasPrefix(BundledPack.phoebe.name), face.label)
+        let swiped = app.buttons.matching(NSPredicate(format: "identifier == 'patch-face' AND label BEGINSWITH '\(BundledPack.finch.name)'")).firstMatch
         face.swipeLeft()
         XCTAssertTrue(swiped.waitForExistence(timeout: 5), "the swipe did not reach another patch: \(app.debugDescription.prefix(3000))")
 
@@ -117,7 +117,7 @@ final class FeelUITests: XCTestCase {
     @MainActor
     func testALongPressPeeksWithTurnOverShareAndAllSightings() {
         let app = board()
-        let finch = tile(app, "House Finch")
+        let finch = tile(app, BundledPack.finch.name)
         XCTAssertTrue(finch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
 
         finch.press(forDuration: 1.2)
@@ -169,9 +169,9 @@ final class FeelUITests: XCTestCase {
     @MainActor
     func testLiftAndPeekInASheetStayInTheSheet() throws {
         // The full map's own stack, opened on a sighting's sheet, on the bird's patches: a sheet stack that reaches a tile.
-        let app = launch(["-seedJournal", "YES", "-autoScreen", "map", "-autoCardSpecies", "Haemorhous mexicanus", "-autoMapSpeciesPatches", "YES"])
-        XCTAssertTrue(app.navigationBars.buttons["On the map"].waitForExistence(timeout: 20) || app.navigationBars["House Finch"].waitForExistence(timeout: 20), "not on the map's stack: \(app.debugDescription.prefix(3000))")
-        let finch = tile(app, "House Finch")
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "map", "-autoCardSpecies", BundledPack.finch.scientificName, "-autoMapSpeciesPatches", "YES"])
+        XCTAssertTrue(app.navigationBars.buttons["On the map"].waitForExistence(timeout: 20) || app.navigationBars[BundledPack.finch.name].waitForExistence(timeout: 20), "not on the map's stack: \(app.debugDescription.prefix(3000))")
+        let finch = tile(app, BundledPack.finch.name)
         XCTAssertTrue(finch.waitForExistence(timeout: 15), "no tile in the sheet: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(finch.isHittable, "the tile isn't in the sheet in front")
 
@@ -222,9 +222,9 @@ final class FeelUITests: XCTestCase {
         let app = board()
         let name = app.buttons["collection-board"]
         XCTAssertTrue(name.waitForExistence(timeout: 15), "no set menu: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(name.label, "Los Angeles")
+        XCTAssertEqual(name.label, BundledPack.setName)
         XCTAssertFalse(app.navigationBars["Collection"].buttons["Set"].exists, "the toolbar's stack is gone")
-        XCTAssertTrue(element(app, "cards-set-progress").label.contains("3 of 160 sewn"), element(app, "cards-set-progress").label)
+        XCTAssertTrue(element(app, "cards-set-progress").label.contains("3 of \(BundledPack.speciesCount) sewn"), element(app, "cards-set-progress").label)
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS '5 patches'")).firstMatch.exists, "the total isn't on the page beside the count: \(app.debugDescription.prefix(3000))")
 
         name.tap()
@@ -244,7 +244,7 @@ final class FeelUITests: XCTestCase {
         let app = launch(["-seedBoard", "YES", "-autoScreen", "cards"])
         XCTAssertTrue(element(app, "cards-set-progress").waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons["collection-board"].exists, "nothing to choose")
-        XCTAssertTrue(app.staticTexts["Los Angeles"].exists)
+        XCTAssertTrue(app.staticTexts[BundledPack.setName].exists)
     }
 
     // MARK: - Modes
@@ -268,7 +268,7 @@ final class FeelUITests: XCTestCase {
         let app = board(["-modeFadeSeconds", "6"])
         let modes = app.segmentedControls["collection-mode"]
         XCTAssertTrue(modes.waitForExistence(timeout: 15))
-        XCTAssertTrue(tile(app, "House Finch").waitForExistence(timeout: 10))
+        XCTAssertTrue(tile(app, BundledPack.finch.name).waitForExistence(timeout: 10))
         let felt = surfaceColour(of: app.screenshot())
 
         modes.buttons["Sightings"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
@@ -284,7 +284,7 @@ final class FeelUITests: XCTestCase {
         XCTAssertGreaterThan(fromFelt, span * 0.1, "under way it has left the felt: \(felt) \(during) \(page)")
         XCTAssertGreaterThan(fromPage, span * 0.1, "and hasn't reached the page: \(felt) \(during) \(page)")
 
-        XCTAssertFalse(tile(app, "House Finch").exists, "the board has gone")
+        XCTAssertFalse(tile(app, BundledPack.finch.name).exists, "the board has gone")
         XCTAssertTrue(modes.buttons["Sightings"].isSelected)
     }
 
@@ -386,8 +386,8 @@ final class FeelUITests: XCTestCase {
         addTeardownBlock { [self] in try? setSystemReduceMotion(false) }
         Thread.sleep(forTimeInterval: 1)
         XCTAssertTrue(UIAccessibility.isReduceMotionEnabled, "the setting didn't take")
-        let app = board(["-UIAnimationDragCoefficient", "10", "-autoCardSpecies", "Sayornis nigricans", "-autoLiftAfter", "12", "-autoLiftBackAfter", "14"])
-        XCTAssertTrue(tile(app, "Black Phoebe").waitForExistence(timeout: 10))
+        let app = board(["-UIAnimationDragCoefficient", "10", "-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoLiftAfter", "12", "-autoLiftBackAfter", "14"])
+        XCTAssertTrue(tile(app, BundledPack.phoebe.name).waitForExistence(timeout: 10))
         // Read until the page has come and gone: about 12 s to its opening and 14 s more to going back.
         var samples: [(at: TimeInterval, pixels: [Double])] = []
         let start = Date.now
@@ -424,10 +424,10 @@ final class FeelUITests: XCTestCase {
 
     @MainActor
     func testTheNewPatchIsTheWayToTheCollectionAndThePageSaysLess() {
-        let app = launch(["-seedJournal", "YES", "-autoScreen", "reveal", "-autoCardSpecies", "Sayornis nigricans", "-reduceMotion", "YES"])
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "reveal", "-autoCardSpecies", BundledPack.phoebe.scientificName, "-reduceMotion", "YES"])
         let patch = app.buttons["revealed-patch"]
         XCTAssertTrue(patch.waitForExistence(timeout: 15), "the patch is a button: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(patch.label.hasPrefix("Black Phoebe, Citrus edition patch"), patch.label)
+        XCTAssertTrue(patch.label.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch"), patch.label)
         XCTAssertTrue(app.buttons["Done"].exists, "the one primary action")
         XCTAssertTrue(app.buttons["Share this patch"].exists)
         XCTAssertFalse(app.buttons["See it in my collection"].exists, "the patch does that")
@@ -437,13 +437,13 @@ final class FeelUITests: XCTestCase {
         patch.tap()
         XCTAssertFalse(patch.waitForExistence(timeout: 2), "the page closed")
         XCTAssertTrue(app.tabBars.buttons["Collection"].isSelected, "\(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(tile(app, "Black Phoebe").waitForExistence(timeout: 10), "on the board with the new patch: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(tile(app, BundledPack.phoebe.name).waitForExistence(timeout: 10), "on the board with the new patch: \(app.debugDescription.prefix(3000))")
     }
 
     #if ACCOUNTS_ENABLED
     @MainActor
     func testTheRevealSaysWhichGuildsItWasSharedWithOnlyIfItWas() {
-        let arguments = ["-seedJournal", "YES", "-autoScreen", "reveal", "-autoCardSpecies", "Sayornis nigricans", "-reduceMotion", "YES", "-fakeAccount", "signedIn"]
+        let arguments = ["-seedJournal", "YES", "-autoScreen", "reveal", "-autoCardSpecies", BundledPack.phoebe.scientificName, "-reduceMotion", "YES", "-fakeAccount", "signedIn"]
         let shared = launch(arguments + ["-fakeCircles", "some"])
         let line = element(shared, "revealed-shared")
         XCTAssertTrue(line.waitForExistence(timeout: 15), "screen: \(shared.debugDescription.prefix(3000))")
@@ -467,10 +467,10 @@ final class FeelUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-albumFile", album, "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))", "-reduceMotion", "YES",
-            "-autoGlassesListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "glasses-run", "-autoLensAdd", "House Finch,Dark-eyed Junco",
+            "-autoGlassesListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "glasses-run", "-autoLensAdd", "\(BundledPack.finch.name),\(BundledPack.junco.name)",
         ]
         app.launch()
-        XCTAssertTrue(app.buttons["Added. Review Dark-eyed Junco"].waitForExistence(timeout: 120), "\(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.buttons["Added. Review \(BundledPack.junco.name)"].waitForExistence(timeout: 120), "\(app.debugDescription.prefix(3000))")
         app.buttons["Stop listening"].tap()
         XCTAssertTrue(app.buttons["Next patch"].waitForExistence(timeout: 15), "\(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.buttons["revealed-patch"].exists, "going to the collection waits for the last")
@@ -484,7 +484,7 @@ final class FeelUITests: XCTestCase {
     @MainActor
     func testTheRightMomentsAskForTheRightHaptics() {
         let app = board(["-hapticLog", "YES"])
-        let phoebe = tile(app, "Black Phoebe")
+        let phoebe = tile(app, BundledPack.phoebe.name)
         XCTAssertTrue(phoebe.waitForExistence(timeout: 15))
         XCTAssertEqual(hapticLog(app), [], "nothing on opening a tab")
         phoebe.tap()
@@ -504,7 +504,7 @@ final class FeelUITests: XCTestCase {
         guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
         let app = launch(["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL", "-acknowledgmentSeconds", "40", "-seedJournal", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
         // A repeat add, from its review: a row is hard to catch at this size while the list re-sorts.
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
+        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), '")).firstMatch
         let close = app.buttons["Close"]
         let addAgain = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Add'")).firstMatch
         var added = false
@@ -513,7 +513,7 @@ final class FeelUITests: XCTestCase {
             if !row.isHittable { app.swipeUp() }
             row.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.2)).tap()
             guard close.waitForExistence(timeout: 5) else { continue }
-            if app.staticTexts["House Finch"].exists, addAgain.waitForExistence(timeout: 5) {
+            if app.staticTexts[BundledPack.finch.name].exists, addAgain.waitForExistence(timeout: 5) {
                 addAgain.tap()
                 added = true
             } else {
@@ -586,13 +586,13 @@ final class FeelUITests: XCTestCase {
     func testASewnPatchTicksThenSucceeds() throws {
         guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
         let app = launch(["-hapticLog", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90), "\(app.debugDescription.prefix(3000))")
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10))
-            if app.staticTexts["House Finch"].exists, add.waitForExistence(timeout: 10) {
+            if app.staticTexts[BundledPack.finch.name].exists, add.waitForExistence(timeout: 10) {
                 add.tap()
                 break
             }
@@ -613,13 +613,13 @@ final class FeelUITests: XCTestCase {
     func testUnderReduceMotionASewnPatchSucceedsOnce() throws {
         guard FileManager.default.fileExists(atPath: Self.clip) else { throw XCTSkip("no example soundscape") }
         let app = launch(["-hapticLog", "YES", "-reduceMotion", "YES", "-autoPhoneListening", Self.clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90), "\(app.debugDescription.prefix(3000))")
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10))
-            if app.staticTexts["House Finch"].exists, add.waitForExistence(timeout: 10) {
+            if app.staticTexts[BundledPack.finch.name].exists, add.waitForExistence(timeout: 10) {
                 add.tap()
                 break
             }

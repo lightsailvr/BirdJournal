@@ -1,6 +1,6 @@
 import XCTest
 
-/// Issues #134 and #179 (guide page 7): a species' patches across editions, with fifteen seeded House Finch sightings at two places
+/// Issues #134 and #179 (guide page 7): a species' patches across editions, with fifteen seeded finch sightings at two places
 /// (`-seedGallery`). Real taps open a patch from the species view and the sightings behind them. The second place is San
 /// Diego when the pack index has reached the phone, Uncharted when it hasn't, so the counts are what's checked.
 final class GalleryUITests: XCTestCase {
@@ -27,13 +27,13 @@ final class GalleryUITests: XCTestCase {
         let carousel = app.scrollViews["species-patch-carousel"]
         XCTAssertTrue(carousel.exists)
         XCTAssertGreaterThan(patches(app).firstMatch.frame.width, 280, "the hero has room beyond the old small grid")
-        // Los Angeles, as every label says the bird.
-        let losAngeles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, Citrus edition patch, seen 9 times'")).firstMatch
+        // The bundled pack's set, as every label says the bird.
+        let losAngeles = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), \(BundledPack.editionName) patch, seen 9 times'")).firstMatch
         XCTAssertTrue(losAngeles.exists, "screen: \(app.debugDescription.prefix(4000))")
         losAngeles.tap()
         let turn = app.buttons["card-flip"]
         XCTAssertTrue(turn.waitForExistence(timeout: 10), "the patch did not open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.descendants(matching: .any)["patch-count"].label.hasPrefix("Seen 9 times in Los Angeles"))
+        XCTAssertTrue(app.descendants(matching: .any)["patch-count"].label.hasPrefix("Seen 9 times in \(BundledPack.setName)"))
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(summary.waitForExistence(timeout: 5))
 

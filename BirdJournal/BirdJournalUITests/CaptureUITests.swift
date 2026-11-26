@@ -13,13 +13,13 @@ final class CaptureUITests: XCTestCase {
         return clip
     }
 
-    /// A phone run that has heard a House Finch, with nothing in the album. Reduce Motion, so a new patch's page is the
+    /// A phone run that has heard the finch, with nothing in the album. Reduce Motion, so a new patch's page is the
     /// finished patch at once, and the acknowledgment held long enough to reach its Undo.
     @MainActor
     private func launchRun(camera: String = "ready", _ extra: [String] = []) throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", "Haemorhous mexicanus_House Finch",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", BundledPack.finch.label,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
             "-fakeCamera", camera, "-reduceMotion", "YES", "-acknowledgmentSeconds", "90",
         ] + extra
@@ -95,31 +95,31 @@ final class CaptureUITests: XCTestCase {
         let add = app.buttons["name-bird-add"]
         XCTAssertFalse(add.isEnabled, "nothing chosen")
 
-        search(app, for: "calypte")
-        let anna = app.buttons["name-bird-Calypte anna"]
+        search(app, for: BundledPack.hummingbird.genus.lowercased())
+        let anna = app.buttons["name-bird-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(anna.waitForExistence(timeout: 10), "the scientific name finds it; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["In your field guides"].exists, "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(anna.label, "Anna's Hummingbird, Los Angeles, New to you here")
-        XCTAssertFalse(app.buttons["name-bird-Selasphorus sasin"].exists, "the search kept only the match")
+        XCTAssertEqual(anna.label, "\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here")
+        XCTAssertFalse(app.buttons["name-bird-\(BundledPack.otherHummingbird.scientificName)"].exists, "the search kept only the match")
         anna.tap()
         XCTAssertTrue(add.isEnabled)
         XCTAssertEqual(add.label, "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["Anna's Hummingbird, new to you here."].exists, "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["\(BundledPack.hummingbird.name), new to you here."].exists, "screen: \(app.debugDescription.prefix(3000))")
         add.tap()
 
         // An add like any other: the new patch's page, then the run with the bird under Seen this run and Undo.
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Keep listening"].tap()
         let heading = app.staticTexts["Seen this run"]
         XCTAssertTrue(heading.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
-        let row = app.buttons["seen-row-Calypte anna"]
+        let row = app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(row.label, "Anna's Hummingbird, Seen, your photo, New patch")
-        let heard = app.buttons["Sew it, House Finch"]
+        XCTAssertEqual(row.label, "\(BundledPack.hummingbird.name), Seen, your photo, New patch")
+        let heard = app.buttons["Sew it, \(BundledPack.finch.name)"]
         XCTAssertTrue(heard.exists, "what was heard is still there; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertLessThan(heading.frame.minY, heard.frame.minY, "seen birds sit above the heard ones")
         XCTAssertLessThan(row.frame.minY, heard.frame.minY)
-        XCTAssertTrue(app.staticTexts["Your first Anna's Hummingbird in Los Angeles"].exists, "the acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(BundledPack.hummingbird.name) in \(BundledPack.setName)"].exists, "the acknowledgment; screen: \(app.debugDescription.prefix(4000))")
 
         // The row opens the sighting: Seen, your photo, and no match score.
         row.tap()
@@ -163,7 +163,7 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(unnamed.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(unnamed.label, "Unnamed sighting, Your photo, just now, Name it")
         XCTAssertEqual(app.buttons.matching(identifier: "unnamed-row").count, 1)
-        XCTAssertLessThan(unnamed.frame.minY, app.buttons["Sew it, House Finch"].frame.minY, "above the birds heard")
+        XCTAssertLessThan(unnamed.frame.minY, app.buttons["Sew it, \(BundledPack.finch.name)"].frame.minY, "above the birds heard")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no patch for a photo with no name")
         XCTAssertFalse(app.buttons["Undo"].exists, "nothing was added")
     }
@@ -246,22 +246,22 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(heard.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         let likely = app.staticTexts["Likely here now"]
         XCTAssertTrue(likely.exists, "screen: \(app.debugDescription.prefix(3000))")
-        let finch = app.buttons["name-bird-Haemorhous mexicanus"]
+        let finch = app.buttons["name-bird-\(BundledPack.finch.scientificName)"]
         XCTAssertTrue(finch.exists, "the run's bird; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(finch.label, "House Finch, Los Angeles, New to you here")
+        XCTAssertEqual(finch.label, "\(BundledPack.finch.name), \(BundledPack.setName), New to you here")
         XCTAssertLessThan(heard.frame.minY, finch.frame.minY)
         XCTAssertLessThan(finch.frame.maxY, likely.frame.minY + 1, "the run's bird sits under Heard this run, above the likely birds")
         XCTAssertFalse(app.staticTexts["In your field guides"].exists, "the suggestions stand in for the list by name")
         XCTAssertFalse(app.staticTexts["All birds"].exists)
         let suggested = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@ AND identifier != %@", "name-bird-", "name-bird-add"))
         XCTAssertGreaterThan(suggested.count, 2, "likely birds are listed under the heading; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(app.buttons.matching(identifier: "name-bird-Haemorhous mexicanus").count, 1, "the bird heard isn't listed again as likely")
+        XCTAssertEqual(app.buttons.matching(identifier: "name-bird-\(BundledPack.finch.scientificName)").count, 1, "the bird heard isn't listed again as likely")
 
         // Typing replaces both with the search. The keyboard stays up, as it does while a birder types.
         let field = app.textFields["name-bird-search"]
         field.tap()
-        field.typeText("calypte")
-        XCTAssertTrue(app.buttons["name-bird-Calypte anna"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        field.typeText(BundledPack.hummingbird.genus.lowercased())
+        XCTAssertTrue(app.buttons["name-bird-\(BundledPack.hummingbird.scientificName)"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(heard.exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(likely.exists)
         XCTAssertFalse(finch.exists)
@@ -281,11 +281,11 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(add.isEnabled)
         XCTAssertEqual(add.label, "Add and sew patch")
         add.tap()
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Keep listening"].tap()
-        let row = app.buttons["seen-row-Haemorhous mexicanus"]
+        let row = app.buttons["seen-row-\(BundledPack.finch.scientificName)"]
         XCTAssertTrue(row.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(row.label, "House Finch, Seen, your photo, New patch")
+        XCTAssertEqual(row.label, "\(BundledPack.finch.name), Seen, your photo, New patch")
     }
 
     // Issue #188: photo first, name second.
@@ -301,7 +301,7 @@ final class CaptureUITests: XCTestCase {
         let own = done.filter { $0.frame.maxY <= shareTop }.max { $0.frame.maxY < $1.frame.maxY }
         XCTAssertNotNil(own, "no Done above Share; Done at \(done.map(\.frame)), Share at \(share.frame)")
         own?.tap()
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForNonExistence(timeout: 10), "the page didn't close; Done at \(done.map(\.frame)), Share at \(share.frame)")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForNonExistence(timeout: 10), "the page didn't close; Done at \(done.map(\.frame)), Share at \(share.frame)")
     }
 
     @MainActor
@@ -340,7 +340,7 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 10), "back on the run")
         XCTAssertTrue(unnamed.waitForNonExistence(timeout: 10), "the row is still there")
         XCTAssertFalse(app.staticTexts["Seen this run"].exists)
-        XCTAssertTrue(app.buttons["Sew it, House Finch"].exists, "the run is as it was")
+        XCTAssertTrue(app.buttons["Sew it, \(BundledPack.finch.name)"].exists, "the run is as it was")
     }
 
     /// The app is killed with "Name this bird" open, nothing tapped. At the next launch, with no run, the photo waits in the
@@ -351,7 +351,7 @@ final class CaptureUITests: XCTestCase {
         let app = XCUIApplication()
         // Not the in-memory album: this one is on disk, as a birder's is.
         app.launchArguments = [
-            "-albumFile", album, "-collectionIntroShown", "YES", "-fakeRunBirds", "Haemorhous mexicanus_House Finch",
+            "-albumFile", album, "-collectionIntroShown", "YES", "-fakeRunBirds", BundledPack.finch.label,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
             "-fakeCamera", "ready", "-reduceMotion", "YES", "-acknowledgmentSeconds", "90",
         ]
@@ -373,23 +373,23 @@ final class CaptureUITests: XCTestCase {
         let photo = element(app, "name-bird-photo")
         XCTAssertTrue(photo.label.hasPrefix("Your photo, Today, "), photo.label)
         XCTAssertTrue(photo.label.contains("Near "), "the place it was taken, kept from the shutter: \(photo.label)")
-        search(app, for: "calypte")
-        let anna = app.buttons["name-bird-Calypte anna"]
+        search(app, for: BundledPack.hummingbird.genus.lowercased())
+        let anna = app.buttons["name-bird-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(anna.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(anna.label, "Anna's Hummingbird, Los Angeles, New to you here", "placed where the photo was taken")
+        XCTAssertEqual(anna.label, "\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here", "placed where the photo was taken")
         anna.tap()
         app.buttons["name-bird-add"].tap()
 
         // An add made on the phone, with no run on: the new patch's page there and then.
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Your first Anna's Hummingbird in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(BundledPack.hummingbird.name) in \(BundledPack.setName)"].exists, "screen: \(app.debugDescription.prefix(4000))")
         closeNewPatchPage(app)
         XCTAssertTrue(app.staticTexts["To name"].waitForNonExistence(timeout: 10), "named, it no longer waits; screen: \(app.debugDescription.prefix(4000))")
 
         // And it stays named.
         app.terminate()
         app.launch()
-        let sighting = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Anna's Hummingbird, ")).firstMatch
+        let sighting = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "\(BundledPack.hummingbird.name), ")).firstMatch
         XCTAssertTrue(sighting.waitForExistence(timeout: 60), "the sighting isn't in the Collection; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts["To name"].exists)
         XCTAssertFalse(app.buttons["unnamed-row"].exists)
@@ -412,18 +412,18 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         // The photo is of the run under review, so what the run heard is suggested first (#189).
         XCTAssertTrue(app.staticTexts["Heard this run"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.buttons["name-bird-Haemorhous mexicanus"].exists, "screen: \(app.debugDescription.prefix(3000))")
-        search(app, for: "allen")
-        let allens = app.buttons["name-bird-Selasphorus sasin"]
+        XCTAssertTrue(app.buttons["name-bird-\(BundledPack.finch.scientificName)"].exists, "screen: \(app.debugDescription.prefix(3000))")
+        search(app, for: BundledPack.otherHummingbird.genus.lowercased())
+        let allens = app.buttons["name-bird-\(BundledPack.otherHummingbird.scientificName)"]
         XCTAssertTrue(allens.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         allens.tap()
         app.buttons["name-bird-add"].tap()
 
         // The run has ended: the patch is sewn now, on the phone, over the review.
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
         closeNewPatchPage(app)
         XCTAssertTrue(app.navigationBars["Your run"].exists, "still in the review")
-        XCTAssertTrue(app.buttons.matching(identifier: "seen-row-Selasphorus sasin").firstMatch.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons.matching(identifier: "seen-row-\(BundledPack.otherHummingbird.scientificName)").firstMatch.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(rows.count, 0, "named, it no longer waits anywhere")
     }
 
@@ -454,15 +454,15 @@ final class CaptureUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Likely here now"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.staticTexts["Heard this run"].exists)
         XCTAssertFalse(app.staticTexts["In your field guides"].exists)
-        search(app, for: "black phoebe")
-        let phoebe = app.buttons["name-bird-Sayornis nigricans"]
+        search(app, for: BundledPack.phoebe.name.lowercased())
+        let phoebe = app.buttons["name-bird-\(BundledPack.phoebe.scientificName)"]
         XCTAssertTrue(phoebe.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         phoebe.tap()
         let add = app.buttons["name-bird-add"]
         XCTAssertEqual(add.label, "Add sighting")
         add.tap()
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForNonExistence(timeout: 10))
-        let said = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Black Phoebe seen again, ")).firstMatch
+        let said = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "\(BundledPack.phoebe.name) seen again, ")).firstMatch
         XCTAssertTrue(said.waitForExistence(timeout: 10), "no acknowledgment in the Collection; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(rows.count, 1, "one still waits")
         XCTAssertNotEqual(summary.label, before, "the named one is a sighting now: \(summary.label)")
@@ -488,14 +488,14 @@ final class CaptureUITests: XCTestCase {
         // The button waits for the run to be listening.
         XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 120), "the glasses run didn't start; screen: \(app.debugDescription.prefix(4000))")
         capture(app)
-        search(app, for: "allen")
-        let allens = app.buttons["name-bird-Selasphorus sasin"]
+        search(app, for: BundledPack.otherHummingbird.genus.lowercased())
+        let allens = app.buttons["name-bird-\(BundledPack.otherHummingbird.scientificName)"]
         XCTAssertTrue(allens.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         allens.tap()
         app.buttons["name-bird-add"].tap()
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Keep listening"].tap()
-        XCTAssertTrue(app.buttons["seen-row-Selasphorus sasin"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons["seen-row-\(BundledPack.otherHummingbird.scientificName)"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(app.buttons["Stop listening"].exists, "the run is still on")
     }
 }
