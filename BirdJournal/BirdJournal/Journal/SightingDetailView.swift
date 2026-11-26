@@ -48,9 +48,10 @@ struct SightingDetailView: View {
 
     var body: some View {
         if let sighting {
-            let reference = library.species(scientificName: sighting.scientificName)
-            let commonName = library.commonName(for: sighting)
             let patch = collectionStore.collection.patch(of: sighting.identifier)
+            // The pack of the sighting's own set first (issue #207), then a download, then the bundled pack.
+            let reference = library.species(scientificName: sighting.scientificName, setID: patch?.placement.setID)
+            let commonName = library.commonName(for: sighting)
             let leadPhoto = sighting.attachedPhotoPaths.first
             ScrollViewReader { proxy in
             PaperPage {

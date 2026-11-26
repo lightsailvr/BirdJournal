@@ -52,7 +52,7 @@ struct FieldGuideView: View {
                 }
                 LazyVStack(spacing: 16) {
                     ForEach(onPhone) { set in
-                        SetTile(set: set, progress: collection.progress(of: set.id))
+                        SetTile(set: set, progress: collection.progress(of: set))
                     }
                 }
                 .padding(.top, 8)
@@ -61,7 +61,7 @@ struct FieldGuideView: View {
                         .id("atlas-new")
                     LazyVStack(spacing: 16) {
                         ForEach(elsewhere) { set in
-                            SetTile(set: set, progress: collection.progress(of: set.id))
+                            SetTile(set: set, progress: collection.progress(of: set))
                         }
                     }
                     .padding(.top, 12)

@@ -29,13 +29,13 @@ final class CurrentPlace {
         self.location = location
         self.defaults = defaults
         let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.set(id: id) != nil ? id : nil }
-        let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
+        let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection(), among: library.knownCardSets)
         setID = id
     }
 
     func prepareForLaunch() async {
         let remembered = defaults.string(forKey: Self.rememberedKey).flatMap { id in library.set(id: id) != nil ? id : nil }
-        let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection())
+        let id = remembered ?? LocalSet.choose(coordinate: nil, in: collection(), among: library.knownCardSets)
         let cover = id.flatMap(library.cover(setID:))
         let image = await SetCoverImage.load(cover)
         setID = id
@@ -46,7 +46,7 @@ final class CurrentPlace {
     /// One read of the last known position, and the set it picks. If that's a different set (or a better cover of the same one),
     /// its cover decodes off the main actor and then everything changes at once.
     func refresh() async {
-        guard let id = LocalSet.choose(coordinate: location.lastKnownCoordinate(), in: collection()) else { return }
+        guard let id = LocalSet.choose(coordinate: location.lastKnownCoordinate(), in: collection(), among: library.knownCardSets) else { return }
         if defaults.string(forKey: Self.rememberedKey) != id { defaults.set(id, forKey: Self.rememberedKey) }
         let cover = library.cover(setID: id)
         guard id != setID || cover != shownCover else { return }

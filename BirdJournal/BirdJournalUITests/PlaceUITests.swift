@@ -30,7 +30,9 @@ final class PlaceUITests: XCTestCase {
         }
     }
 
-    /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set.
+    /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set: the
+    /// set of the newest sighting that a set took. San Diego's field guide isn't on this phone, so a sighting there is
+    /// Uncharted (issue #207) and leaves the bundled set, where it used to make San Diego the last set.
     @MainActor
     func testTheFallbackOrderWithSightings() {
         let inSanDiego = ["-seedNewestAt", "san-diego"]
@@ -38,10 +40,10 @@ final class PlaceUITests: XCTestCase {
         expectPainting(of: "California Deserts", in: app)
         app.terminate()
         app = launch(inSanDiego + ["-autoLocation", "kansas"])
-        expectPainting(of: "San Diego", in: app)
+        expectPainting(of: "Los Angeles", in: app)
         app.terminate()
         app = launch(inSanDiego + ["-autoLocation", "denied"])
-        expectPainting(of: "San Diego", in: app)
+        expectPainting(of: "Los Angeles", in: app)
         app.terminate()
         app = launch(["-autoLocation", "denied", "-currentPlaceSetID", ""])
         expectPainting(of: "Los Angeles", in: app)
@@ -78,8 +80,8 @@ final class PlaceUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 10), "the set's page; screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// Offline, a set the phone knows only from what shipped has its tile and page, with no Download to offer, and sewing a patch in
-    /// it would count.
+    /// Offline, a set the phone knows only from what shipped has its tile and page, with no Download to offer. It says that
+    /// birds found there aren't sewn into it until its field guide is on the phone (issue #207).
     @MainActor
     func testASetKnownOnlyFromWhatShippedOpensInTheAtlas() {
         let app = launch(["-autoLocation", "joshua-tree", "-autoScreen", "guide"])
@@ -95,5 +97,6 @@ final class PlaceUITests: XCTestCase {
         desert.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
         XCTAssertTrue(app.navigationBars["California Deserts"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["155 still out there"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "aren't sewn into this set")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 }
