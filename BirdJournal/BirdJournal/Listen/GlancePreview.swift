@@ -1,4 +1,5 @@
 #if DEBUG
+import Pack
 import SwiftUI
 import UIKit
 import WidgetKit
@@ -8,9 +9,14 @@ import WidgetKit
 /// surfaces themselves are checked by hand on a phone.
 struct GlancePreview: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(PackLibrary.self) private var library
 
-    private static let run = RunSnapshot(phase: .listening, startedAt: .now.addingTimeInterval(-2_532), birdsHeard: 3, newPatchesWaiting: 1, setID: "us-ca-la")
-    private static let empty = WidgetSnapshot(progress: .init(setID: "us-ca-la", setName: "Los Angeles", sewn: 0, total: 160))
+    private static let run = RunSnapshot(phase: .listening, startedAt: .now.addingTimeInterval(-2_532), birdsHeard: 3, newPatchesWaiting: 1, setID: SampleBirds.setID)
+    /// The bundled pack's set with nothing sewn.
+    private var empty: WidgetSnapshot {
+        let set = library.set(id: SampleBirds.setID)
+        return WidgetSnapshot(progress: .init(setID: SampleBirds.setID, setName: set?.name ?? "", sewn: 0, total: set?.species.count ?? 0))
+    }
 
     /// `-glancePage widgets`: the widgets alone, so they fit one screenshot.
     private static var showsWidgets: Bool { UserDefaults.standard.string(forKey: "glancePage") == "widgets" }
@@ -25,10 +31,10 @@ struct GlancePreview: View {
                     if let snapshot {
                         HStack(spacing: 14) {
                             widget(snapshot, image, .systemSmall, width: 170)
-                            widget(Self.empty, nil, .systemSmall, width: 170)
+                            widget(empty, nil, .systemSmall, width: 170)
                         }
                         widget(snapshot, image, .systemMedium, width: 354)
-                        widget(Self.empty, nil, .systemMedium, width: 354)
+                        widget(empty, nil, .systemMedium, width: 354)
                     } else {
                         Text("No widget files were written.")
                     }
