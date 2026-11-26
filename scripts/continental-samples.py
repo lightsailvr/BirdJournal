@@ -88,7 +88,10 @@ def artist(letter: str, data: dict, out: Path, comfy: str) -> PatchArtist:
     art_lock = ArtLock(folder / "references.json", {
         species_id: {"photos": [bird["photo"]], "isolate_seed": bird["isolate_seed"], "common_name": bird["common_name"]} for species_id, bird in birds.items()
     })
-    pins = {species_id: PatchPin(bird.get("setting", "perch"), None, bird.get("markings"), None, bird.get("dark_clause", True)) for species_id, bird in birds.items()}
+    # A candidate's own markings for a bird follow the bird's: what a pack's overrides.json would say of it in that edition.
+    own = candidate.get("markings", {})
+    pins = {species_id: PatchPin(bird.get("setting", "perch"), None, " ".join(filter(None, [bird.get("markings"), own.get(species_id)])) or None, None, bird.get("dark_clause", True))
+            for species_id, bird in birds.items()}
     canvas = tuple(candidate["canvas"]) if candidate.get("canvas") else None
     return PatchArtist(CanvasClient(comfy, canvas), pack_id=pack_id(letter), lock=PatchLock.load(folder / LOCK_FILE), art_lock=art_lock,
                        cache_dir=out / "cache" / "art", prompts=prompts, pins=pins)
@@ -226,6 +229,8 @@ def sheet(args: argparse.Namespace) -> int:
             measured = entry.get("measure")
             line = f"seed {entry.get('seed')} · shape fit {entry.get('shape_fit', '-')} · width : height {aspect:.2f}"
             line += f" · dE {measured['dE_mean']:.1f}" if measured else " · not measured"
+            if entry.get("rejected_seeds"):
+                flags.append(f"{len(entry['rejected_seeds'])} rejected before this one")
             draw.text((x + 2, y + cell + 6), line, fill=FADED_INK, font=font(16))
             draw.text((x + 2, y + cell + 28), " · ".join(flags), fill=INK, font=font(16))
         for label, words, colour in (("Shape", candidate["shape"], None), ("Cord", candidate["cord"], candidate["cord_hex"]),
@@ -240,6 +245,12 @@ def sheet(args: argparse.Namespace) -> int:
                 draw.text((margin + 96 + 34, ty + 3), f"{colour} in the app", fill=INK, font=font(18))
                 ty += 34
             ty += 12
+        for species_id, words in candidate.get("markings", {}).items():
+            draw.text((margin, ty), "Markings", fill=FADED_INK, font=font(18))
+            lines = wrap(f"for the {birds[species_id]['common_name']}, in this candidate only: {words}", 17, text_width - 110 - 20)
+            for i, text in enumerate(lines):
+                draw.text((margin + 96, ty + i * 22), text, fill=INK, font=font(17))
+            ty += len(lines) * 22 + 12
         draw.text((margin, ty), f"width : height {candidate['aspect']:g} : 1" + (f" · canvas {candidate['canvas'][0]} x {candidate['canvas'][1]}" if candidate.get("canvas") else ""), fill=FADED_INK, font=font(17))
 
     # The eight editions, for comparison: the same two species' approved patches.
