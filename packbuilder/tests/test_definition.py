@@ -56,3 +56,19 @@ def test_la_pack_is_about_150_species():
     definition = PackDefinition.load(PACKS / "us-ca-la" / "pack.json")
     assert 140 <= len(definition.species) <= 170
     assert json.loads((PACKS / "us-ca-la" / "pack.json").read_text())["inat_created_before"] == "2026-09-26"
+
+
+def test_the_north_america_pack_is_the_approved_list_bounded_by_the_two_countries():
+    """Issue #212: the list drafted by `packbuilder draft-continental` (#211), as the maintainer approved it."""
+    definition = PackDefinition.load(PACKS / "north-america" / "pack.json")
+    assert (definition.id, definition.name, definition.region, definition.version) == ("north-america", "North America", "United States and Canada", 1)
+    assert definition.set.edition.name == "Continental edition" and definition.set.edition.theme
+    [part] = definition.set.boundary
+    assert (part.name, part.natural_earth_countries) == ("United States and Canada", ("USA", "CAN"))
+    names = [s.scientific_name for s in definition.species]
+    assert len(names) == 300
+    # The two changes the approval made to the draft: the farmyard chicken out, the owl the geomodel has no class for in.
+    assert "Gallus gallus" not in names and "Tyto furcata" in names
+    # The definition records them, and the command that gives the list again, as the regional definitions record theirs.
+    comment = json.loads((PACKS / "north-america" / "pack.json").read_text())["comment"]
+    assert "--exclude 'Gallus gallus'" in comment and "--add 'Tyto furcata'" in comment and "draft-continental" in comment

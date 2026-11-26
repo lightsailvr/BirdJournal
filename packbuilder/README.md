@@ -380,6 +380,10 @@ and the birds without an acoustic class. Nothing is written into `packs/`: the a
 the pack's definition. A run takes a few seconds, plus a second for each bird new to the project the first time
 (below).
 
+The North America list was approved on issue #212 and is `packs/north-america/pack.json`: the command above with
+`--exclude 'Gallus gallus' --add 'Tyto furcata'`, as its `comment` records. The list is fixed at version 1 of the
+pack, since a later addition renumbers the set. A rerun now counts the pack's own birds as already in the project.
+
 - **The sample** is `cities/north-america.json`: 90 cities of the lower 48 states and southern Canada, chosen so the
   Southwest, Texas, Florida, the Northwest, the Plains and the Maritimes are all in it. Alaska and Hawaii are left out
   on purpose. Changing the file changes the draft.
