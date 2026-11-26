@@ -12,7 +12,7 @@ public struct PackSet: Codable, Sendable, Hashable, Identifiable {
         public let theme: String
     }
 
-    /// One part of the boundary: a county, a park or a hand-drawn region.
+    /// One part of the boundary: a county, a park, a hand-drawn region, or countries pushed a little offshore.
     public struct Region: Codable, Sendable, Hashable {
         public let name: String
         /// Where the boundary comes from, e.g. "US Census Bureau TIGER county 06037 (public domain)".
