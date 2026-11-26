@@ -45,7 +45,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 
    `--season` takes the most-observed species of those months too (a trip pack wants the wintering ducks and the
    migrants a yearly ranking buries); `--add` takes a species by hand (the ones heard far more than seen). A taxon the
-   label file does not name is printed as unresolved for a person to map or drop.
+   label file does not name is printed as unresolved for a person to map or drop. A continent-wide pack's list comes
+   from `packbuilder draft-continental` instead ("Continental list" below).
 2. **Describe.** Each species' English Wikipedia article (plain-text extract, cached under `cache/wikipedia/` by
    title so a rebuild is offline and gives the same text) is cut by rule into a `summary` (the lead's first sentences,
    60 words), `field_marks` (the Description section's plumage sentences, skipping measurements, 20 words: the lens
@@ -312,6 +313,55 @@ uv run packbuilder mascot-assets                            # the app's art from
 - **The cache** is `packbuilder/cache/mascot/` and gitignored; `mascot-review` needs the candidate you pick in it, and `mascot` paints a lost one again from its seed.
 - **Running it**: about 12 s a painting, plus a peeled retry now and then. On the box itself: copy `packbuilder/src`, the `art` files and the icons to a checkout-shaped folder (`~/birdjournal-art/mascot-run`), run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli mascot --comfy http://127.0.0.1:8189 --cache packbuilder/cache/mascot`, then copy `art/mascot/mascot.lock.json`, the cache and `build/mascot/` back.
 
+## Continental list
+
+`packbuilder draft-continental` (`continental.py`; issue #211, spec #206) drafts the species list of a pack for a whole
+continent, the North America set. Observation counts would be the list of its biggest cities, so it reads the BirdNET
+geomodel (the repo's `models/`, as the rarity calibration does) at the cities of a committed sample, for every bird
+and all 48 weeks:
+
+```sh
+uv run packbuilder draft-continental --cities cities/north-america.json --count 300 \
+    --report ../build/north-america-draft.md > species.json
+```
+
+It prints the `species` array of a `pack.json`, in the order the birds were taken, and with `--report` writes the
+draft as Markdown for the review: the birds in taxonomic order with the collector numbers they would have, every
+city's coverage with the birds it most misses, the birds no committed pack lists, the next 30 in line (`--runners-up`)
+and the birds without an acoustic class. Nothing is written into `packs/`: the approved list is committed by hand as
+the pack's definition. A run takes a few seconds, plus a second for each bird new to the project the first time
+(below).
+
+- **The sample** is `cities/north-america.json`: 90 cities of the lower 48 states and southern Canada, chosen so the
+  Southwest, Texas, Florida, the Northwest, the Plains and the Maritimes are all in it. Alaska and Hawaii are left out
+  on purpose. Changing the file changes the draft.
+- **Present** means an occurrence at or above the identification floor, 0.03: the reading under which the app does
+  not admit a bird it hears at a place. Readings under it count for nothing.
+- **Coast-to-coast birds first**: the birds present for two months or more (8 of the 48 weeks, in a row or not) in
+  at least 90 % of the cities, in the order of their mean occurrence over every city and week.
+- **Coverage** of a city is the share of its occurrence weight that the list's birds hold. A bird's weight there is
+  its occurrence summed over the weeks it is present; the city's is that of every bird the geomodel has, with or
+  without an acoustic class. The geomodel's insects, frogs and mammals are no part of it.
+- **Then one bird at a time**, each the one that most lifts the cities furthest behind: the bird that most reduces
+  the sum over the cities of the squared shortfall, (1 − coverage)². A point of coverage so counts in proportion to
+  how far its city is behind, twice as much at 60 % as at 80 %. A tie goes to the higher mean occurrence, then to
+  the scientific name, so the same inputs give the same list.
+- **Names** are the BirdNET+ label file's. A geomodel class is the label of the same binomial (the entry a committed
+  pack already has for it is reused whole); failing that, the one label of the same common name, printed as a rename
+  to check (the geomodel's *Leuconotopicus* woodpeckers are the label file's *Dryobates*); failing that the bird has
+  no acoustic class and is left out. The sample file's `geomodel_names` says which label a class means where its own
+  binomial is another bird's label (the geomodel's world-wide whimbrel is the Hudsonian Whimbrel here).
+- **By hand**: `--add` takes a bird whatever the geomodel says (it takes one of the places, so the count holds; a bird
+  the geomodel has no class for, the American Barn Owl, can only come in this way) and `--exclude` never takes one.
+  Both name the label's scientific name, and a name that is not a label stops the command. The pack's `comment`
+  records the command, as the regional definitions record theirs.
+- **New birds**: a bird in no committed pack gets iNaturalist's taxon of the same name and its Wikipedia link, cached
+  under `cache/api/`; one iNaturalist names differently is printed as unresolved and its entry has no taxon.
+
+The coverage figures weigh every bird by the geomodel's occurrence, which reads like a range map more than a count:
+common birds are met far more often than their weight says, and a wader the geomodel expects near every city for
+two months of passage counts as coast to coast. So the draft is read over by a birder before it becomes a list.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
@@ -393,6 +443,7 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
 | `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `patch.lock.json`, `silhouette.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's, patches' and silhouettes' sources and review, and the lore with its facts and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
+| `cities/north-america.json` | The sample cities the North America list is drafted from (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
