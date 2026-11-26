@@ -59,6 +59,67 @@ struct PackSetsOnThePhoneTests {
         #expect(Set(library.sets.map(\.id)) == known, "the Atlas still lists what it knew")
     }
 
+    static let phoebe = "Sayornis nigricans"
+
+    /// A library whose bundled pack and one download both describe the Black Phoebe, with the same photo and sound ids: the
+    /// two-species fixture under the bundled pack's id stands in for the bundled pack, and the test pack is downloaded.
+    /// Only the download has lore.
+    static func libraryWithASharedSpecies(root: URL) async throws -> PackLibrary {
+        let standIn = try #require(Bundle.module.url(forResource: "us-ca-la-v2", withExtension: "zip", subdirectory: "Fixtures"))
+        let bundled = try PackStorage(directory: root.appending(path: "Bundled")).install(zip: standIn, as: Fixtures.descriptor(for: standIn, version: 2, id: PackIndex.bundledPackID)).pack
+        let zip = try Fixtures.testPackZip()
+        let indexURL = root.appending(path: "index.json")
+        try JSONEncoder().encode(PackIndex(packs: [try Fixtures.descriptor(for: zip, version: 1)])).write(to: indexURL)
+        let library = PackLibrary(bundled: bundled, storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: indexURL, availableCapacity: { nil }, bundledCovers: .none)
+        await library.refreshIndex()
+        #expect(library.species(scientificName: phoebe)?.pack.info.id == bundled.info.id, "before the download, the bundled pack's")
+        await library.download(try #require(library.available.first))
+        #expect(library.packs.map(\.info.id) == [bundled.info.id, "test-pack"])
+        return library
+    }
+
+    @Test("a species in two packs is read from the download before the bundled pack: its text, photos and sounds")
+    func aDownloadBeforeTheBundledPack() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = try await Self.libraryWithASharedSpecies(root: root)
+        let bundled = try #require(library.bundled)
+        let download = try #require(library.pack(id: "test-pack"))
+        #expect(bundled.species(scientificName: Self.phoebe)?.lore == nil && bundled.photo(id: "inat-1") != nil && bundled.sound(id: "xc-1") != nil, "the bundled pack has the same photo and sound")
+
+        let found = try #require(library.species(scientificName: Self.phoebe))
+        #expect(found.pack.info.id == "test-pack")
+        #expect(found.species.lore?.title == "The Waterside Sentinel", "the download's text")
+        #expect(found.species == download.species(scientificName: Self.phoebe))
+        #expect(library.photo(id: "inat-1")?.pack.info.id == "test-pack")
+        #expect(library.sound(id: "xc-1")?.pack.info.id == "test-pack")
+        let photo = try #require(library.photo(id: "inat-1"))
+        #expect(photo.pack.lensImageURL(for: photo.photo).path(percentEncoded: false).hasPrefix(download.directory.path(percentEncoded: false)), "the download's own file")
+
+        try library.remove(id: "test-pack")
+
+        #expect(library.species(scientificName: Self.phoebe)?.pack.info.id == bundled.info.id, "back to the bundled pack's")
+        #expect(library.species(scientificName: Self.phoebe)?.species.lore == nil)
+        #expect(library.photo(id: "inat-1")?.pack.info.id == bundled.info.id && library.sound(id: "xc-1")?.pack.info.id == bundled.info.id)
+    }
+
+    @Test("the pack of a sighting's own set comes before both; a set with no pack on the phone, or none, reads as any other lookup")
+    func aSightingsOwnSetsPackFirst() async throws {
+        let root = try Fixtures.temporaryFolder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let library = try await Self.libraryWithASharedSpecies(root: root)
+        let bundled = try #require(library.bundled)
+
+        let inBundledSet = try #require(library.species(scientificName: Self.phoebe, setID: bundled.info.id))
+        #expect(inBundledSet.pack.info.id == bundled.info.id, "the bundled pack's, though a download has the bird")
+        #expect(inBundledSet.species.lore == nil)
+        #expect(inBundledSet.species.photos.first.map { inBundledSet.pack.lensImageURL(for: $0).path(percentEncoded: false).hasPrefix(bundled.directory.path(percentEncoded: false)) } == true)
+        #expect(library.species(scientificName: Self.phoebe, setID: "test-pack")?.pack.info.id == "test-pack")
+        #expect(library.species(scientificName: Self.phoebe, setID: nil)?.pack.info.id == "test-pack", "Uncharted: the download, then the bundled pack")
+        #expect(library.species(scientificName: Self.phoebe, setID: "us-test-elsewhere")?.pack.info.id == "test-pack", "a set whose pack isn't on the phone")
+        #expect(library.species(scientificName: "Nope nope", setID: bundled.info.id) == nil)
+    }
+
     @Test("with no pack on the phone no set takes a sighting, though the phone knows sets")
     func noPackNoPlacement() async throws {
         let root = try Fixtures.temporaryFolder()
