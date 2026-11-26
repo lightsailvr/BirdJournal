@@ -69,6 +69,9 @@ def test_the_north_america_pack_is_the_approved_list_bounded_by_the_two_countrie
     assert len(names) == 300
     # The two changes the approval made to the draft: the farmyard chicken out, the owl the geomodel has no class for in.
     assert "Gallus gallus" not in names and "Tyto furcata" in names
+    # Everything else stands as drafted: the draft's last bird keeps the place the exclusion would have given another.
+    assert "Pyrocephalus rubinus" in names and "Passerina amoena" not in names
     # The definition records them, and the command that gives the list again, as the regional definitions record theirs.
     comment = json.loads((PACKS / "north-america" / "pack.json").read_text())["comment"]
-    assert "--exclude 'Gallus gallus'" in comment and "--add 'Tyto furcata'" in comment and "draft-continental" in comment
+    assert "draft-continental" in comment
+    assert "--exclude 'Gallus gallus' --add 'Tyto furcata' --add 'Pyrocephalus rubinus'" in comment

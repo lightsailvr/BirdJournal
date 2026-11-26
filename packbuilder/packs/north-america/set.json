@@ -363,6 +363,7 @@
     {"scientificName": "Contopus virens", "commonName": "Eastern Wood Pewee"},
     {"scientificName": "Empidonax traillii", "commonName": "Willow Flycatcher"},
     {"scientificName": "Empidonax minimus", "commonName": "Least Flycatcher"},
+    {"scientificName": "Pyrocephalus rubinus", "commonName": "Scarlet Flycatcher"},
     {"scientificName": "Tyrannus verticalis", "commonName": "Western Kingbird"},
     {"scientificName": "Tyrannus tyrannus", "commonName": "Eastern Kingbird"},
     {"scientificName": "Myiarchus cinerascens", "commonName": "Ash-throated Flycatcher"},
@@ -493,7 +494,6 @@
     {"scientificName": "Cardinalis cardinalis", "commonName": "Northern Cardinal"},
     {"scientificName": "Spiza americana", "commonName": "Dickcissel"},
     {"scientificName": "Passerina caerulea", "commonName": "Blue Grosbeak"},
-    {"scientificName": "Passerina cyanea", "commonName": "Indigo Bunting"},
-    {"scientificName": "Passerina amoena", "commonName": "Lazuli Bunting"}
+    {"scientificName": "Passerina cyanea", "commonName": "Indigo Bunting"}
   ]
 }

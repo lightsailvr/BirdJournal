@@ -14,7 +14,7 @@
     "north": 83.16,
     "east": -52.56
   },
-  "comment": "The North America list (spec #206): 300 species for the United States and Canada, drafted from the BirdNET geomodel (v3.0.4) and not from observation counts (issue #211), and approved by the maintainer on issue #212 on 2026-11-26 with one exclusion and one addition. `packbuilder draft-continental --cities cities/north-america.json --count 300 --exclude 'Gallus gallus' --add 'Tyto furcata'` reads the geomodel at the 90 sample cities of the lower 48 states and southern Canada (no Alaska, no Hawaii) over all 48 weeks: first the 186 coast-to-coast birds (present at or above the 0.03 identification floor for two months or more in at least 90 % of the cities, by mean occurrence), then the bird added by hand, then 113 taken one at a time, each the one that most lifts the cities whose coverage is furthest behind (packbuilder/README.md, \"Continental list\"). Excluded: the Red Junglefowl (Gallus gallus), which the geomodel puts in every city because of farmyard chickens. Added: the American Barn Owl (Tyto furcata), which the geomodel has no class for and so cannot draft. The list holds a median of 91.4 % of a sample city's occurrence weight; the weakest city is Brownsville at 66.6 %. It is fixed at version 1 of the pack: collector numbers are positions in taxonomic order, so a later addition renumbers the set. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the order taken: the coast-to-coast birds, the addition, then the birds that lift. tests/test_definition.py checks the labels. Still to be proven by the build tickets: inat_place_ids are iNaturalist's United States (1, the fifty states and DC) and Canada (6712), read from its places API on 2026-11-26 and not yet used by a photo build (#216); inat_created_before is the day the list was approved and may move when the photos are first fetched; bounding_box is the two countries' extent with the Aleutians cut at 180° W, read only by the Open Data source and by the rarity calibration, which is to leave this pack out (#215); the pack is to be built with 3 photos a species (`--max-photos 3`) and its sounds searched in United States recordings first and Canada's when there are none, neither of which the definition carries yet (#215); the edition's theme was written from the look chosen on issue #213 (a rising sun on a far flat horizon) and is the maintainer's to reword.",
+  "comment": "The North America list (spec #206): 300 species for the United States and Canada, drafted from the BirdNET geomodel (v3.0.4) and not from observation counts (issue #211), and approved by the maintainer on issue #212 on 2026-11-26 as drafted, with one bird excluded and one added. `packbuilder draft-continental --cities cities/north-america.json --count 300 --exclude 'Gallus gallus' --add 'Tyto furcata' --add 'Pyrocephalus rubinus'` reads the geomodel at the 90 sample cities of the lower 48 states and southern Canada (no Alaska, no Hawaii) over all 48 weeks: first the 186 coast-to-coast birds (present at or above the 0.03 identification floor for two months or more in at least 90 % of the cities, by mean occurrence), then the two birds added by hand, then 112 taken one at a time, each the one that most lifts the cities whose coverage is furthest behind (packbuilder/README.md, \"Continental list\"). Excluded: the Red Junglefowl (Gallus gallus), which the geomodel puts in every city because of farmyard chickens. Added: the American Barn Owl (Tyto furcata), which the geomodel has no class for and so cannot draft. Also added, so that the approved draft stands: the Scarlet Flycatcher (Pyrocephalus rubinus, the Vermilion Flycatcher), the last bird the draft took, which the exclusion would otherwise have cost its place by reordering the last picks (the Lazuli Bunting would have come in for it). The list is therefore the draft posted on #212 less the junglefowl plus the barn owl. It holds a median of 91.3 % of a sample city's occurrence weight; the weakest city is Brownsville at 67.0 %. It is fixed at version 1 of the pack: collector numbers are positions in taxonomic order, so a later addition renumbers the set. scientific_name and common_name follow the BirdNET+ label file as in us-ca-la (species the committed packs already list reuse their entries); inat_taxon_id is iNaturalist's; wikipedia_url is iNaturalist's link for the taxon. The order is the order taken: the coast-to-coast birds, the two additions, then the birds that lift. tests/test_definition.py checks the labels. Still to be proven by the build tickets: inat_place_ids are iNaturalist's United States (1, the fifty states and DC) and Canada (6712), read from its places API on 2026-11-26 and not yet used by a photo build (#216); inat_created_before is the day the list was approved and may move when the photos are first fetched; bounding_box is the two countries' extent with the Aleutians cut at 180° W, read only by the Open Data source and by the rarity calibration, which is to leave this pack out (#215); the pack is to be built with 3 photos a species (`--max-photos 3`) and its sounds searched in United States recordings first and Canada's when there are none, neither of which the definition carries yet (#215); the edition's theme was written from the look chosen on issue #213 (a rising sun on a far flat horizon) and is the maintainer's to reword.",
   "set": {
     "edition": {
       "name": "Continental edition",
@@ -1154,6 +1154,12 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/American_barn_owl"
     },
     {
+      "scientific_name": "Pyrocephalus rubinus",
+      "common_name": "Scarlet Flycatcher",
+      "inat_taxon_id": 16447,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Vermilion_flycatcher"
+    },
+    {
       "scientific_name": "Corvus corax",
       "common_name": "Northern Raven",
       "inat_taxon_id": 8010,
@@ -1226,16 +1232,16 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Tufted_titmouse"
     },
     {
-      "scientific_name": "Pipilo maculatus",
-      "common_name": "Spotted Towhee",
-      "inat_taxon_id": 9420,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Spotted_towhee"
-    },
-    {
       "scientific_name": "Pipilo erythrophthalmus",
       "common_name": "Eastern Towhee",
       "inat_taxon_id": 9424,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Eastern_towhee"
+    },
+    {
+      "scientific_name": "Pipilo maculatus",
+      "common_name": "Spotted Towhee",
+      "inat_taxon_id": 9420,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Spotted_towhee"
     },
     {
       "scientific_name": "Spizella pusilla",
@@ -1304,16 +1310,16 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Baltimore_oriole"
     },
     {
-      "scientific_name": "Myadestes townsendi",
-      "common_name": "Townsend's Solitaire",
-      "inat_taxon_id": 12951,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Townsend's_solitaire"
-    },
-    {
       "scientific_name": "Bonasa umbellus",
       "common_name": "Ruffed Grouse",
       "inat_taxon_id": 890,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Ruffed_grouse"
+    },
+    {
+      "scientific_name": "Myadestes townsendi",
+      "common_name": "Townsend's Solitaire",
+      "inat_taxon_id": 12951,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Townsend's_solitaire"
     },
     {
       "scientific_name": "Quiscalus mexicanus",
@@ -1328,28 +1334,28 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Lesser_goldfinch"
     },
     {
-      "scientific_name": "Zenaida asiatica",
-      "common_name": "White-winged Dove",
-      "inat_taxon_id": 3460,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/White-winged_dove"
-    },
-    {
       "scientific_name": "Piranga rubra",
       "common_name": "Summer Tanager",
       "inat_taxon_id": 9915,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Summer_tanager"
     },
     {
-      "scientific_name": "Spatula cyanoptera",
-      "common_name": "Cinnamon Teal",
-      "inat_taxon_id": 558434,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Cinnamon_teal"
+      "scientific_name": "Zenaida asiatica",
+      "common_name": "White-winged Dove",
+      "inat_taxon_id": 3460,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/White-winged_dove"
     },
     {
       "scientific_name": "Troglodytes hiemalis",
       "common_name": "Winter Wren",
       "inat_taxon_id": 1720022,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Winter_wren"
+    },
+    {
+      "scientific_name": "Spatula cyanoptera",
+      "common_name": "Cinnamon Teal",
+      "inat_taxon_id": 558434,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Cinnamon_teal"
     },
     {
       "scientific_name": "Passerina caerulea",
@@ -1460,22 +1466,16 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Rock_wren"
     },
     {
-      "scientific_name": "Egretta caerulea",
-      "common_name": "Little Blue Heron",
-      "inat_taxon_id": 4937,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Little_blue_heron"
-    },
-    {
       "scientific_name": "Aegolius acadicus",
       "common_name": "Northern Saw-whet Owl",
       "inat_taxon_id": 20356,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_saw-whet_owl"
     },
     {
-      "scientific_name": "Coccyzus americanus",
-      "common_name": "Yellow-billed Cuckoo",
-      "inat_taxon_id": 1965,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Yellow-billed_cuckoo"
+      "scientific_name": "Poecile carolinensis",
+      "common_name": "Carolina Chickadee",
+      "inat_taxon_id": 144814,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Carolina_chickadee"
     },
     {
       "scientific_name": "Sialia currucoides",
@@ -1484,16 +1484,22 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Mountain_bluebird"
     },
     {
+      "scientific_name": "Egretta caerulea",
+      "common_name": "Little Blue Heron",
+      "inat_taxon_id": 4937,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Little_blue_heron"
+    },
+    {
       "scientific_name": "Piranga ludoviciana",
       "common_name": "Western Tanager",
       "inat_taxon_id": 9919,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Western_tanager"
     },
     {
-      "scientific_name": "Poecile carolinensis",
-      "common_name": "Carolina Chickadee",
-      "inat_taxon_id": 144814,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Carolina_chickadee"
+      "scientific_name": "Coccyzus americanus",
+      "common_name": "Yellow-billed Cuckoo",
+      "inat_taxon_id": 1965,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Yellow-billed_cuckoo"
     },
     {
       "scientific_name": "Podiceps grisegena",
@@ -1592,12 +1598,6 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Northern_shrike"
     },
     {
-      "scientific_name": "Geococcyx californianus",
-      "common_name": "Greater Roadrunner",
-      "inat_taxon_id": 1986,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Greater_roadrunner"
-    },
-    {
       "scientific_name": "Corvus ossifragus",
       "common_name": "Fish Crow",
       "inat_taxon_id": 8001,
@@ -1614,6 +1614,12 @@
       "common_name": "Two-barred Crossbill",
       "inat_taxon_id": 10423,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Two-barred_crossbill"
+    },
+    {
+      "scientific_name": "Geococcyx californianus",
+      "common_name": "Greater Roadrunner",
+      "inat_taxon_id": 1986,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Greater_roadrunner"
     },
     {
       "scientific_name": "Nyctanassa violacea",
@@ -1640,16 +1646,16 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Brown_pelican"
     },
     {
-      "scientific_name": "Numenius americanus",
-      "common_name": "Long-billed Curlew",
-      "inat_taxon_id": 3906,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Long-billed_curlew"
-    },
-    {
       "scientific_name": "Larus marinus",
       "common_name": "Great Black-backed Gull",
       "inat_taxon_id": 4368,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Great_black-backed_gull"
+    },
+    {
+      "scientific_name": "Numenius americanus",
+      "common_name": "Long-billed Curlew",
+      "inat_taxon_id": 3906,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Long-billed_curlew"
     },
     {
       "scientific_name": "Catherpes mexicanus",
@@ -1682,28 +1688,28 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Black-headed_grosbeak"
     },
     {
-      "scientific_name": "Myiarchus cinerascens",
-      "common_name": "Ash-throated Flycatcher",
-      "inat_taxon_id": 16010,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Ash-throated_flycatcher"
-    },
-    {
       "scientific_name": "Buteo regalis",
       "common_name": "Ferruginous Hawk",
       "inat_taxon_id": 5181,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Ferruginous_hawk"
     },
     {
-      "scientific_name": "Egretta tricolor",
-      "common_name": "Tricolored Heron",
-      "inat_taxon_id": 4938,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Tricolored_heron"
+      "scientific_name": "Myiarchus cinerascens",
+      "common_name": "Ash-throated Flycatcher",
+      "inat_taxon_id": 16010,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Ash-throated_flycatcher"
     },
     {
       "scientific_name": "Perisoreus canadensis",
       "common_name": "Canada Jay",
       "inat_taxon_id": 8335,
       "wikipedia_url": "https://en.wikipedia.org/wiki/Canada_jay"
+    },
+    {
+      "scientific_name": "Egretta tricolor",
+      "common_name": "Tricolored Heron",
+      "inat_taxon_id": 4938,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Tricolored_heron"
     },
     {
       "scientific_name": "Setophaga townsendi",
@@ -1730,16 +1736,16 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Varied_thrush"
     },
     {
-      "scientific_name": "Botaurus exilis",
-      "common_name": "Least Bittern",
-      "inat_taxon_id": 1578960,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Least_bittern"
-    },
-    {
       "scientific_name": "Callipepla californica",
       "common_name": "California Quail",
       "inat_taxon_id": 1409,
       "wikipedia_url": "https://en.wikipedia.org/wiki/California_quail"
+    },
+    {
+      "scientific_name": "Botaurus exilis",
+      "common_name": "Least Bittern",
+      "inat_taxon_id": 1578960,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Least_bittern"
     },
     {
       "scientific_name": "Plectrophenax nivalis",
@@ -1808,12 +1814,6 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Cassin's_finch"
     },
     {
-      "scientific_name": "Nannopterum brasilianum",
-      "common_name": "Neotropic Cormorant",
-      "inat_taxon_id": 1289601,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Neotropic_cormorant"
-    },
-    {
       "scientific_name": "Melanitta americana",
       "common_name": "Black Scoter",
       "inat_taxon_id": 144220,
@@ -1826,10 +1826,10 @@
       "wikipedia_url": "https://en.wikipedia.org/wiki/Hooded_warbler"
     },
     {
-      "scientific_name": "Passerina amoena",
-      "common_name": "Lazuli Bunting",
-      "inat_taxon_id": 10234,
-      "wikipedia_url": "https://en.wikipedia.org/wiki/Lazuli_bunting"
+      "scientific_name": "Nannopterum brasilianum",
+      "common_name": "Neotropic Cormorant",
+      "inat_taxon_id": 1289601,
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Neotropic_cormorant"
     }
   ]
 }
