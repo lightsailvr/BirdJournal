@@ -27,7 +27,7 @@ struct PackDetailView: View {
         PaperPage {
             VStack(alignment: .leading, spacing: 0) {
                 let line = [edition, installed?.info.region ?? descriptor?.region].compactMap { $0?.isEmpty == false ? $0 : nil }.joined(separator: ", ").nilIfEmpty
-                let progress = library.set(id: id) != nil ? collectionStore.collection.progress(of: id) : nil
+                let progress = library.set(id: id).map(collectionStore.collection.progress(of:))
                 PackPlate(setID: id, line: line, progress: progress)
                     .padding(.top, 4)
                 if let installed {
@@ -87,7 +87,7 @@ struct PackDetailView: View {
 
                 if isDownload || isBundledUpdate {
                     SectionTitle("Storage")
-                    Text(isBundledUpdate ? "Removing this update goes back to the copy in the app. Your collection is not touched." : "Removing the download frees its space. Your collection keeps every patch, sighting, note and original photo; its birds are then named without photos until it is downloaded again.")
+                    Text(isBundledUpdate ? "Removing this update goes back to the copy in the app. Your collection is not touched." : "Removing the download frees its space. Your collection keeps every sighting, note and original photo. Until it is downloaded again, this set's patches move to another set on your iPhone that lists the bird, or to Uncharted, and its birds are named without photos.")
                         .font(JournalFont.supporting)
                         .foregroundStyle(Color.inkSecondary)
                         .padding(.top, 12)
@@ -117,7 +117,7 @@ struct PackDetailView: View {
                 }
             }
         } message: {
-            Text("Your patches, sightings, notes and original photos stay. The field guide can be downloaded again.")
+            Text("Your sightings, notes and original photos stay. This set's patches move to another set on your iPhone, or to Uncharted, until the field guide is downloaded again.")
         }
         .alert("The download could not be removed", isPresented: Binding(get: { removalError != nil }, set: { if !$0 { removalError = nil } })) {
             Button("OK") { removalError = nil }

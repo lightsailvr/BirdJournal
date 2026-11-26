@@ -2,7 +2,8 @@ import Foundation
 
 /// A set as the collection reads it (issue #54): the species of one pack's region in taxonomic order, which a birder
 /// collects toward, with the region's boundary and the edition its cards carry. The app builds these from the set
-/// definitions the packs and the pack index publish, so a set works before its pack is downloaded.
+/// definitions the packs and the pack index publish, and gives the collection the ones whose pack is on the phone: only
+/// those take sightings (issue #207).
 public struct CardSet: Sendable, Hashable, Identifiable {
     /// A point of a boundary, in degrees.
     public struct Point: Sendable, Hashable {
