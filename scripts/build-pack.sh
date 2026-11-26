@@ -5,14 +5,25 @@
 # never ends up in the app binary. Both write build/packs/<id>.zip, the release asset. Needs uv (`brew install uv`);
 # uv creates the Python environment on first run.
 #
-#   scripts/build-pack.sh                 # the bundled Los Angeles pack, us-ca-la
+#   scripts/build-pack.sh                 # the pack the manifest marks bundled, to packs/<id>/
 #   scripts/build-pack.sh us-ca-sd        # a downloadable pack, to build/packs/us-ca-sd/
-#   scripts/build-pack.sh us-ca-la --limit 60
+#   scripts/build-pack.sh us-ca-sd --limit 60
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-pack_id="${1:-us-ca-la}"
-shift $(( $# > 0 ? 1 : 0 ))
+if (($#)); then
+    pack_id="$1"
+    shift
+else
+    # No pack named: the one the app bundles, as the manifest says, and only if it says so of exactly one.
+    pack_id="$(python3 -c 'import json, sys
+bundled = [p["id"] for p in json.load(open(sys.argv[1]))["packs"] if p.get("bundled")]
+print(bundled[0] if len(bundled) == 1 else "")' "$repo_root/packs/manifest.json")"
+    if [ -z "$pack_id" ]; then
+        echo "packs/manifest.json does not mark exactly one pack bundled: name the pack, scripts/build-pack.sh <pack id> [packbuilder build flags]" >&2
+        exit 2
+    fi
+fi
 
 if ! command -v uv >/dev/null; then
     echo "uv is required: brew install uv" >&2
