@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Album
 
 // Issue #54: cards belong to sets. A card's set is the smallest region whose boundary contains the sighting and whose
@@ -39,7 +40,7 @@ struct CardSetTests {
         ]
     )
     static let losAngeles = CardSet(
-        id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition",
+        id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition",
         species: species(count: 160, placing: [21: "Haemorhous mexicanus", 87: "Sayornis nigricans"]),
         regions: [CardSet.Region(name: "Los Angeles County", polygons: [[losAngelesCounty]])]
     )
@@ -65,7 +66,7 @@ struct CardSetTests {
     @Test("a place's set is the one whose smallest part contains it, whatever birds it lists; outside them all there's none")
     func aPlacesSet() {
         let sets = [Self.sanDiego, Self.deserts, Self.losAngeles]
-        #expect(CardSet.containing(Self.griffithPark, in: sets)?.id == "us-ca-la")
+        #expect(CardSet.containing(Self.griffithPark, in: sets)?.id == LosAngelesSet.id)
         #expect(CardSet.containing(Self.balboaPark, in: sets)?.id == "us-ca-sd")
         #expect(CardSet.containing(Self.borregoSprings, in: sets)?.id == "us-ca-desert", "Anza-Borrego wins over the county")
         #expect(CardSet.containing(Self.portland, in: sets) == nil)
@@ -122,16 +123,16 @@ struct CardSetTests {
             ],
             sets: Self.sets
         )
-        let losAngeles = collection.progress(of: "us-ca-la")
-        #expect(losAngeles == SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 2, total: 160))
+        let losAngeles = collection.progress(of: LosAngelesSet.id)
+        #expect(losAngeles == SetProgress(setID: LosAngelesSet.id, name: "Los Angeles", collected: 2, total: 160))
         #expect(losAngeles.text == "Los Angeles, 2 of 160")
         #expect(losAngeles.sewnText == "2 of 160 sewn")
         #expect(losAngeles.stillOutThereText == "158 still out there")
-        #expect(SetProgress(setID: "us-ca-la", name: "Los Angeles", collected: 160, total: 160).stillOutThereText == "All 160 sewn")
+        #expect(SetProgress(setID: LosAngelesSet.id, name: "Los Angeles", collected: 160, total: 160).stillOutThereText == "All 160 sewn")
         #expect(collection.progress(of: "us-ca-sd").collected == 1, "the phoebe; the finch was never added in San Diego")
         #expect(collection.progress(of: "us-ca-desert").collected == 0)
-        #expect(collection.progress.map(\.setID) == ["us-ca-la", "us-ca-sd"], "only sets with a card, most collected first")
-        #expect(collection.collected(in: "us-ca-la") == ["Haemorhous mexicanus", "Sayornis nigricans"])
+        #expect(collection.progress.map(\.setID) == [LosAngelesSet.id, "us-ca-sd"], "only sets with a card, most collected first")
+        #expect(collection.collected(in: LosAngelesSet.id) == ["Haemorhous mexicanus", "Sayornis nigricans"])
         #expect(collection.collected(in: "us-ca-sd") == ["Sayornis nigricans"])
     }
 
