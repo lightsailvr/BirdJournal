@@ -23,7 +23,7 @@ struct BirdPacksView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Photos, sounds and field notes, ready offline. A download adds reference material, never birds; removing one keeps every patch, sighting, note and original photo.")
+                Text("Photos, sounds and field notes, ready offline. A download adds reference material, never birds; removing one keeps every sighting, note and original photo, and its set's patches come back with it.")
                     .font(JournalFont.body)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 2)

@@ -65,7 +65,7 @@ struct PackSetsOnThePhoneTests {
     /// two-species fixture under the bundled pack's id stands in for the bundled pack, and the test pack is downloaded.
     /// Only the download has lore.
     static func libraryWithASharedSpecies(root: URL) async throws -> PackLibrary {
-        let standIn = try #require(Bundle.module.url(forResource: "us-ca-la-v2", withExtension: "zip", subdirectory: "Fixtures"))
+        let standIn = try #require(Bundle.module.url(forResource: "\(PackIndex.bundledPackID)-v2", withExtension: "zip", subdirectory: "Fixtures"))
         let bundled = try PackStorage(directory: root.appending(path: "Bundled")).install(zip: standIn, as: Fixtures.descriptor(for: standIn, version: 2, id: PackIndex.bundledPackID)).pack
         let zip = try Fixtures.testPackZip()
         let indexURL = root.appending(path: "index.json")

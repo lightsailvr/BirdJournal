@@ -26,6 +26,9 @@ final class PlaceUITests: XCTestCase {
         for (place, set) in [("joshua-tree", "California Deserts"), ("orlando", "Orlando & Space Coast"), ("san-diego", "San Diego"), ("oakland", "SF Bay Area"), ("griffith", "Los Angeles")] {
             let app = launch(["-autoLocation", place])
             expectPainting(of: set, in: app)
+            // Only the bundled set's field guide is on this phone: the others say that birds found there aren't sewn into them (issue #207).
+            let notOnPhone = app.staticTexts["This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set."]
+            XCTAssertEqual(notOnPhone.waitForExistence(timeout: set == "Los Angeles" ? 1 : 5), set != "Los Angeles", "\(set); screen: \(app.debugDescription.prefix(3000))")
             app.terminate()
         }
     }
