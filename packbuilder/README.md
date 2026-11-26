@@ -126,8 +126,10 @@ The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `w
 A pack's species make a set the birder collects toward (issue #54). The `set` section of `pack.json` names the edition
 (`name`, shown on cards that are not Legendary, and `theme`, what pack art is painted in) and the region boundary as
 named parts, each one of `census_county` (the five-digit FIPS code; US Census Bureau TIGERweb, public domain),
-`nps_park` (the NPS unit code; NPS Land Resources Division boundaries, public domain) or `polygon` (a hand-drawn
-GeoJSON file beside `pack.json`, for a region that is neither, such as the Coachella Valley in `us-ca-desert/regions/`).
+`nps_park` (the NPS unit code; NPS Land Resources Division boundaries, public domain), `polygon` (a hand-drawn
+GeoJSON file beside `pack.json`, for a region that is neither, such as the Coachella Valley in `us-ca-desert/regions/`)
+or `natural_earth_countries` (a list of countries merged into one outline, by `ADM0_A3` code: `["USA", "CAN"]`;
+Natural Earth 1:10m Admin 0 – Countries, public domain; see "A set bounded by countries" below).
 
 `uv run packbuilder set packs/<id>` fetches the boundaries into `cache/boundaries/`, simplifies each part with
 Douglas–Peucker (0.5 km by default, `--tolerance-km`), drops islets and holes under 1 km², orders the species by the
@@ -139,6 +141,52 @@ phone gives a sighting to the smallest containing part (Anza-Borrego beats San D
 
 `uv run packbuilder index --out <file>` writes the pack index from `packs/manifest.json` with each pack's `set.json`;
 `scripts/publish-pack-index.sh` runs it before uploading.
+
+### A set bounded by countries
+
+The North America set's boundary is the United States and Canada (issue #210, `countries.py`). Its source is Natural
+Earth's 1:10m "Admin 0 – Countries" and "Minor Islands", version 5.1.2, fetched once from Natural Earth's own
+repository (`nvkelso/natural-earth-vector` at the `v5.1.2` tag) into `cache/boundaries/` and checked against the
+SHA-256s in `countries.py`. Natural Earth is in the public domain ("All versions of Natural Earth raster + vector map data found on
+this website are in the public domain", [terms of use](https://www.naturalearthdata.com/about/terms-of-use/), read
+2026-11-26), so the outline may ship in the index, the packs and the app; no credit is required, and the part's
+`source` line, which the pack's `LICENSE` repeats, names it all the same. Natural Earth draws dependencies as units of
+their own (Puerto Rico `PRI`, Guam `GUM`, the US Virgin Islands `VIR`, American Samoa `ASM`, the Northern Marianas
+`MNP`, the minor outlying islands `UMI`), so `USA` is the 50 states and DC, and the Great Lakes are inside the two
+countries' polygons.
+
+The countries file leaves out islands of a few square kilometres or less; the minor islands file draws many of them
+but does not say whose they are. An islet goes to the part when the nearest country's land is one of the part's and
+no farther than 200 km (`ISLET_REACH_KM`): Monhegan, the Dry Tortugas, the Farallones, Santa Barbara Island and
+French Frigate Shoals are in this way (264 islets in all, none of them a territory's or a neighbour's). What neither
+file draws stays outside when it lies beyond the push: Machias Seal Island, Seal Island (Nova Scotia), Funk Island and
+Triangle Island as built. A definition can add such a place as a part of its own (a hand-drawn `polygon`, or an
+`nps_park`).
+
+A country part is not simplified like a county. The countries and their islets are merged and then:
+
+1. **Pushed 15 km offshore** (`OFFSHORE_KM`), so a pier or a boat counts; sea the push encloses is filled in.
+2. **Simplified to 10 km** (`COAST_TOLERANCE_KM`, Douglas–Peucker). The tolerance is less than the push, so the line
+   never comes back onto land: it runs between 4 and 25 km off the coast as Natural Earth draws it. The simplifier
+   is the builder's own: GEOS's also drops a ring's first point, and then moved the line 12 km.
+3. **Cut back at a land border.** Every other country's land is taken out again, so the push goes out to sea and not
+   into Mexico. The border keeps a 2 km margin on the neighbour's side (`BORDER_MARGIN_KM`) and is simplified to 1 km
+   (`BORDER_TOLERANCE_KM`), so no place in the named countries falls outside (Santa Ana NWR and Border Field State
+   Park are on the line) and at most 3 km of the neighbour is inside (about 5,200 km² of Mexico along 3,100 km).
+4. **Cut at 180°**, so the western Aleutians are polygons of their own east of the antimeridian and the phone's plain
+   longitude test holds. Coordinates are rounded to three decimals (about 110 m).
+
+As built on 2026-11-26 the United States and Canada are 62 polygons of 1,632 points, 28,602 bytes in the index
+(about 10.6 KB gzipped), beside 13 to 44 KB for a regional set's whole definition. `--tolerance-km` does not apply to
+a country part; change the constants, and the `source` line changes with them, so `build` and `index` refuse the
+stale `set.json`. Other settings measured the same day (bytes of the part in the index): 10 km push and 5 km
+tolerance 54 KB, 12 and 8 36 KB, 20 and 15 20 KB.
+
+No pack definition has this boundary until the North America list is approved, so it is pinned as a fixture where
+the Album package's placement test reads it:
+`uv run packbuilder set ../BirdJournal/BirdJournalKit/Tests/AlbumTests/Fixtures/united-states-and-canada` rebuilds it,
+and `tests/test_sets.py` checks the sample places against it and, when Natural Earth is in the cache, that the fixture
+is what the builder draws.
 
 ## Stats and type lines
 
@@ -396,7 +444,7 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
-| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks), `art/` (the paintings by SHA-256 and the isolated reference birds). |
+| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` (counties, parks and the Natural Earth countries) and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks), `art/` (the paintings by SHA-256 and the isolated reference birds). |
 
 Output goes to the repo's `packs/<id>/`, which is not committed: the built pack is published as a GitHub Release asset
 and fetched by `scripts/download-pack.sh` (see `packs/README.md`).
