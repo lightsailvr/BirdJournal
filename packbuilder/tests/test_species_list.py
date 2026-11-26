@@ -5,7 +5,7 @@ import json
 import pytest
 
 from packbuilder.definition import PackDefinition
-from packbuilder.species_list import Ranked, draft, wikipedia_guess
+from packbuilder.species_list import Ranked, draft, named_taxon, wikipedia_guess
 
 LABELS = {
     "Sayornis nigricans": "Black Phoebe",
@@ -93,3 +93,19 @@ def test_a_definition_takes_one_place_or_several(tmp_path):
     (tmp_path / "pack.json").write_text(json.dumps(base | {"inat_place_ids": []}))
     with pytest.raises(ValueError):
         PackDefinition.load(tmp_path / "pack.json")
+
+
+def test_a_species_named_by_hand_is_iNaturalists_taxon_of_exactly_that_name(tmp_path):
+    # The cached answer to a search for "Auriparus flaviceps": the search also returns taxa that only mention it.
+    (tmp_path / "api").mkdir()
+    (tmp_path / "api" / "taxon-name-Auriparus_flaviceps.json").write_text(json.dumps([
+        {"id": 999, "name": "Auriparus flaviceps ornatus", "rank": "subspecies"},
+        {"id": 13632, "name": "Auriparus flaviceps", "rank": "species", "preferred_common_name": "Verdin", "wikipedia_url": "http://en.wikipedia.org/wiki/Verdin"},
+    ]))
+    (tmp_path / "api" / "taxon-name-Dryobates_arizonae.json").write_text(json.dumps([{"id": 1, "name": "Leuconotopicus arizonae", "rank": "species"}]))
+
+    verdin = named_taxon("Auriparus flaviceps", tmp_path)
+
+    assert (verdin.taxon_id, verdin.common_name, verdin.rank, verdin.count) == (13632, "Verdin", "species", 0)
+    with pytest.raises(LookupError):
+        named_taxon("Dryobates arizonae", tmp_path)
