@@ -309,6 +309,7 @@ struct PatchWordsTests {
         #expect(PatchEdition.of(setID: "us-pnw").shape == .pentagon)
         #expect(PatchEdition.of(setID: "us-ny-nyc").shape == .roundedSquare)
         #expect(PatchEdition.of(setID: "us-la-south").shape == .diamond)
+        #expect(PatchEdition.of(setID: "north-america").shape == .wideRectangle)
         #expect(Set(ids.map { PatchEdition.of(setID: $0).cord }).count == ids.count, "and its own cord")
         #expect(ids.prefix(5).allSatisfy { PatchEdition.of(setID: $0).shape.tagDrop == 0.1 }, "the first five blanks' tags hang where they did")
         #expect(PatchEdition.of(setID: "us-la-south").shape.tagDrop > PatchEdition.of(setID: "us-pnw").shape.tagDrop, "lower under the sharper point")
