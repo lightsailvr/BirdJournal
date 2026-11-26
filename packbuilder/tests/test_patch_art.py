@@ -4,6 +4,7 @@ paints nothing; and `layers` gives the app the patch's colour, height, cord and 
 
 import hashlib
 import json
+from pathlib import Path
 
 import numpy as np
 from scipy import ndimage
@@ -353,3 +354,93 @@ def test_an_edition_sets_its_own_least_fit_and_of_the_wrong_shapes_the_nearest_i
     entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
     assert entry["attempts"] == 3 and entry["shape_fit"] == 0.91, "every try was an octagon: the nearest one is kept"
     assert "shape_limit" not in entry["edition"]
+
+
+# The Continental edition (issue #214, of #206): the maintainer's pick, candidate E of #213, "as painted".
+
+REPO = Path(__file__).resolve().parents[2]
+
+
+def test_the_continental_edition_is_the_candidate_the_maintainer_picked_and_the_eight_are_as_they_were():
+    picked = json.loads((REPO / "art" / "continental-candidates.json").read_text())["candidates"]["E"]
+    edition = PatchPrompts.load().editions["north-america"]
+    assert (edition.shape, edition.cord, edition.twill, edition.motif) == (picked["shape"], picked["cord"], picked["twill"], picked["motif"])
+    assert edition.shape.startswith("a wide rectangle lying on its long side") and edition.cord == "rich golden-yellow"
+    assert edition.outline == tuple(map(tuple, picked["outline"]))
+    assert edition.canvas == (1152, 864), "the canvas its samples held their shape on"
+
+    # A reviewed patch is painted again when its edition's painting inputs change: none of the eight's may.
+    for pack in ("us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"):
+        spec = PatchPrompts.load().editions[pack]
+        locked = {json.dumps(entry["edition"], sort_keys=True) for entry in json.loads((REPO / "packbuilder" / "packs" / pack / "patch.lock.json").read_text())["species"].values() if entry.get("edition")}
+        assert locked == {json.dumps(spec.as_dict(), sort_keys=True)}, pack
+        assert spec.canvas is None and spec.aspect is None
+
+
+def continental_artist(tmp_path, comfy) -> PatchArtist:
+    painter = artist(tmp_path, comfy)
+    painter.pack_id = "north-america"
+    painter.spec = painter.prompts.editions["north-america"]
+    return painter
+
+
+def test_a_continental_patch_is_painted_on_its_wide_canvas_and_cuts_out_to_the_wide_rectangle(tmp_path, comfy):
+    # The model fits a badge to its picture: the stub's rectangle takes 70% of the canvas's width and 66% of its height,
+    # as the samples' did (#213).
+    comfy.patch_boxes = [(0.70, 0.66)]
+    patches = continental_artist(tmp_path, comfy).paint([FINCH])
+
+    painting = comfy.paintings[0]
+    canvas = painting.node("canvas")["inputs"]
+    assert (canvas["width"], canvas["height"]) == (1152, 864)
+    for words in ("a wide rectangle lying on its long side", "rich golden-yellow", "pale lavender-grey cotton twill", "a big rising sun low on a far, flat horizon"):
+        assert words in painting.prompt
+    cut = Image.open(patches[FINCH].file)
+    alpha = np.asarray(cut)[..., 3] > 128
+    width, height = alpha.any(axis=0).sum(), alpha.any(axis=1).sum()
+    assert cut.width == SIZE and 1.38 < width / height < 1.46, "wide, as painted: about 1.42 to 1"
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["attempts"] == 1 and entry["aspect"] == pytest.approx(width / height, abs=0.01) and entry["shape_fit"] > 0.95
+    assert entry["edition"]["canvas"] == [1152, 864], "a painting input: another canvas paints the patch again"
+    assert entry["measure"]["iou"] > 0.6, "the bird inside it is still found and measured"
+
+
+def test_every_other_edition_is_painted_on_the_cards_own_canvas(tmp_path, comfy):
+    artist(tmp_path, comfy).paint([FINCH])
+    canvas = comfy.paintings[0].node("canvas")["inputs"]
+    assert (canvas["width"], canvas["height"]) == (864, 1152)
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert "canvas" not in entry["edition"] and "aspect" not in entry
+
+
+def test_a_continental_patch_that_comes_out_too_square_is_painted_again_with_the_next_seed(tmp_path, comfy):
+    """`shape_fit` cannot see it: a square fills the rectangle's outline in its own bounding box as well as a wide one."""
+    from packbuilder.patch_art import shape_fit
+    from tests.comfy_stub import patch_on_card
+
+    nearly_square = (0.56, 0.66)  # 1.13 to 1 on the wide canvas, about New York's rounded square
+    comfy.patch_boxes = [nearly_square, (0.70, 0.66)]
+    painter = continental_artist(tmp_path, comfy)
+    painter.paint([FINCH])
+    seeds = [job.seed for job in comfy.paintings]
+    assert len(seeds) == 2 and seeds[1] == seeds[0] + 1
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert entry["seed"] == seeds[1] and entry["attempts"] == 2 and 1.38 < entry["aspect"] < 1.46
+    assert shape_fit(cut_from_card(patch_on_card((1152, 864), isolated_bird(), nearly_square)), painter.spec.outline) > 0.95, "the outline alone would have kept the first"
+
+
+def test_of_continental_patches_that_all_miss_the_aspect_the_nearest_is_kept_and_the_sheet_says_so(tmp_path, comfy, monkeypatch):
+    comfy.patch_boxes = [(0.56, 0.66), (0.62, 0.66), (0.92, 0.5)]  # 1.13, 1.25 and 2.45 to 1
+    painter = continental_artist(tmp_path, comfy)
+    patches = painter.paint([FINCH])
+    seeds = [job.seed for job in comfy.paintings]
+    entry = PatchLock.load(tmp_path / "patch.lock.json").species[FINCH]
+    assert len(seeds) == 3 and entry["seed"] == seeds[1] and entry["attempts"] == 2, "the 1.25 one: nearest to 1.3 to 1.55"
+    assert 1.22 < entry["aspect"] < 1.29
+
+    import packbuilder.patch_art as patch_art
+
+    labels, draw = [], patch_art.grid
+    monkeypatch.setattr(patch_art, "grid", lambda rows, *args, **kwargs: (labels.extend(label for row in rows for _, label in row), draw(rows, *args, **kwargs))[1])
+    painter.sheets([FINCH], patches, tmp_path / "sheets")
+    assert any("WRONG ASPECT" in label for label in labels), "the review sees why it was painted three times"
