@@ -1,0 +1,22 @@
+{
+  "id": "fixture-united-states-and-canada",
+  "name": "United States and Canada",
+  "region": "United States and Canada",
+  "version": 1,
+  "inat_place_ids": [0],
+  "bounding_box": {"south": 18.0, "west": -180.0, "north": 84.0, "east": 180.0},
+  "comment": "Not a pack: a fixture (#210). `cd packbuilder && uv run packbuilder set ../BirdJournal/BirdJournalKit/Tests/AlbumTests/Fixtures/united-states-and-canada` writes set.json beside this file with the country boundary the North America set will carry, which the Album package's placement test and the builder's tests/test_sets.py read. Only the set section and the species matter; the place ids and the bounding box are placeholders, and nothing is built or painted from it. Rerun the command after changing the boundary's constants in packbuilder/src/packbuilder/countries.py.",
+  "set": {
+    "edition": {"name": "Continental edition", "theme": "a fixture: nothing is painted from it"},
+    "boundary": [
+      {"name": "United States and Canada", "natural_earth_countries": ["USA", "CAN"]}
+    ]
+  },
+  "species": [
+    {"scientific_name": "Turdus migratorius", "common_name": "American Robin", "inat_taxon_id": 12727},
+    {"scientific_name": "Branta canadensis", "common_name": "Canada Goose", "inat_taxon_id": 7089},
+    {"scientific_name": "Cardinalis cardinalis", "common_name": "Northern Cardinal", "inat_taxon_id": 9083},
+    {"scientific_name": "Buteo jamaicensis", "common_name": "Red-tailed Hawk", "inat_taxon_id": 5212},
+    {"scientific_name": "Haemorhous mexicanus", "common_name": "House Finch", "inat_taxon_id": 199840}
+  ]
+}

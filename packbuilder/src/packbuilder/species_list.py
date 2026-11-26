@@ -70,20 +70,27 @@ class SpeciesCounts:
 
     def taxon(self, scientific_name: str) -> Ranked:
         """A species named by hand, looked up by its exact name (count 0: it is not from the ranking)."""
-        cache_file = self.cache_dir / f"taxon-name-{scientific_name.replace(' ', '_')}.json"
-        if cache_file.exists():
-            results = json.loads(cache_file.read_text())
-        else:
-            params = {"q": scientific_name, "rank": "species", "is_active": "true", "per_page": 10}
-            response = session().get(TAXA, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
-            response.raise_for_status()
-            results = response.json()["results"]
-            cache_file.write_text(json.dumps(results))
-            time.sleep(self.pause_seconds)
-        for taxon in results:
-            if taxon.get("name") == scientific_name:
-                return _ranked({"count": 0, "taxon": taxon})
-        raise LookupError(f"no active iNaturalist species named {scientific_name!r}")
+        return named_taxon(scientific_name, self.cache_dir.parent, self.pause_seconds)
+
+
+def named_taxon(scientific_name: str, cache_dir: Path, pause_seconds: float = 1.0) -> Ranked:
+    """iNaturalist's active species of exactly this name, cached under `cache_dir/api`; `LookupError` when it has none
+    (the bird is under another binomial there)."""
+    cache_file = Path(cache_dir) / "api" / f"taxon-name-{scientific_name.replace(' ', '_')}.json"
+    if cache_file.exists():
+        results = json.loads(cache_file.read_text())
+    else:
+        params = {"q": scientific_name, "rank": "species", "is_active": "true", "per_page": 10}
+        response = session().get(TAXA, params=params, headers={"User-Agent": USER_AGENT}, timeout=60)
+        response.raise_for_status()
+        results = response.json()["results"]
+        cache_file.parent.mkdir(parents=True, exist_ok=True)
+        cache_file.write_text(json.dumps(results))
+        time.sleep(pause_seconds)
+    for taxon in results:
+        if taxon.get("name") == scientific_name:
+            return _ranked({"count": 0, "taxon": taxon})
+    raise LookupError(f"no active iNaturalist species named {scientific_name!r}")
 
 
 def _ranked(result: dict) -> Ranked:

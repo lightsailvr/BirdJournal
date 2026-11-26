@@ -19,6 +19,7 @@ their own (issue #113), in lore.lock.json (`lore.py`).
 `packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
+`packbuilder draft-continental --cities <file> ...`: prints a continent-wide pack's species list from the geomodel (`continental.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
 
 from __future__ import annotations
@@ -175,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
-    set_command.add_argument("--tolerance-km", type=float, default=None, help="boundary simplification tolerance in km (default sets.DEFAULT_TOLERANCE_KM)")
+    set_command.add_argument("--tolerance-km", type=float, default=None, help="simplification tolerance in km for counties, parks and hand-drawn parts (default sets.DEFAULT_TOLERANCE_KM); a part bounded by countries has its own in countries.py")
     index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
     index_command.add_argument("--out", type=Path, required=True, help="index file to write")
     index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
@@ -191,6 +192,14 @@ def main(argv: list[str] | None = None) -> int:
     draft.add_argument("--add", action="append", default=[], help="a species taken by hand, by scientific name (repeat)")
     draft.add_argument("--exclude", action="append", default=[], help="a species never taken, by scientific name (repeat)")
     draft.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    continental = commands.add_parser("draft-continental", help="print a species list for a continent-wide pack from the geomodel's occurrence at sample cities")
+    continental.add_argument("--cities", type=Path, required=True, help="the sample cities file, such as packbuilder/cities/north-america.json")
+    continental.add_argument("--count", type=int, default=300, help="how many species (default 300)")
+    continental.add_argument("--add", action="append", default=[], help="a species taken by hand, by its BirdNET+ label's scientific name (repeat)")
+    continental.add_argument("--exclude", action="append", default=[], help="a species never taken, by its BirdNET+ label's scientific name (repeat)")
+    continental.add_argument("--report", type=Path, help="also write the draft as Markdown for review: taxonomic order, each city's coverage, the new birds")
+    continental.add_argument("--runners-up", type=int, default=30, help="how many of the next birds in line the report names (default 30)")
+    continental.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
     calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition")
     calibrate.add_argument("--version", type=int, required=True, help="the calibration version; bump it for any new calibration")
     calibrate.add_argument("--out", type=Path, help="file to write (default: the Identification module's RarityCalibration.json)")
@@ -212,6 +221,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
+    if args.command == "draft-continental":
+        return _draft_continental(args)
     if args.command == "set":
         return _set(args)
     if args.command == "index":
@@ -836,6 +847,8 @@ def _thumbnails(args: argparse.Namespace) -> int:
 
 
 def _set(args: argparse.Namespace) -> int:
+    import json
+
     from packbuilder.sets import DEFAULT_TOLERANCE_KM, PublicBoundaries, Taxonomy, build_set, dump_set, polygon_area_km2
 
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -846,7 +859,8 @@ def _set(args: argparse.Namespace) -> int:
     for region in document["regions"]:
         points = sum(len(ring) for polygon in region["polygons"] for ring in polygon)
         area = sum(polygon_area_km2(polygon) for polygon in region["polygons"])
-        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km²", file=sys.stderr)
+        size = len(json.dumps(region, ensure_ascii=False, separators=(",", ":")))
+        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km², {size:,} bytes in the index", file=sys.stderr)
     print(f"wrote {args.definition / 'set.json'}: {len(document['species'])} species, {len(text):,} bytes", file=sys.stderr)
     return 0
 
@@ -887,6 +901,48 @@ def _draft(args: argparse.Namespace) -> int:
         print(f"UNRESOLVED {ranked.name} ({ranked.common_name}, taxon {ranked.taxon_id}, {ranked.count} obs): not a BirdNET label", file=sys.stderr)
     print(f"{len(result.species)} species", file=sys.stderr)
     json.dump(result.species, sys.stdout, indent=2, ensure_ascii=False)
+    print()
+    return 0
+
+
+def _draft_continental(args: argparse.Namespace) -> int:
+    import json
+    import statistics
+
+    from packbuilder import species_list
+    from packbuilder.continental import draft, load_sample, read_geomodel, report, species_entries
+    from packbuilder.sets import Taxonomy
+
+    repo = Path(__file__).resolve().parents[3]
+    sample = load_sample(args.cities)
+    occurrence, geomodel = read_geomodel(repo / "models")
+    labels = species_list.birdnet_labels(repo / "models" / "BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv")
+    try:
+        result = draft(
+            occurrence, geomodel, labels, sample.cities, args.count, add=args.add, exclude=set(args.exclude),
+            geomodel_names=sample.geomodel_names, runners_up=args.runners_up if args.report else 0,
+        )
+    except ValueError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    known: dict[str, dict] = {}
+    for entry in species_list.known_entries(sorted((repo / "packbuilder" / "packs").iterdir())).values():
+        known.setdefault(entry["scientific_name"], entry)
+    entries = species_entries(result.picks, known, lambda name: species_list.named_taxon(name, args.cache))
+    for geomodel_name, label_name in result.renamed:
+        print(f"renamed   the geomodel's {geomodel_name} as BirdNET's {label_name}: check", file=sys.stderr)
+    for name in entries.unresolved:
+        print(f"UNRESOLVED {name} ({labels[name]}): iNaturalist has no species of that name, so its entry has no taxon", file=sys.stderr)
+    weakest = min(range(len(sample.cities)), key=lambda c: result.coverage[c])
+    print(
+        f"{len(result.picks)} species, {len(entries.new)} new to the project; coverage median {100 * statistics.median(result.coverage):.1f} %, "
+        f"weakest {sample.cities[weakest].name} at {100 * result.coverage[weakest]:.1f} %", file=sys.stderr,
+    )
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(report(result, sample.cities, entries, Taxonomy.load(args.cache)), encoding="utf-8")
+        print(f"wrote {args.report}", file=sys.stderr)
+    json.dump(entries.species, sys.stdout, indent=2, ensure_ascii=False)
     print()
     return 0
 
