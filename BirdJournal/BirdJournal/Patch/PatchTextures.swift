@@ -12,6 +12,27 @@ nonisolated struct PatchArt: Hashable, Sendable {
     let ground: String
     /// Where each stitch layer starts on the order's 0...255, the last being 255 (`PackPatch`): the stitch-in's threads.
     var stitchBounds: [Int] = []
+    /// Uncharted's patch (issue #222), the one embroidery for every bird outside every set. It pictures no bird, so wherever
+    /// a tagged blank would name the bird it wears the bird's name on a paper tag, and it's no bird's own painting: an add has
+    /// no stitch-in for it, and a Guild still looks for the bird's painting in another edition.
+    var isGeneric = false
+}
+
+extension PatchArt {
+    /// The generic Uncharted patch, a feather on Uncharted's canvas round (the maintainer's pick, 2026-11-26). It ships in the
+    /// app, not in a pack, so it's there on a phone with no pack at all; nil only in a bundle without its two files, where
+    /// Uncharted falls back to its tagged blank. The numbers are `art/uncharted-patch.json`'s.
+    static let uncharted: PatchArt? = {
+        guard let colour = Bundle.main.url(forResource: "UnchartedPatch", withExtension: "avif"),
+              let layers = Bundle.main.url(forResource: "UnchartedPatchLayers", withExtension: "avif")
+        else { return nil }
+        return PatchArt(colour: colour, layers: layers, ground: "#D9C5A9", stitchBounds: [0, 26, 51, 76, 102, 128, 153, 178, 204, 230, 255], isGeneric: true)
+    }()
+
+    /// The name on the paper tag over this patch once it's lit: the bird's on the generic patch, none on a bird's own painting.
+    func tag(_ name: String?) -> String? {
+        isGeneric ? name : nil
+    }
 }
 
 /// What stands where a found bird's painting goes (issue #138, guide page 15). It's only ever a bird you did find: one you
@@ -20,8 +41,9 @@ nonisolated enum PatchArtState: Hashable, Sendable {
     case painted(PatchArt)
     /// The sighting is saved and the edition's pack is on its way: the blank, saying "Being sewn", until it arrives.
     case beingSewn
-    /// Nothing is coming: Uncharted, a pack that isn't on the phone, a bird it has no painting of. The blank with the bird's
-    /// name on a paper tag. Never an error patch: the sighting and the paper card are complete.
+    /// Nothing is coming: a pack that isn't on the phone, a bird it has no painting of. The edition's blank with the bird's
+    /// name on a paper tag. Never an error patch: the sighting and the paper card are complete. Uncharted isn't here: its
+    /// patch is `PatchArt.uncharted`, painted.
     case tagged
 
     var art: PatchArt? {
@@ -41,8 +63,10 @@ nonisolated enum PatchArtState: Hashable, Sendable {
 
 extension PackLibrary {
     /// A bird's painting in one edition; nil when that edition's pack isn't on the phone, or it has no painting of the
-    /// bird, or the patch is Uncharted. A patch is never drawn with another edition's painting (guide page 7).
+    /// bird. A patch is never drawn with another edition's painting (guide page 7). Outside every set it's Uncharted's one
+    /// generic patch, whatever the bird (issue #222).
     func patchArt(scientificName: String, setID: String?) -> PatchArt? {
+        guard let setID else { return .uncharted }
         #if DEBUG
         if FakePatchArt.current != nil { return nil }
         #endif
@@ -62,8 +86,9 @@ extension PackLibrary {
 }
 
 #if DEBUG
-/// `-fakePatchArt missing|sewing` (issue #138): every patch without its painting, as when its pack hasn't come or is on its
-/// way, for the states' UI tests and screenshots: the bundled pack is always on the simulator.
+/// `-fakePatchArt missing|sewing` (issue #138): every set's patch without its painting, as when its pack hasn't come or is on
+/// its way, for the states' UI tests and screenshots: the bundled pack is always on the simulator. Uncharted's patch ships in
+/// the app, so it's never missing.
 enum FakePatchArt: String {
     case missing, sewing
 

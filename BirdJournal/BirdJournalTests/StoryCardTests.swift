@@ -334,7 +334,7 @@ struct PatchWordsTests {
         #expect(art.colour.lastPathComponent == "haemorhous-mexicanus.avif")
         #expect(art.layers.lastPathComponent == "haemorhous-mexicanus-layers.avif")
         #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == nil)
-        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: nil) == nil)
+        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: nil)?.isGeneric == true, "outside every set, Uncharted's generic patch (#222)")
     }
 
     @Test("the bundled pack's patch decodes at both sizes, with its alpha, for the shader")

@@ -601,7 +601,7 @@ struct ScreenAccessibilityTests {
         }
         Self.expectClean(card, screen: "Uncharted card")
         #expect(card.contains("Uncharted, outside every set"), "\(card)")
-        #expect(!card.contains("AI illustration"), "no painting to credit: \(card)")
+        #expect(card.contains("AI illustration"), "the generic patch is one (#222): \(card)")
     }
 
     // A set the phone knows from the index and whose pack it doesn't have: Coastal (a stand-in for San Diego, around the

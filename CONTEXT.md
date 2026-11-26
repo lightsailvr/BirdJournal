@@ -121,7 +121,8 @@ Your patches in one place in Collection, on felt across the whole sheet, in coll
 _Avoid_: grid, shelf
 
 **Blank**:
-An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Uncharted's is the plain canvas round. Never an error patch, and never shown for a bird you haven't found (#138).
+An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Never an error patch, and never shown for a bird you haven't found (#138). Uncharted has no blank (#222): a bird outside every set wears the generic patch, one finished embroidery (a feather, low on Uncharted's plain canvas round with its brown cord) that ships in the app and is lit like any patch, the same for every bird, with the bird's name on the paper tag a blank would carry. It pictures no bird, so its add has no stitch-in, and it is never a set's blank: a set whose painting is missing or on its way still shows its own.
+_Avoid_: placeholder, empty patch, default patch (for the generic patch)
 
 **Not yet found**:
 A bird in a set with no patch of yours there. It has no patch or pattern anywhere: only a silhouette row on the set's page in the Atlas, with its number and name, and its own no-sightings page. Not a state of any board. In copy, "still out there".

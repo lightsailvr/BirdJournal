@@ -6,7 +6,8 @@ import SwiftUI
 /// linen with its paper card tucked beneath, lit from a fixed upper-left light: an image has no tilt to follow. The card's
 /// front says the name, the story title, the edition, the place the share may carry, the date, "AI illustration" and the
 /// credits, with the Featherguild wordmark small. `CardExport` renders it; the renderer can't wait, so the patch's
-/// textures come decoded, and without any it's the edition's blank.
+/// textures come decoded, and without any it's the edition's blank. The generic Uncharted patch wears the bird's name on
+/// its paper tag here as everywhere (issue #222).
 struct PatchShareImage: View {
     /// What the card's front says: all of it is decided here, so the rules are tested without drawing.
     struct Facts: Equatable {
@@ -29,6 +30,8 @@ struct PatchShareImage: View {
     let facts: Facts
     let edition: PatchEdition
     let loaded: PatchTextures.Loaded?
+    /// The name on the generic patch's paper tag (`PatchArt.tag`); nil for a bird's own painting.
+    var tag: String? = nil
 
     var body: some View {
         VStack(spacing: -34) {
@@ -56,6 +59,7 @@ struct PatchShareImage: View {
             .overlay {
                 if let loaded {
                     LitPatch(loaded: loaded, ground: edition.twill, sewnTo: StitchTimeline.allSewn, room: 34, fixedLight: Self.light)
+                        .tied(tag, drop: edition.shape.tagDrop)
                 } else {
                     PatchBlank(edition: edition)
                 }
@@ -102,7 +106,8 @@ extension PatchShareImage.Facts {
     /// - Parameters:
     ///   - place: only what the share may carry: a city, "a secret spot", or nothing when the city is off
     ///     (`FindPolicy.sharedPlace`).
-    ///   - hasPainting: whether the patch is painted; a blank isn't an illustration, and has no credit but the story's.
+    ///   - hasPainting: whether the patch is painted, a bird's own or the generic one; a blank isn't an illustration, and
+    ///     has no credit but the story's.
     init(sighting: Sighting, name: String, placement: CardPlacement?, place: String?, lore: PackLore?, hasPainting: Bool, photoCredits: [String]) {
         let date = sighting.confirmedAt.formatted(date: .abbreviated, time: .omitted)
         self.name = name
@@ -113,6 +118,13 @@ extension PatchShareImage.Facts {
         if !photoCredits.isEmpty { credits.append("Patch from a reference photo: \(photoCredits.joined(separator: "; ")).") }
         if storyTitle != nil { credits.append("Story text: CC BY-SA 4.0.") }
         self.credits = credits.isEmpty ? nil : credits.joined(separator: " ")
+    }
+
+    /// The photo credits of the patch a share pictures: its own painting's. None for a blank, and none for the generic patch,
+    /// which was painted from no photo whichever pack describes the bird (issue #222).
+    static func photoCredits(of art: PatchArt?, species: PackSpecies?) -> [String] {
+        guard let species, let patch = species.patch, art?.isGeneric == false else { return [] }
+        return credits(of: patch, in: species)
     }
 
     /// Who took the photos the patch's bird was stitched from, as iNaturalist credits them.
