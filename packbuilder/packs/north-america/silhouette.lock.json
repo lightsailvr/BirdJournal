@@ -1,0 +1,185 @@
+{
+  "comment": "True silhouettes (#150), written by `packbuilder silhouettes` and `packbuilder silhouette-review`; review on the contact sheets in build/pack-art/<pack id>/silhouettes/. Per species: the reference photo and isolation seed, the recipe's version, the picture's SHA-256 (its file in <cache>/art/silhouettes/), its size, what the recipe noticed (the bird's size in the isolated picture, holes filled, sides the frame cuts) and the review: pending, approved (in the pack), rejected (it stays out until art.silhouette.reference in overrides.json gives another bird) or gap (no silhouette; the app keeps its glyph; why).",
+  "species": {
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "photos": [
+        767948124
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "da61848fb5ca05931f83e747a5a35d2d59ef64b00c1321562eecc50b7cb25c53",
+      "width": 180,
+      "height": 85,
+      "bytes": 1256,
+      "measure": {
+        "bird_pixels": 673,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "photos": [
+        768366048
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "a25391f02f4cb74859e6811d1bb3994548d43ce8fdc3ffdeb12ca629c9605475",
+      "width": 74,
+      "height": 180,
+      "bytes": 1343,
+      "measure": {
+        "bird_pixels": 437,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "photos": [
+        767897737
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b7fe9a17c61bf9560c63c6d5d221c94161c93a1934ca228fa0e0818a4b21cf67",
+      "width": 180,
+      "height": 145,
+      "bytes": 1866,
+      "measure": {
+        "bird_pixels": 710,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "photos": [
+        767214706
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "43791148e7271795f5f4c3409451149602bccc41422c4dc54564d699276f585b",
+      "width": 180,
+      "height": 99,
+      "bytes": 1561,
+      "measure": {
+        "bird_pixels": 887,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "photos": [
+        767718014
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "c396de8f6366e7711c280c8f809e7803488e8b8ea76341bf4035365feddce5c3",
+      "width": 88,
+      "height": 180,
+      "bytes": 1542,
+      "measure": {
+        "bird_pixels": 831,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "photos": [
+        767139103
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "4c8fa43c4eeaa6565d4acef45a770aa647b16c09e1ef7edbe4712cb0f6b2140e",
+      "width": 180,
+      "height": 164,
+      "bytes": 2198,
+      "measure": {
+        "bird_pixels": 667,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "photos": [
+        767899172
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "64b52053dc4b5cfaac316642fae132344af1cd3f9f96c5730bf347e60301098e",
+      "width": 180,
+      "height": 107,
+      "bytes": 1558,
+      "measure": {
+        "bird_pixels": 968,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "photos": [
+        739664730
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "364f8c9eb22074ac3aa78f47187748b8cb25084fe4732d0b2f47031757cd956a",
+      "width": 180,
+      "height": 136,
+      "bytes": 1875,
+      "measure": {
+        "bird_pixels": 682,
+        "holes_filled": 1,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "photos": [
+        763673374
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "f8120f26fd8653fac3ab9549a71056796e9e4c4b0227f8e910db6cb4b358db44",
+      "width": 176,
+      "height": 180,
+      "bytes": 2141,
+      "measure": {
+        "bird_pixels": 637,
+        "holes_filled": 41,
+        "cut": []
+      },
+      "review": "pending"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "photos": [
+        767736146
+      ],
+      "isolate_seed": 49,
+      "workflow": "silhouette@1",
+      "sha256": "b2b2e95a7daa2cf4aee17cf5ceb5618aeae2ccff95a8ac30727d724e09bceef2",
+      "width": 180,
+      "height": 146,
+      "bytes": 2027,
+      "measure": {
+        "bird_pixels": 660,
+        "holes_filled": 0,
+        "cut": []
+      },
+      "review": "pending"
+    }
+  }
+}

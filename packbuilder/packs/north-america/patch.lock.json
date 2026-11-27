@@ -1,0 +1,374 @@
+{
+  "comment": "Patch art (issue #133, of #131), written by `packbuilder patches` and `packbuilder patch-review`; review on the contact sheets in build/pack-art/<pack id>/patches/. Per species: the reference photo and isolation seed (from art.lock.json, or art.patch.reference), the workflow and patch prompts versions, the setting and any markings it was painted with, the edition's patch, the seed, the cut patch's SHA-256 (its file in <cache>/patches/), the bird's measure against its reference, whether the dark-bird clause was used, and the review: pending, approved (in the pack), rejected (painted again with the next seed by the next run) or gap (no patch; why).",
+  "species": {
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "seed": 3107810179,
+      "dark": false,
+      "measure": {
+        "iou": 0.95,
+        "dE_mean": 17.7,
+        "dE_p95": 29.9,
+        "dL": -11.2,
+        "dC": -2.7,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.979,
+      "aspect": 1.743,
+      "sha256": "18a0bfc4f048a419358ce320c1bb1e632095ed0119c7fff327920e554b670b65",
+      "photos": [
+        767948124
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "water",
+      "markings": "The head and neck are glossy bottle green with a narrow white collar; the bill is yellow; the breast is chestnut brown; the sides and back are pale grey; the rear is black, with white tail feathers.",
+      "review": "pending"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "seed": 3782296965,
+      "dark": false,
+      "measure": {
+        "iou": 0.608,
+        "dE_mean": 29.5,
+        "dE_p95": 59.5,
+        "dL": -18.6,
+        "dC": 9.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "aspect": 1.37,
+      "sha256": "6d408f103f07cdc9c9756ad466414f5cad5404beba8df31b94829bafe465d8b1",
+      "photos": [
+        768366048
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The crown, nape and cheeks are light brown, clearly darker than the white throat, never white. The breast and belly are creamy white, with a band of dark brown streaks across the belly. The folded wings are dark brown. The bill is dark with a yellow base and the feet are yellow.",
+      "review": "pending"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "seed": 3794675605,
+      "dark": false,
+      "measure": {
+        "iou": 0.963,
+        "dE_mean": 15.3,
+        "dE_p95": 32.2,
+        "dL": -6.5,
+        "dC": 8.8,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.968,
+      "aspect": 1.375,
+      "sha256": "46df47c3e2da199b6fdf18c06bf8f210b7c233c02fb312b11878e00c0d176698",
+      "photos": [
+        767897737
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright scarlet red, crest, head, breast, belly, back, wings and tail, in true red thread, not orange, brown, rust or gold; the wings and tail are only a slightly deeper red. A black mask surrounds the thick red-orange bill and covers the throat.",
+      "review": "pending"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "seed": 2674281690,
+      "dark": false,
+      "measure": {
+        "iou": 0.939,
+        "dE_mean": 5.7,
+        "dE_p95": 14.0,
+        "dL": -3.0,
+        "dC": -2.9,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.96,
+      "aspect": 1.539,
+      "sha256": "958f2e9da44892c471bdc2a582e29960a64e8195eeaabf1726eac573ed7d8fbe",
+      "photos": [
+        767214706
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "ground",
+      "markings": "The whole bird is matte jet-black thread with no white, grey, blue or pale thread anywhere, the folded wing exactly as black as the body. The bill, legs and eye are black.",
+      "review": "pending"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "seed": 3047679679,
+      "dark": false,
+      "measure": {
+        "iou": 0.839,
+        "dE_mean": 5.0,
+        "dE_p95": 10.5,
+        "dL": -0.2,
+        "dC": -1.8,
+        "faithful": true
+      },
+      "card_at_edge": 0.0029,
+      "attempts": 1,
+      "shape_fit": 0.975,
+      "aspect": 1.475,
+      "sha256": "5d3c78d6018c1365cc0e4ff81bfac1d6e3ebb294aab4a2b875798392dd83daee",
+      "photos": [
+        767718014
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "trunk",
+      "review": "pending"
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "seed": 1332122001,
+      "dark": false,
+      "measure": {
+        "iou": 0.91,
+        "dE_mean": 10.0,
+        "dE_p95": 16.9,
+        "dL": -6.7,
+        "dC": 2.4,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.978,
+      "aspect": 1.448,
+      "sha256": "9354c2645d3fe2b3eaf0664c36fb1bbadeea928a27578f66b72c0431f6b066d2",
+      "photos": [
+        767139103
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "wade",
+      "markings": "The whole body, neck and wings are pure bright white thread, with no cream, beige, lavender or grey anywhere, and the bird stands out clearly from the cloth behind it. The bare face and the long down-curved bill are pinkish red, and the legs pinkish red. The eye is pale blue with a small black centre.",
+      "review": "pending"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "seed": 2726019305,
+      "dark": false,
+      "measure": {
+        "iou": 0.948,
+        "dE_mean": 11.7,
+        "dE_p95": 18.8,
+        "dL": -9.0,
+        "dC": 0.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.974,
+      "aspect": 1.516,
+      "sha256": "cdff6cfc98d31e89666bf274dbd02f02bf3fca178dd208bf1f33730156a46eb8",
+      "photos": [
+        767899172
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The cap and a bib under the bill are solid black; the cheek between them is white; the single dark eye sits inside the black cap; the back is grey, the wing feathers dark with white edges, and the flanks warm buff.",
+      "review": "pending"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "seed": 2623876390,
+      "dark": false,
+      "measure": {
+        "iou": 0.883,
+        "dE_mean": 12.9,
+        "dE_p95": 21.4,
+        "dL": 3.0,
+        "dC": 8.9,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 2,
+      "shape_fit": 0.984,
+      "aspect": 1.451,
+      "sha256": "4a09277e1cad327de1b9d7aa31f94073cef4358c409eb9fd73140b349a56da17",
+      "photos": [
+        739664730
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The whole bird is bright lemon yellow, in clear yellow thread, not mustard, olive, ochre or gold, and paler and cooler than the golden border and the sun; the wings are a slightly greener yellow with yellow feather edges; the eye is black in a plain yellow face.",
+      "review": "pending"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "seed": 1600835376,
+      "dark": false,
+      "measure": {
+        "iou": 0.928,
+        "dE_mean": 21.0,
+        "dE_p95": 30.6,
+        "dL": 14.8,
+        "dC": 9.0,
+        "faithful": false
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.979,
+      "aspect": 1.478,
+      "sha256": "d1d5a743735e4005617ad6f0abaed6c23e9226b3de32472efb98d8dbe1231ffd",
+      "photos": [
+        763673374
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The throat, breast and belly are bright lemon yellow, in clear yellow thread that is paler and cooler than the golden border and the sun, with a bold black V across the breast. The head is striped buff and dark brown; the back and wings are streaked brown and buff; the flanks are white with dark streaks.",
+      "review": "pending"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "seed": 2570548333,
+      "dark": false,
+      "measure": {
+        "iou": 0.947,
+        "dE_mean": 9.7,
+        "dE_p95": 17.5,
+        "dL": 3.1,
+        "dC": 0.1,
+        "faithful": true
+      },
+      "card_at_edge": 0.0,
+      "attempts": 1,
+      "shape_fit": 0.98,
+      "aspect": 1.345,
+      "sha256": "5426b409e76a7d4837d65aec77c64a9b9aa335376a25ccb1dfbb70884dc95e13",
+      "photos": [
+        767736146
+      ],
+      "isolate_seed": 49,
+      "workflow": "patch-art@1",
+      "edition": {
+        "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+        "cord": "rich golden-yellow",
+        "twill": "pale lavender-grey cotton twill",
+        "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+        "canvas": [
+          1152,
+          864
+        ]
+      },
+      "prompts": 2,
+      "setting": "perch",
+      "markings": "The breast and belly are stitched in rusty red-orange thread, the warm orange-red of the bird in <ref_image_0>, clearly redder than the golden border and the sun; there is no gold or yellow thread on the bird except its bill. The head is black with broken white marks around the eye; the back, wings and tail are dark grey, with no white patch on the wing.",
+      "review": "pending"
+    }
+  }
+}

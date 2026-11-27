@@ -24,6 +24,11 @@ command -v sqlite3 >/dev/null || { echo "sqlite3 is needed to read the pack's co
 database="$repo_root/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || database="$repo_root/build/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || { echo "no pack.sqlite for $pack_id under packs/ or build/packs/" >&2; exit 1; }
+# A build of some of the pack's birds (`packbuilder build --only`, issue #215) is for a trial, never for the manifest.
+partial="$(python3 -c 'import json, sys
+partial = json.load(open(sys.argv[1])).get("partial")
+print("{species} of its {listed} species".format(**partial) if partial else "")' "$(dirname "$database")/report.json")"
+[ -z "$partial" ] || { echo "$pack_id was built with --only ($partial): a partial pack is never pinned. Build the whole pack first." >&2; exit 1; }
 species="$(sqlite3 "$database" 'select count(*) from species')"
 photos="$(sqlite3 "$database" 'select count(*) from photo')"
 region="$(sqlite3 "$database" 'select region from pack')"

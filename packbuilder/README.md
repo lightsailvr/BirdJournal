@@ -33,6 +33,11 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    (the file's `comment` says how it was made). A region made of several places (the counties around Orlando) lists
    them as `inat_place_ids` instead of `inat_place_id`; the photos come from their union.
 
+   Two more keys say how the pack is built where the default would not do (issue #215, both set for North America):
+   `"photos_per_species": 3` keeps three photos a species where every other pack keeps five (`build --max-photos`
+   overrides it for one build), and `"rarity_calibration": false` leaves the pack out of the rarity calibration
+   ("Rarity calibration" below). `"sound_countries"` is under step 3.
+
    A new pack's list starts from `packbuilder draft` (`species_list.py`), which ranks research-grade observations of
    birds in the places, maps each taxon to its BirdNET+ label (reusing the committed packs' entries, then the label
    file's binomial, then its common name, which is logged as a rename to check), skips hybrids and `--exclude`d
@@ -61,7 +66,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 3. **Sounds** (issue #41, `sounds.py`). One **song** and one **call** per species, each an 8 s clip, from
    [xeno-canto](https://xeno-canto.org) (API v3, `xenocanto.py`): one search per species for its recordings in the
    pack's country (`country` in `pack.json`, default United States; a worldwide search only when the country has no
-   usable song or call), ranked A/B grade first, then open licenses (CC0, CC BY, CC BY-SA) before NonCommercial
+   usable song or call; a pack of several countries lists them as `sound_countries`, searched in order, each only when
+   those before it have no usable song or call: North America's are the United States, then Canada, issue #215), ranked A/B grade first, then open licenses (CC0, CC BY, CC BY-SA) before NonCommercial
    (CC BY-NC, CC BY-NC-SA), then grade, MP3 over WAV, 5–60 s long, no background species, the country, the newest.
    No-derivatives recordings are refused (the clip is an adaptation), as are juveniles' calls, subsong and birds
    answering playback. A species xeno-canto leaves without any clip falls back to iNaturalist's research-grade
@@ -110,8 +116,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    (`scoring.py`): big birds on dark, sharp backgrounds read best on the additive lens display. Crops under 0.4
    sharpness are dropped before ranking. The score cannot tell a hand-held or dead bird from a perched one; that
    is what `overrides.json` is for (see the Los Angeles file for examples).
-9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
-   logged gap (`selection.py`).
+9. **Select.** Top five per species, or as many as the definition's `photos_per_species` says (at most one photo per
+   observation), overrides first; fewer than three is a logged gap (`selection.py`).
 10. **Pack art.** One painting per species in the set's edition theme, painted from its best-lit photo (below).
 11. **Fact sheet and lore.** Each species' sourced facts, and lore written from them by a Claude model (below).
 12. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
@@ -188,6 +194,28 @@ the Album package's placement test reads it:
 `uv run packbuilder set ../BirdJournal/BirdJournalKit/Tests/AlbumTests/Fixtures/united-states-and-canada` rebuilds it,
 and `tests/test_sets.py` checks the sample places against it and, when Natural Earth is in the cache, that the fixture
 is what the builder draws.
+
+## Some of a pack's birds
+
+`packbuilder build packs/<id> --only 8,9 --only "Northern Cardinal" ...` builds only the species it names, by their
+numbers in `pack.json` (the contact sheets' numbers), their ids or their common names (issue #215: the North America
+tracer built ten of the 300 this way, before the full run). It asks iNaturalist, xeno-canto and the stats join about
+those species alone, and writes a **partial pack**: the set it carries is still the whole pack's, so a collector number
+is the real one, but only the named species have photos, text, sounds and patches, and `report.json` says so
+(`"partial": {"species": 10, "listed": 300}`). A partial pack is for a trial on a simulator; it is never pinned or
+published (`scripts/pin-pack.sh` refuses one).
+
+- **The locks keep the rest.** Every lock is by species, and a partial build writes only its own species' entries:
+  the other species' recordings stay in `sounds.lock.json` (a whole build drops a species that left the pack), and the
+  art, patch, silhouette and lore locks never drop anything.
+- **The sheets keep the pack's numbers.** A sheet of the tracer's ten shows 002, 006, 008 and so on, the numbers
+  `patch-review` and `silhouette-review` take, and the patches and silhouettes each write `sheets.json` beside their
+  sheets: every cell's number, species, state and sheet (and a patch's flags), for a review page. `packbuilder patches
+  --only` names species the same way.
+- **The tracer's ten** (2026-11-26): `--only 2,6,8,9,14,97,190,193,195,283`, the Red-tailed Hawk, Mallard, American
+  Robin, American Crow, Downy Woodpecker, American Yellow Warbler, Northern Cardinal, Black-capped Chickadee, Western
+  Meadowlark and American White Ibis. Their photos, references, settings and markings are in the pack's
+  `overrides.json`, and their locks are the first entries of the full run's.
 
 ## Stats and type lines
 
@@ -420,10 +448,15 @@ two months of passage counts as coast to coast. So the draft is read over by a b
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
-species of every definition under `packs/`, over a 6 × 6 grid across each pack's bounding box and all 48 weeks, and
-writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
+species of every definition under `packs/` that it pools, over a 6 × 6 grid across each pack's bounding box and all
+48 weeks, and writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
 (`rarity.py`; ADR-0006, issue #52). It takes a few seconds. Run it again only for a new calibration, with the next
 version: cards keep the version they were labelled under.
+
+A definition with `"rarity_calibration": false` is not pooled, and North America's says so (issue #215, spec #206):
+its bounding box is the continent, so its 300 birds read over all of it would outweigh every regional pack and move
+the thresholds. The committed calibration is version 1, over the five packs that existed then, and
+`tests/test_continental_pack.py` pins its thresholds; nothing in #206 runs a new one.
 
 ## Fact sheet and lore
 

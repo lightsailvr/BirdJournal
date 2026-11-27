@@ -1,0 +1,222 @@
+{
+ "_comment": "North America (#206). The first ten birds were built for the tracer, issue #215, on 2026-11-26: every photo here was looked at on the build's review sheets. The newest photos of late November are winter birds, so each species' three photos are pinned (`include`, the hero first), and its patch is painted from the one `art.reference` names: a well-lit adult, whole, feet showing, standing where the bird lives. The patches are pending the maintainer's review.",
+ "Buteo jamaicensis": {
+  "include": [
+   768366048,
+   768284658,
+   767826854
+  ],
+  "exclude": [
+   768038690
+  ],
+  "_why": "excluded: a dark-morph bird, not what most birders meet; in: a perched adult, an adult overhead with its red tail spread, a young bird on a wire",
+  "hero": {
+   "pinned": 768366048,
+   "_why": "the scorer's first was a bird landing with its wings up; a perched adult, whole, in clear light"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 768366048,
+   "_why": "the best-lit of the first three was a bird landing, wings spread, on a snag; this adult perches upright on a bare branch, breast and belly band showing",
+   "patch": {
+    "markings": "The crown, nape and cheeks are light brown, clearly darker than the white throat, never white. The breast and belly are creamy white, with a band of dark brown streaks across the belly. The folded wings are dark brown. The bill is dark with a yellow base and the feet are yellow."
+   }
+  }
+ },
+ "Anas platyrhynchos": {
+  "include": [
+   767948124,
+   768258469,
+   768048589
+  ],
+  "exclude": [
+   768047284,
+   768048444,
+   768131278,
+   767754913
+  ],
+  "_why": "excluded: domestic-type ducks (black with a white bib; pied; buff; a heavy drake with white wings), which the scorer put first; in: a wild drake swimming side-on, a hen swimming, a drake on ice",
+  "hero": {
+   "pinned": 767948124,
+   "_why": "the scorer's first was a black domestic duck with a white bib"
+  },
+  "art": {
+   "setting": "water",
+   "reference": 767948124,
+   "_why": "the best-lit of the first three was a hen's face, head-on and cut by the frame; a drake swimming side-on",
+   "patch": {
+    "markings": "The head and neck are glossy bottle green with a narrow white collar; the bill is yellow; the breast is chestnut brown; the sides and back are pale grey; the rear is black, with white tail feathers."
+   }
+  }
+ },
+ "Turdus migratorius": {
+  "include": [
+   767736146,
+   767940361,
+   767925678
+  ],
+  "exclude": [
+   767739961
+  ],
+  "_why": "excluded: a photo of reeds with no bird to be seen; in: an adult on a post, one singing in a bare tree, one side-on over water",
+  "hero": {
+   "pinned": 767736146,
+   "_why": "the scorer's first showed no bird"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 767736146,
+   "_why": "an adult standing on a post, whole and sharp, the red-orange of its breast and belly showing along its side",
+   "patch": {
+    "markings": "The breast and belly are stitched in rusty red-orange thread, the warm orange-red of the bird in <ref_image_0>, clearly redder than the golden border and the sun; there is no gold or yellow thread on the bird except its bill. The head is black with broken white marks around the eye; the back, wings and tail are dark grey, with no white patch on the wing.",
+    "_why": "the edition samples of #213 stitched this bird's breast in gold four paintings running beside the gold cord and sun (art/continental-candidates.json, candidate E)"
+   }
+  }
+ },
+ "Corvus brachyrhynchos": {
+  "include": [
+   767214706,
+   760419495,
+   767060342
+  ],
+  "_why": "the scorer's first two were a pair pressed together and a bird behind a trunk; in: one walking side-on, one on a fence, one on a fountain",
+  "hero": {
+   "pinned": 767214706,
+   "_why": "two birds in one frame; a single bird, whole, side-on"
+  },
+  "art": {
+   "setting": "ground",
+   "reference": 767214706,
+   "patch": {
+    "dark_clause": false,
+    "markings": "The whole bird is matte jet-black thread with no white, grey, blue or pale thread anywhere, the folded wing exactly as black as the body. The bill, legs and eye are black.",
+    "_why": "as every pack's crow: the dark clause stitches the sheen on black feathers as white patches"
+   }
+  }
+ },
+ "Dryobates pubescens": {
+  "include": [
+   767718014,
+   767358671,
+   767319077
+  ],
+  "_why": "the scorer's three were a soft phone picture and a bird on a feeder; in: one clinging to a snag, a male with his red nape on a twig, one on a limb",
+  "hero": {
+   "pinned": 767718014,
+   "_why": "a bird on a seed feeder; one on bark"
+  },
+  "art": {
+   "setting": "trunk",
+   "reference": 767718014,
+   "_why": "the best-lit of the first three clung to a seed feeder; this one clings upright to a dead trunk, whole, both feet on the bark (a female: no red on the nape)"
+  }
+ },
+ "Setophaga aestiva": {
+  "sounds": {
+   "accept": [
+    "Setophaga petechia"
+   ]
+  },
+  "include": [
+   734585391,
+   739664730,
+   739443067
+  ],
+  "exclude": [
+   766151635,
+   758527716,
+   758528679
+  ],
+  "_why": "sounds: BirdNET+ carries both halves of the yellow warbler split and hears American recordings as Setophaga petechia (#41). excluded: three grey-headed, pale birds that do not look like this species; in: three bright birds of late summer, since the newest photos are dull autumn birds",
+  "hero": {
+   "pinned": 734585391,
+   "_why": "the scorer's first was a small bird deep in mistletoe"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 739664730,
+   "_why": "the best-lit of the first three was small and half hidden; this bright bird perches side-on on a twig, whole, feet showing (the photo the Bay Area's patch was painted from)",
+   "patch": {
+    "markings": "The whole bird is bright lemon yellow, in clear yellow thread, not mustard, olive, ochre or gold, and paler and cooler than the golden border and the sun; the wings are a slightly greener yellow with yellow feather edges; the eye is black in a plain yellow face."
+   }
+  }
+ },
+ "Cardinalis cardinalis": {
+  "include": [
+   767897737,
+   767892009,
+   768282855
+  ],
+  "_why": "the scorer's first was a male in flight, blurred wings spread; in: a male on a log, a male on a branch among red leaves, a female on bamboo",
+  "hero": {
+   "pinned": 767897737,
+   "_why": "a bird in flight; a male perched, crest and mask showing"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 767897737,
+   "patch": {
+    "markings": "The whole bird is bright scarlet red, crest, head, breast, belly, back, wings and tail, in true red thread, not orange, brown, rust or gold; the wings and tail are only a slightly deeper red. A black mask surrounds the thick red-orange bill and covers the throat."
+   }
+  }
+ },
+ "Poecile atricapillus": {
+  "include": [
+   767897696,
+   767719896,
+   767899172
+  ],
+  "_why": "nearly every recent photo is of birds fed on a gloved hand; in: two on branches, and one on a glove, last, because it is the clearest whole bird and the patch is painted from it (the glove is no part of the patch)",
+  "hero": {
+   "pinned": 767897696,
+   "_why": "the scorer's three were all on a glove; a bird on a branch against the sky"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 767899172,
+   "_why": "side-on, whole, cap, bib, cheek and buff flank all showing; the birds on branches hide the bib or have a twig across them",
+   "patch": {
+    "markings": "The cap and a bib under the bill are solid black; the cheek between them is white; the single dark eye sits inside the black cap; the back is grey, the wing feathers dark with white edges, and the flanks warm buff."
+   }
+  }
+ },
+ "Sturnella neglecta": {
+  "include": [
+   763830661,
+   763673374,
+   763374741
+  ],
+  "_why": "the scorer's second and third were soft pictures of a bird in dry grass; in: one singing on a fence post, one facing the camera on a stalk, one singing from a shrub",
+  "hero": {
+   "pinned": 763830661,
+   "_why": "the first photo is upright and the profile's slot cuts it; a whole bird singing on a post"
+  },
+  "art": {
+   "setting": "perch",
+   "reference": 763673374,
+   "_why": "the best-lit of the first three was a soft bird half hidden in grass; this one faces the camera on a stalk, yellow breast and black V showing, feet on the stalk",
+   "patch": {
+    "markings": "The throat, breast and belly are bright lemon yellow, in clear yellow thread that is paler and cooler than the golden border and the sun, with a bold black V across the breast. The head is striped buff and dark brown; the back and wings are streaked brown and buff; the flanks are white with dark streaks."
+   }
+  }
+ },
+ "Eudocimus albus": {
+  "include": [
+   767139103,
+   763311627,
+   765311703
+  ],
+  "_why": "the scorer's first was a head cut off by the frame; in: an adult wading, a pair on a snag, an adult in marsh grass",
+  "hero": {
+   "pinned": 767139103,
+   "_why": "a head and neck cut by the frame; a whole adult wading"
+  },
+  "art": {
+   "setting": "wade",
+   "reference": 767139103,
+   "patch": {
+    "markings": "The whole body, neck and wings are pure bright white thread, with no cream, beige, lavender or grey anywhere, and the bird stands out clearly from the cloth behind it. The bare face and the long down-curved bill are pinkish red, and the legs pinkish red. The eye is pale blue with a small black centre."
+   }
+  }
+ }
+}

@@ -1,0 +1,215 @@
+{
+  "comment": "Pack art (issue #57), written by `packbuilder build` and `packbuilder art-review`; review on the contact sheets in build/pack-art/<pack id>/. Per species: the source photo ids, the workflow, isolation and prompts versions and the set's edition theme it was painted with, the seeds, the painting's SHA-256 (the art cache's file name), its fidelity, and the review: pending, approved (in the pack), rejected (repainted with new seeds by the next build) or gap (no art; why).",
+  "species": {
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "photos": [
+        767948124
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.964,
+          "dE_mean": 5.1,
+          "dE_p95": 14.2,
+          "dL": -0.4,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "photos": [
+        768366048
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.928,
+          "dE_mean": 4.1,
+          "dE_p95": 8.6,
+          "dL": 1.0,
+          "dC": -0.8,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "photos": [
+        767897737
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.938,
+          "dE_mean": 5.7,
+          "dE_p95": 13.4,
+          "dL": 0.2,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "photos": [
+        767214706
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.962,
+          "dE_mean": 2.2,
+          "dE_p95": 6.5,
+          "dL": -0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "photos": [
+        767718014
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.95,
+          "dE_mean": 5.1,
+          "dE_p95": 15.8,
+          "dL": -0.4,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "photos": [
+        767139103
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.972,
+          "dE_mean": 2.1,
+          "dE_p95": 6.0,
+          "dL": -0.1,
+          "dC": 0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "photos": [
+        767899172
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.948,
+          "dE_mean": 4.1,
+          "dE_p95": 9.6,
+          "dL": -0.7,
+          "dC": -0.1,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "photos": [
+        739664730
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.867,
+          "dE_mean": 4.6,
+          "dE_p95": 10.3,
+          "dL": 0.1,
+          "dC": 0.7,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "photos": [
+        763673374
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.963,
+          "dE_mean": 5.6,
+          "dE_p95": 10.9,
+          "dL": 1.5,
+          "dC": -0.6,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "photos": [
+        767736146
+      ],
+      "isolate": "bird-isolate@1",
+      "first_isolate_seed": 49,
+      "isolate_seed": 49,
+      "faithful": true,
+      "fidelity": {
+        "isolated": {
+          "iou": 0.961,
+          "dE_mean": 2.5,
+          "dE_p95": 6.5,
+          "dL": 0.1,
+          "dC": 0.0,
+          "faithful": true
+        }
+      },
+      "review": "reference"
+    }
+  }
+}
