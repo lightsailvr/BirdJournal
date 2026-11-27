@@ -285,7 +285,7 @@ struct BoardTiles: View {
 extension PackLibrary {
     /// "Citrus edition", when this phone knows the set.
     func editionLabel(setID: String?) -> String? {
-        cardSets.first { $0.id == setID }?.edition
+        knownCardSets.first { $0.id == setID }?.edition
     }
 
     /// What the packs and sets on this phone call each bird, then BirdNET. The server's names are the finder's phone's word.

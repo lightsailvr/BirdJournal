@@ -206,12 +206,11 @@ struct RunReviewSheet: View {
                 drawn.append(known)
                 continue
             }
+            let art = library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID)
             var loaded: PatchTextures.Loaded?
-            if let art = library.patchArt(scientificName: patch.scientificName, setID: patch.placement.setID) {
-                loaded = await PatchTextures.load(art, size: .thumbnail)
-            }
+            if let art { loaded = await PatchTextures.load(art, size: .thumbnail) }
             guard !Task.isCancelled else { return }
-            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: PatchText.name(of: patch, library: library), width: 80, scale: CardExport.imageScale) {
+            if let image = FlatPatch.render(loaded: loaded, edition: PatchEdition.of(setID: patch.placement.setID), tag: PatchText.name(of: patch, library: library), isGeneric: art?.isGeneric == true, width: 80, scale: CardExport.imageScale) {
                 drawn.append(RunRecap.Picture(id: patch.id, image: image))
             }
         }

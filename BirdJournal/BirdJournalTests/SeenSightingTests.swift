@@ -22,7 +22,7 @@ struct SeenSightingTests {
     static let taken = Date(timeIntervalSince1970: 1_800_000_000)
     /// A set of the two birds around Los Feliz.
     static let losAngeles = CardSet(
-        id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition",
+        id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition",
         species: ["Haemorhous mexicanus", "Selasphorus sasin"],
         regions: SightingRecorderSetTests.losAngeles.regions
     )
@@ -85,13 +85,13 @@ struct SeenSightingTests {
         #expect(first.placement.setName == "Los Angeles")
         #expect(first.placement.collectorNumber == "002/002")
         #expect(first.species.commonName == "Allen's Hummingbird")
-        #expect(collection().progress(of: "us-ca-la").collected == 1, "the set's progress moves")
+        #expect(collection().progress(of: LosAngelesSet.id).collected == 1, "the set's progress moves")
 
         let again = try fixture.ledger.addSeen(Self.allens, photo: Data([2]), takenAt: Self.taken.addingTimeInterval(60), location: Self.losFeliz, source: .phone)
         #expect(!again.sewsPatch)
         #expect(again.patchCount == 2)
         #expect(collection().patch(of: again.identifier)?.count == 2)
-        #expect(collection().progress(of: "us-ca-la").collected == 1)
+        #expect(collection().progress(of: LosAngelesSet.id).collected == 1)
 
         let uncharted = try fixture.ledger.addSeen(Self.hermit, photo: Data([3]), takenAt: Self.taken.addingTimeInterval(120), location: Self.losFeliz, source: .phone)
         #expect(uncharted.placement == .uncharted, "no set lists it")

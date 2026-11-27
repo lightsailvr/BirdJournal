@@ -78,7 +78,7 @@ final class LatestPatchPublisher {
         let packs = packs
         return WidgetSnapshot(
             collection: collection,
-            localSetID: LocalSet.choose(coordinate: nil, in: collection),
+            localSetID: LocalSet.choose(coordinate: nil, in: collection, among: packs.knownCardSets),
             name: { PatchText.name(of: $0, library: packs) },
             hasPainting: { packs.patchArt(scientificName: $0.scientificName, setID: $0.placement.setID) != nil }
         )
@@ -126,11 +126,12 @@ final class LatestPatchPublisher {
     private static func drawPatch(_ latest: WidgetSnapshot.Latest, packs: PackLibrary, isInFront: @MainActor () -> Bool) async -> DrawnPatch? {
         let name = Sighting.scientificName(ofLabel: latest.link.speciesID)
         let edition = PatchEdition.of(setID: latest.link.setID)
+        let art = packs.patchArt(scientificName: name, setID: latest.link.setID)
         var loaded: PatchTextures.Loaded?
-        if let art = packs.patchArt(scientificName: name, setID: latest.link.setID) { loaded = await PatchTextures.load(art, size: .full) }
+        if let art { loaded = await PatchTextures.load(art, size: .full) }
         // Asked after the decode, which can outlast the app's moment in front.
         if isInFront() {
-            let image = FlatPatch.render(loaded: loaded, edition: edition, tag: latest.name, width: patchWidth, scale: patchScale)
+            let image = FlatPatch.render(loaded: loaded, edition: edition, tag: latest.name, isGeneric: art?.isGeneric == true, width: patchWidth, scale: patchScale)
             let png = await Task.detached(priority: .utility) { image?.pngData() }.value
             return png.map { DrawnPatch(png: $0, isLit: loaded != nil) }
         }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Pack
 
 /// The packs the app reads (issue #13): the bundled pack first, then every download, looked up as one; the index
@@ -14,8 +15,8 @@ struct PackLibraryTests {
         let library = try Fixtures.library(root: root)
 
         #expect(library.packs.map(\.info.id) == [PackIndex.bundledPackID])
-        #expect(library.species(scientificName: "Calypte anna")?.species.commonName == "Anna's Hummingbird")
-        #expect(library.species(scientificName: "Calypte anna")?.pack.info.id == PackIndex.bundledPackID)
+        #expect(library.species(scientificName: BundledPack.hummingbird.scientificName)?.species.commonName == BundledPack.hummingbird.name)
+        #expect(library.species(scientificName: BundledPack.hummingbird.scientificName)?.pack.info.id == PackIndex.bundledPackID)
         #expect(library.index == nil && library.available.isEmpty)
     }
 
@@ -37,9 +38,9 @@ struct PackLibraryTests {
         #expect(library.status(of: descriptor) == .installed(version: 1))
         #expect(library.packs.map(\.info.id) == [PackIndex.bundledPackID, "test-pack"])
         #expect(library.available.isEmpty)
-        // Black Phoebe is in both packs: the bundled one wins.
-        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == PackIndex.bundledPackID)
-        let phoebe = try #require(library.pack(id: "test-pack")?.species(scientificName: "Sayornis nigricans"))
+        // The phoebe is in both packs: the download is read before the bundled one (issue #207).
+        #expect(library.species(scientificName: BundledPack.phoebe.scientificName)?.pack.info.id == "test-pack")
+        let phoebe = try #require(library.pack(id: "test-pack")?.species(scientificName: BundledPack.phoebe.scientificName))
         #expect(library.photo(id: phoebe.photos[0].id)?.pack.info.id == "test-pack")
         #expect(library.sound(id: "xc-1")?.pack.info.id == "test-pack", "the test pack's song, which the bundled pack lacks")
         #expect(library.storage.installed().map(\.descriptor.id) == ["test-pack"])
@@ -105,7 +106,7 @@ struct PackLibraryTests {
         defer { try? FileManager.default.removeItem(at: root) }
         // The fixture zip is a two-species pack under the bundled pack's id; the index lists it one version past
         // whatever the bundle holds.
-        let newer = try #require(Bundle.module.url(forResource: "us-ca-la-v2", withExtension: "zip", subdirectory: "Fixtures"))
+        let newer = try #require(Bundle.module.url(forResource: "\(BundledPack.id)-v2", withExtension: "zip", subdirectory: "Fixtures"))
         let bundledVersion = try SpeciesPack.bundled().info.version
         let next = bundledVersion + 1
         let library = try Fixtures.library(root: root, bundledZip: newer, bundledVersion: next)
@@ -142,7 +143,7 @@ struct PackLibraryTests {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let bundled = try SpeciesPack.bundled()
-        let zip = try #require(Bundle.module.url(forResource: "us-ca-la-v2", withExtension: "zip", subdirectory: "Fixtures"))
+        let zip = try #require(Bundle.module.url(forResource: "\(BundledPack.id)-v2", withExtension: "zip", subdirectory: "Fixtures"))
         let storage = PackStorage(directory: root.appending(path: "Packs"))
         let old = PackDescriptor(id: bundled.info.id, name: bundled.info.name, version: bundled.info.version + versionDifference,
                                  url: zip, sha256: try PackStorage.sha256(of: zip), byteCount: 1)
@@ -177,7 +178,7 @@ struct PackLibraryTests {
 
         await library.download(descriptor)
 
-        #expect(library.status(of: descriptor) == .failed("The download holds test-pack, not us-ca-la."))
+        #expect(library.status(of: descriptor) == .failed("The download holds test-pack, not \(BundledPack.id)."))
         #expect(library.bundledUpdate == nil)
     }
 
@@ -215,7 +216,7 @@ extension Fixtures {
             descriptor = PackDescriptor(id: descriptor.id, name: descriptor.name, version: indexVersion, url: zip, sha256: sha256, byteCount: descriptor.byteCount)
         }
         let bundledZip = bundledZip ?? zip
-        let bundled = PackDescriptor(id: PackIndex.bundledPackID, name: "Los Angeles", version: bundledVersion, url: bundledZip, sha256: try PackStorage.sha256(of: bundledZip), byteCount: 1)
+        let bundled = PackDescriptor(id: PackIndex.bundledPackID, name: BundledPack.setName, version: bundledVersion, url: bundledZip, sha256: try PackStorage.sha256(of: bundledZip), byteCount: 1)
         let index = PackIndex(packs: [bundled, descriptor])
         let indexURL = root.appending(path: "index.json")
         try JSONEncoder().encode(index).write(to: indexURL)

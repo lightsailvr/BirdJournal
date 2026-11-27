@@ -38,7 +38,7 @@ from scipy.spatial import ConvexHull
 
 from packbuilder.art import ART_DIR, Workflow, reference_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
-from packbuilder.contact_sheets import grid
+from packbuilder.contact_sheets import grid, write_listing
 from packbuilder.crops import upright
 from packbuilder.fidelity import lab, measure as measure_bird
 from packbuilder.geometry import Box
@@ -112,13 +112,30 @@ class PatchSpec:
     so not in `as_dict`, which the lock compares."""
     shape_limit: float | None = None
     """The least `shape_fit` of this edition's shape, where `SHAPE_LIMIT` lets a near shape through. Not in `as_dict` either."""
+    canvas: tuple[int, int] | None = None
+    """The picture the patch is painted on, width by height, where the card's own does not hold the shape: the model fits
+    a badge to its picture, so the Continental edition's wide rectangle came out nearly square on the card's upright
+    864 x 1152 (#213). A painting input, so in `as_dict` for an edition that has one."""
+    aspect: tuple[float, float] | None = None
+    """The least and the greatest width over height of a cut patch that is this edition's shape, for a shape whose
+    outline fills its bounding box whatever its proportions (`shape_fit` measures inside that box, so a square fits a
+    wide rectangle's outline perfectly). Not a painting input."""
 
     @property
     def least_fit(self) -> float:
         return self.shape_limit if self.shape_limit is not None else SHAPE_LIMIT
 
+    def aspect_miss(self, width_over_height: float) -> float:
+        """How far outside the edition's proportions a patch is, as a part of the nearer limit; 0 inside them, or for
+        an edition that sets none."""
+        if self.aspect is None:
+            return 0.0
+        least, greatest = self.aspect
+        return max(least / width_over_height, width_over_height / greatest, 1.0) - 1.0
+
     def as_dict(self) -> dict:
-        return {"shape": self.shape, "cord": self.cord, "twill": self.twill, "motif": self.motif}
+        edition = {"shape": self.shape, "cord": self.cord, "twill": self.twill, "motif": self.motif}
+        return {**edition, "canvas": list(self.canvas)} if self.canvas else edition
 
 
 @dataclass(frozen=True)
@@ -134,12 +151,17 @@ class PatchPrompts:
     def load(cls, path: Path = ART_DIR / "patch-prompts.json") -> "PatchPrompts":
         data = json.loads(Path(path).read_text())
         return cls(data["version"], data["template"], data["dark"], data["dark_lightness"],
-                   {pack: PatchSpec(**{**spec, "outline": tuple(map(tuple, spec["outline"])) if spec.get("outline") else None}) for pack, spec in data["editions"].items()},
-                   data["settings"])
+                   {pack: _spec(spec) for pack, spec in data["editions"].items()}, data["settings"])
 
     def render(self, spec: PatchSpec, dark: bool, setting: str = DEFAULT_SETTING, markings: str | None = None) -> str:
         return self.template.format(shape=spec.shape, cord=spec.cord, twill=spec.twill, motif=spec.motif, dark=self.dark if dark else "",
                                     setting=self.settings[setting], markings=f" {markings}" if markings else "")
+
+
+def _spec(edition: dict) -> PatchSpec:
+    """An entry of `editions` in patch-prompts.json; its lists are tuples here."""
+    return PatchSpec(**{**edition, **{key: tuple(map(tuple, edition[key])) if key == "outline" else tuple(edition[key])
+                                      for key in ("outline", "canvas", "aspect") if edition.get(key)}})
 
 
 @dataclass(frozen=True)
@@ -299,28 +321,34 @@ class PatchArtist:
 
     def _render(self, reference: Reference, seed: int, name: str, common_name: str, pin: PatchPin = PatchPin()) -> dict:
         """Paints the patch with `seed`, then the next seeds while a corner of the card peels into the cut or the patch
-        isn't its edition's shape, at most `PEEL_ATTEMPTS` times, keeping the cleanest (a patch of the right shape before
-        any of the wrong one, and of the wrong ones the nearest to the shape); then measures its bird."""
+        isn't its edition's shape (its outline, or its proportions where the edition sets them), at most `PEEL_ATTEMPTS`
+        times, keeping the cleanest (a patch of the right shape before any of the wrong one, and of the wrong ones the
+        nearest to the shape); then measures its bird."""
         dark = pin.dark_clause and is_dark(reference.image, self.prompts.dark_lightness)
         prompt = self.prompts.render(self.spec, dark, pin.setting, pin.markings)
         best = None
         for attempt in range(PEEL_ATTEMPTS):
             bird = png(reference.image)  # named by its contents too: see `Painter.mask`
-            painting = self.client.paint(self.workflow, images=[(f"patch-bird-{reference.photo_id}-{hashlib.sha256(bird).hexdigest()[:12]}.png", bird)], prompt=prompt, seed=seed + attempt)
+            painting = self.client.paint(self.workflow, images=[(f"patch-bird-{reference.photo_id}-{hashlib.sha256(bird).hexdigest()[:12]}.png", bird)], prompt=prompt, seed=seed + attempt,
+                                         size=self.spec.canvas)
             raw = Image.open(io.BytesIO(painting.image)).convert("RGB")
             self.painted += 1
             cut = cut_from_card(raw)
             card = peeled(cut)
             fit = shape_fit(cut, self.spec.outline) if self.spec.outline else 1.0
-            rank = (True, -fit) if fit < self.spec.least_fit else (False, card)
+            # How far it is from its edition's shape: under its outline's least fit, or outside its proportions.
+            off = max(self.spec.least_fit - fit, 0.0) + self.spec.aspect_miss(aspect(cut))
+            rank = (True, off) if off > 0 else (False, card)
             if best is None or rank < best[0]:
                 best = (rank, seed + attempt, raw, cut, attempt + 1, card, fit)
-            if card <= PEEL_LIMIT and fit >= self.spec.least_fit:
+            if card <= PEEL_LIMIT and off == 0:
                 break
         _, seed, raw, cut, attempts, card, fit = best
         result = {"common_name": common_name, "seed": seed, "dark": dark, "measure": None, "card_at_edge": round(card, 4), "attempts": attempts}
         if self.spec.outline:
             result["shape_fit"] = round(fit, 3)
+        if self.spec.aspect:
+            result["aspect"] = round(aspect(cut), 3)
         try:
             interior_image = interior(cut)
             bird = self.painter.mask(interior_image, None)
@@ -343,15 +371,18 @@ class PatchArtist:
     def _file(self, digest: str) -> Path:
         return self.cache_dir / "patches" / f"{digest}.png"
 
-    def sheets(self, species_ids: list[str], patches: dict[str, Patch], out_dir: Path, per_sheet: int = 12) -> list[Path]:
+    def sheets(self, species_ids: list[str], patches: dict[str, Patch], out_dir: Path, per_sheet: int = 12, numbers: dict[str, int] | None = None) -> list[Path]:
         """Contact sheets for the review: each species' reference bird beside its patch, with its state and measure,
-        numbered in the set's order, plus one overview of every patch."""
+        numbered in the set's order, plus one overview of every patch, and `sheets.json` listing what each number is.
+        `numbers` are the species' numbers in the whole pack, for sheets of some of its birds (#215); without them a
+        species' number is its place among `species_ids`."""
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         for old in [*out_dir.glob("sheet-*.jpg"), out_dir / "overview.jpg"]:
             old.unlink(missing_ok=True)
-        cells = []
+        cells, listing = [], []
         for number, species_id in enumerate(species_ids, start=1):
+            number = (numbers or {}).get(species_id, number)
             patch = patches.get(species_id)
             entry = self.lock.species.get(species_id, {})
             common = entry.get("common_name") or self.art_lock.species.get(species_id, {}).get("common_name", species_id)
@@ -362,13 +393,12 @@ class PatchArtist:
                 bird = None
             measured = entry.get("measure")
             line = f"dE {measured['dE_mean']:.1f} iou {measured['iou']:.2f}" if measured else "not measured"
-            if entry.get("card_at_edge", 0) > PEEL_LIMIT:
-                line += " · CARD AT EDGE"
-            if entry.get("shape_fit", 1) < self.spec.least_fit:
-                line += " · WRONG SHAPE"
+            flags = self.flags(entry)
+            line += "".join(f" · {flag}" for flag in flags)
             state = (patch.review if patch else UNPAINTED).upper()
             picture = _on_card(patch.file) if patch and patch.file and patch.file.exists() else None
             cells.append(((bird, f"{number:03d} {common}\nreference"), (picture, f"{state}{' · dark clause' if entry.get('dark') else ''}\n{line}")))
+            listing.append({"number": number, "species": species_id, "common_name": common, "review": patch.review if patch else UNPAINTED, "flags": flags})
         made = []
         for start in range(0, len(cells), per_sheet):
             chunk = cells[start:start + per_sheet]
@@ -381,7 +411,16 @@ class PatchArtist:
             target = out_dir / "overview.jpg"
             grid(overview, f"{self.pack_id} patches, all {len(cells)}", [], cell=(144, 192)).save(target, quality=85)
             made.append(target)
+        write_listing(out_dir, listing, per_sheet)
         return made
+
+    def flags(self, entry: dict) -> list[str]:
+        """What the sheet marks a patch with: card left in its cut, or not its edition's outline or proportions."""
+        return [flag for flag, raised in (
+            ("CARD AT EDGE", entry.get("card_at_edge", 0) > PEEL_LIMIT),
+            ("WRONG SHAPE", entry.get("shape_fit", 1) < self.spec.least_fit),
+            ("WRONG ASPECT", "aspect" in entry and self.spec.aspect_miss(entry["aspect"]) > 0),
+        ) if raised]
 
 
 def cached_isolations(cache_dir: Path, photo_id: int) -> dict[int, Path]:
@@ -449,6 +488,12 @@ def shape_fit(patch: Image.Image, outline: tuple[tuple[float, float], ...]) -> f
     ImageDraw.Draw(drawn).polygon([(x * (width - 1), y * (height - 1)) for x, y in outline], fill=255)
     wanted = np.asarray(drawn) > 0
     return float((alpha & wanted).sum() / max((alpha | wanted).sum(), 1))
+
+
+def aspect(patch: Image.Image) -> float:
+    """The cut patch's width over its height, measured on the patch itself, not on its picture's margin."""
+    alpha = np.asarray(patch.convert("RGBA"))[..., 3] > 128
+    return float(alpha.any(0).sum() / max(alpha.any(1).sum(), 1))
 
 
 def is_dark(bird_on_white: Image.Image, threshold: float) -> bool:

@@ -51,6 +51,7 @@ nonisolated enum GlanceInk {
         case "us-pnw": return color(dark ? 0x8BD0A7 : 0x1E4F33)
         case "us-ny-nyc": return color(dark ? 0xF3ADA8 : 0x83251F)
         case "us-la-south": return color(dark ? 0xDFB2D3 : 0x6D315D)
+        case "north-america": return color(dark ? 0xE9BE66 : 0x5E420A)
         default: return color(dark ? 0xBCE3D9 : 0x15363A)
         }
     }

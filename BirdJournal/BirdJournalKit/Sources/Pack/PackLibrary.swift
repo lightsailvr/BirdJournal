@@ -127,9 +127,20 @@ public final class PackLibrary {
         packs.first { $0.info.id == id }
     }
 
-    /// The first pack (bundled first) that has this species, with its entry.
-    public func species(scientificName: String) -> (pack: SpeciesPack, species: PackSpecies)? {
-        for pack in packs {
+    /// The order a species, a photo or a sound is looked up in (issue #207): the pack of the sighting's own set when it is
+    /// on the phone, then the downloads, then the bundled pack, so a regional field guide's fuller material is read before
+    /// the bundled pack's for a bird both describe.
+    private func readingOrder(setID: String? = nil) -> [SpeciesPack] {
+        var order = downloads.map(\.pack)
+        if let bundled { order.append(bundledUpdate?.pack ?? bundled) }
+        if let setID, let own = order.firstIndex(where: { $0.info.id == setID }) { order.insert(order.remove(at: own), at: 0) }
+        return order
+    }
+
+    /// The species' entry, with the pack it is read from: the pack of `setID` (a sighting's own set) when that pack has the
+    /// species, else the first download that has it, else the bundled pack.
+    public func species(scientificName: String, setID: String? = nil) -> (pack: SpeciesPack, species: PackSpecies)? {
+        for pack in readingOrder(setID: setID) {
             if let species = pack.species(scientificName: scientificName) { return (pack, species) }
         }
         return nil
@@ -152,27 +163,36 @@ public final class PackLibrary {
         return (pack, patch)
     }
 
-    /// The first pack that has this photo (an iNaturalist photo id; two packs sharing a species share its photos).
+    /// The first pack, downloads before the bundled one, that has this photo (an iNaturalist photo id; two packs sharing a
+    /// species share its photos).
     public func photo(id: String) -> (pack: SpeciesPack, photo: PackPhoto)? {
-        for pack in packs {
+        for pack in readingOrder() {
             if let photo = pack.photo(id: id) { return (pack, photo) }
         }
         return nil
     }
 
-    /// The first pack that has this sound (`xc-<nr>` or `inat-<id>`; two packs sharing a species may share a clip).
+    /// The first pack, downloads before the bundled one, that has this sound (`xc-<nr>` or `inat-<id>`; two packs sharing a
+    /// species may share a clip).
     public func sound(id: String) -> (pack: SpeciesPack, sound: PackSound)? {
-        for pack in packs {
+        for pack in readingOrder() {
             if let sound = pack.sound(id: id) { return (pack, sound) }
         }
         return nil
     }
 
-    /// Every set the phone knows (issue #54): each readable pack's own, then the index's for packs not on the phone, then the
-    /// ones that shipped with the app (issue #150), one per pack id. A set therefore works before its pack is downloaded and
-    /// before the index has ever been read, and an installed pack's set is the one its cards and Field Guide read.
+    /// The sets that take sightings (issue #207): those of the packs on the phone, the bundled one and the downloads. A
+    /// sighting is placed among these and no others, so a download's set takes its sightings from the moment it is
+    /// installed and hands them on when it is deleted.
+    public var setsTakingSightings: [PackSet] {
+        packs.compactMap(\.set)
+    }
+
+    /// Every set the phone knows (issue #54): the ones that take sightings, then the index's for packs not on the phone, then
+    /// the ones that shipped with the app (issue #150), one per pack id. The Atlas lists a set, and a place is found in it,
+    /// before its pack is downloaded and before the index has ever been read; it takes no sighting until then (`setsTakingSightings`).
     public var sets: [PackSet] {
-        var sets = packs.compactMap(\.set)
+        var sets = setsTakingSightings
         var known = Set(sets.map(\.id))
         for descriptor in index?.packs ?? [] {
             guard let set = descriptor.set, known.insert(set.id).inserted else { continue }

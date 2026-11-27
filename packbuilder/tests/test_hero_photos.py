@@ -8,7 +8,7 @@ import pytest
 from PIL import Image
 
 from packbuilder import cli
-from packbuilder.definition import PackDefinition
+from packbuilder.definition import PackDefinition, load_overrides
 from packbuilder.detector import Detection
 from packbuilder.geometry import Box
 from packbuilder.hero_photos import assess, as_shown, candidates, cuts, first_photos, propose, review, sheets, slot_of, write_overrides
@@ -184,7 +184,8 @@ def test_the_command_line_applies_the_answer_by_the_sheets_numbers(tmp_path):
 
 @pytest.mark.parametrize("pack_dir", sorted(PACKS.iterdir()), ids=lambda p: p.name)
 def test_no_committed_proposal_is_a_photo_the_build_would_drop(pack_dir):
-    for name, data in json.loads((pack_dir / "overrides.json").read_text()).items():
+    # Read as the build reads it: a definition without the file (a pack not built yet) has no overrides.
+    for name, data in load_overrides(pack_dir / "overrides.json").items():
         if isinstance(data, dict) and "proposed" in data.get("hero", {}):
             assert data["hero"]["proposed"] not in data.get("exclude", []), name
 

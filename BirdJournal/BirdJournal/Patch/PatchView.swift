@@ -4,7 +4,8 @@ import SwiftUI
 /// One patch as an object (issue #134, guide pages 9 and 13): its painting, lit by the phone's tilt with a shadow opposite
 /// the light, or the same patch part way through being sewn (issue #135). Without a painting it's the edition's blank (guide
 /// page 15): the bird's name on a paper tag when `tag` says so, whether the painting isn't on the phone or wouldn't decode, or
-/// "Being sewn" while it's on its way. A decoration: whoever shows it says what it is to VoiceOver.
+/// "Being sewn" while it's on its way. Uncharted's generic patch (issue #222) is lit like any painting and wears that tag
+/// too, since it pictures no bird. A decoration: whoever shows it says what it is to VoiceOver.
 struct PatchView: View {
     enum Face: Equatable {
         case sewn
@@ -16,7 +17,7 @@ struct PatchView: View {
     let edition: PatchEdition
     let face: Face
     let size: PatchTextures.Size
-    /// The name on a blank's paper tag.
+    /// The name on a blank's paper tag, and on the generic patch's.
     let tag: String?
     /// The painting is on its way (`PatchArtState.beingSewn`); it fills in when it arrives.
     let beingSewn: Bool
@@ -67,9 +68,11 @@ struct PatchView: View {
             .overlay {
                 if let loaded {
                     LitPatch(loaded: loaded, ground: twill, sewnTo: sewnTo, room: size == .thumbnail ? 14 : 34)
+                        .tied(art?.tag(tag), drop: edition.shape.tagDrop)
                         .transition(.opacity)
                 } else {
-                    PatchBlank(edition: edition, tag: art == nil || failed ? tag : nil, beingSewn: beingSewn)
+                    // The generic patch's tag is up while it decodes, on the cloth it's about to be lit on.
+                    PatchBlank(edition: edition, tag: art == nil || failed || art?.isGeneric == true ? tag : nil, beingSewn: beingSewn)
                         .transition(.opacity)
                 }
             }
@@ -196,9 +199,23 @@ private struct PatchCloth: View {
     }
 }
 
-/// A small paper tag in live type, tied on through a slot near the top of the blank: never stitched. The same words are in
-/// type beside the patch wherever one shows, and those grow with Dynamic Type, so the tag stops growing before it outgrows
-/// the patch.
+extension View {
+    /// The bird's name on a paper tag over a lit patch, tied where a blank's is: for the generic patch (`PatchArt.tag`), on
+    /// every surface that lights one. Nothing for nil.
+    func tied(_ tag: String?, drop: CGFloat) -> some View {
+        overlay {
+            if let tag {
+                GeometryReader { proxy in
+                    TiedTag(text: tag, size: proxy.size, drop: drop)
+                }
+            }
+        }
+    }
+}
+
+/// A small paper tag in live type, tied on through a slot near the top of the blank, or of the generic patch: never stitched.
+/// The same words are in type beside the patch wherever one shows, and those grow with Dynamic Type, so the tag stops
+/// growing before it outgrows the patch.
 private struct TiedTag: View {
     let text: String
     let size: CGSize

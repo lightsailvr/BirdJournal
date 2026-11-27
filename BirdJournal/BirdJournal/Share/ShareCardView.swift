@@ -73,10 +73,7 @@ struct ShareCardView: View {
         return SharePolicy.content(for: sighting, commonName: library.commonName(for: sighting), reference: nil, area: place, choices: policy)
     }
 
-    private var photoCredits: [String] {
-        guard let species, let patch = species.patch, patchArt != nil else { return [] }
-        return PatchShareImage.Facts.credits(of: patch, in: species)
-    }
+    private var photoCredits: [String] { PatchShareImage.Facts.photoCredits(of: patchArt, species: species) }
 
     private var facts: PatchShareImage.Facts {
         PatchShareImage.Facts(
@@ -351,7 +348,7 @@ struct ShareCardView: View {
     @MainActor
     private func render() {
         guard isReady else { return }
-        let image = PatchShareImage(facts: facts, edition: PatchEdition.of(setID: setID), loaded: loaded)
+        let image = PatchShareImage(facts: facts, edition: PatchEdition.of(setID: setID), loaded: loaded, tag: patchArt?.tag(facts.name))
         guard let rendered = CardExport.render(image, scale: CardExport.imageScale) else { return }
         let content = content
         let lore = species?.lore

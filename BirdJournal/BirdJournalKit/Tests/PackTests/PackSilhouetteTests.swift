@@ -45,7 +45,7 @@ struct PackSilhouetteTests {
         #expect(pack.species.allSatisfy { $0.silhouette == nil })
     }
 
-    @Test("Los Angeles carries all 160, each a PNG with an alpha channel on disk")
+    @Test("Los Angeles carries all 160, each a PNG with an alpha channel on disk", .tags(.losAngelesContent))
     func theBundledPack() throws {
         let pack = try SpeciesPack.bundled()
         #expect(pack.species.count == 160)

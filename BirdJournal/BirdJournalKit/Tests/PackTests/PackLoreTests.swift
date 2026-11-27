@@ -3,7 +3,7 @@ import Testing
 @testable import Pack
 
 /// The fact sheet and lore (issue #56): a schema-4 pack carries each species' sourced facts and its reviewed lore with
-/// a tagline; an older pack has neither, and the bundled Los Angeles pack has lore for every species once its lore
+/// a tagline; an older pack has neither, and the bundled pack has lore for every species once its lore
 /// lock is filled and the pack rebuilt (version 7, the build that ships #57's art and this lore together). Since #113 the
 /// lore carries an approved story title; a pack built before has none.
 @Suite("PackLore")
@@ -62,6 +62,7 @@ struct PackLoreTests {
 
     @Test(
         "every Los Angeles species has a fact sheet, lore and a tagline, crediting its Wikipedia revision",
+        .tags(.losAngelesContent),
         .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= firstLoreVersion, "the bundled pack predates the lore build")
     )
     func bundledLore() throws {
@@ -81,6 +82,7 @@ struct PackLoreTests {
 
     @Test(
         "every Los Angeles species has a story title of 2 to 5 words",
+        .tags(.losAngelesContent),
         .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= firstTitleVersion, "the bundled pack predates the story titles")
     )
     func bundledTitles() throws {

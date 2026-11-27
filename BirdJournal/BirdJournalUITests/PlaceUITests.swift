@@ -23,14 +23,19 @@ final class PlaceUITests: XCTestCase {
 
     @MainActor
     func testAFreshInstallOfflineShowsThePaintingOfThePlaceItsIn() {
-        for (place, set) in [("joshua-tree", "California Deserts"), ("orlando", "Orlando & Space Coast"), ("san-diego", "San Diego"), ("oakland", "SF Bay Area"), ("griffith", "Los Angeles")] {
+        for (place, set) in [("joshua-tree", "California Deserts"), ("orlando", "Orlando & Space Coast"), ("san-diego", "San Diego"), ("oakland", "SF Bay Area"), ("griffith", BundledPack.setName)] {
             let app = launch(["-autoLocation", place])
             expectPainting(of: set, in: app)
+            // Only the bundled set's field guide is on this phone: the others say that birds found there aren't sewn into them (issue #207).
+            let notOnPhone = app.staticTexts["This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set."]
+            XCTAssertEqual(notOnPhone.waitForExistence(timeout: set == BundledPack.setName ? 1 : 5), set != BundledPack.setName, "\(set); screen: \(app.debugDescription.prefix(3000))")
             app.terminate()
         }
     }
 
-    /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set.
+    /// The set you're in beats your newest sighting's. Outside every set, or with location denied, it's your last set: the
+    /// set of the newest sighting that a set took. San Diego's field guide isn't on this phone, so a sighting there is
+    /// Uncharted (issue #207) and leaves the bundled set, where it used to make San Diego the last set.
     @MainActor
     func testTheFallbackOrderWithSightings() {
         let inSanDiego = ["-seedNewestAt", "san-diego"]
@@ -38,13 +43,13 @@ final class PlaceUITests: XCTestCase {
         expectPainting(of: "California Deserts", in: app)
         app.terminate()
         app = launch(inSanDiego + ["-autoLocation", "kansas"])
-        expectPainting(of: "San Diego", in: app)
+        expectPainting(of: BundledPack.setName, in: app)
         app.terminate()
         app = launch(inSanDiego + ["-autoLocation", "denied"])
-        expectPainting(of: "San Diego", in: app)
+        expectPainting(of: BundledPack.setName, in: app)
         app.terminate()
         app = launch(["-autoLocation", "denied", "-currentPlaceSetID", ""])
-        expectPainting(of: "Los Angeles", in: app)
+        expectPainting(of: BundledPack.setName, in: app)
     }
 
     /// A launch with permission undecided asks nothing and falls back to the bundled set. Only Start may ask.
@@ -54,7 +59,7 @@ final class PlaceUITests: XCTestCase {
         app.resetAuthorizationStatus(for: .location)
         app.launchArguments = ["-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-freshPackStorage", "YES", "-packIndexURL", "http://127.0.0.1:9/index.json", "-currentPlaceSetID", ""]
         app.launch()
-        expectPainting(of: "Los Angeles", in: app)
+        expectPainting(of: BundledPack.setName, in: app)
         let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
         // Long enough for a prompt to have come up.
         XCTAssertFalse(springboard.alerts.firstMatch.waitForExistence(timeout: 4), "a prompt at launch: \(springboard.alerts.firstMatch.debugDescription)")
@@ -65,21 +70,21 @@ final class PlaceUITests: XCTestCase {
     @MainActor
     func testTheLocalSetAndItsLatestPatchOpen() {
         let app = launch(["-seedJournal", "YES", "-autoLocation", "griffith"])
-        expectPainting(of: "Los Angeles", in: app)
+        expectPainting(of: BundledPack.setName, in: app)
         let patch = app.buttons.matching(identifier: "board-patch").firstMatch
         if !patch.waitForExistence(timeout: 5) || !patch.isHittable { app.swipeUp() }
         XCTAssertTrue(patch.waitForExistence(timeout: 10), "no latest patch; screen: \(app.debugDescription.prefix(3000))")
         patch.tap()
-        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Los Angeles,")).firstMatch.waitForExistence(timeout: 10), "the patch's page; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "\(BundledPack.setName),")).firstMatch.waitForExistence(timeout: 10), "the patch's page; screen: \(app.debugDescription.prefix(3000))")
         app.navigationBars.buttons.element(boundBy: 0).tap()
-        let local = app.buttons["Your local set, Los Angeles"]
+        let local = app.buttons["Your local set, \(BundledPack.setName)"]
         XCTAssertTrue(local.waitForExistence(timeout: 10))
         local.tap()
-        XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 10), "the set's page; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.setName].waitForExistence(timeout: 10), "the set's page; screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// Offline, a set the phone knows only from what shipped has its tile and page, with no Download to offer, and sewing a patch in
-    /// it would count.
+    /// Offline, a set the phone knows only from what shipped has its tile and page, with no Download to offer. It says that
+    /// birds found there aren't sewn into it until its field guide is on the phone (issue #207).
     @MainActor
     func testASetKnownOnlyFromWhatShippedOpensInTheAtlas() {
         let app = launch(["-autoLocation", "joshua-tree", "-autoScreen", "guide"])
@@ -95,5 +100,6 @@ final class PlaceUITests: XCTestCase {
         desert.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.3)).tap()
         XCTAssertTrue(app.navigationBars["California Deserts"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["155 still out there"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "aren't sewn into this set")).firstMatch.exists, "screen: \(app.debugDescription.prefix(3000))")
     }
 }

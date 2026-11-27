@@ -185,11 +185,13 @@ class SoundLock:
     def record(self, scientific_name: str, chosen: list[ChosenSound]) -> None:
         self._used[scientific_name] = {sound.kind: sound.candidate.to_json() for sound in chosen}
 
-    def write(self) -> None:
-        """Writes the recordings this build chose (a species without a clip drops out)."""
+    def write(self, keep_others: bool = False) -> None:
+        """Writes the recordings this build chose (a species the build did not pick for drops out). A build of some of
+        the pack's birds (`keep_others`) leaves the entries of the species it never picked for as they were."""
         if self.path is None:
             return
-        self.path.write_text(json.dumps(dict(sorted(self._used.items())), indent=2, ensure_ascii=False) + "\n")
+        others = {name: kinds for name, kinds in self.entries.items() if name not in self._used} if keep_others else {}
+        self.path.write_text(json.dumps(dict(sorted({**others, **self._used}.items())), indent=2, ensure_ascii=False) + "\n")
 
 
 @dataclass

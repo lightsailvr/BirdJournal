@@ -115,7 +115,7 @@ struct NameableBirdsTests {
 @Suite("Name this bird's words")
 @MainActor
 struct NameBirdTextTests {
-    static let losAngeles = CardPlacement.numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 21, total: 160)
+    static let losAngeles = CardPlacement.numbered(setID: LosAngelesSet.id, setName: "Los Angeles", edition: "Citrus edition", number: 21, total: 160)
 
     @Test("a field guide's bird says its set and New to you here, or how often it was seen here; any other bird is marked by its placement")
     func status() {

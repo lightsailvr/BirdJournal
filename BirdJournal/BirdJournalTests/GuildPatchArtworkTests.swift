@@ -7,19 +7,20 @@ import Testing
 @Suite("Guild patch illustrations")
 @MainActor
 struct GuildPatchArtworkTests {
-    private static let goose = "Branta canadensis"
+    private static let goose = BundledPack.goose.scientificName
 
-    @Test("Canada Goose uses its available LA patch for missing, unpainted and unavailable editions", arguments: [nil, "us-ca-sd", "not-on-this-phone"] as [String?])
+    @Test("the goose uses its available bundled patch for missing, unpainted and unavailable editions", arguments: [nil, "us-ca-sd", "not-on-this-phone"] as [String?])
     func gooseFallback(edition: String?) throws {
         let folder = temporaryFolder()
         defer { try? FileManager.default.removeItem(at: folder) }
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: folder))
         let artwork = library.guildPatchArtwork(scientificName: Self.goose, setID: edition)
-        #expect(artwork.setID == "us-ca-la")
-        #expect(artwork.state.art == library.patchArt(scientificName: Self.goose, setID: "us-ca-la"))
-        #expect(artwork.note == "Showing Citrus edition artwork")
-        // This correction never changes the viewer's own patch, or claims the find happened in LA.
-        #expect(library.patchArt(scientificName: Self.goose, setID: edition) == nil)
+        #expect(artwork.setID == BundledPack.id)
+        #expect(artwork.state.art == library.patchArt(scientificName: Self.goose, setID: BundledPack.id))
+        #expect(artwork.note == "Showing \(BundledPack.editionName) artwork")
+        // This correction never changes the viewer's own patch, or claims the find happened in the bundled set: outside every
+        // set that's the generic patch (#222), and no painting of the goose.
+        #expect(library.patchArt(scientificName: Self.goose, setID: edition)?.isGeneric != false)
     }
 
     @Test("an installed edition without patches also falls back; an edition with a patch always wins")
@@ -30,8 +31,8 @@ struct GuildPatchArtworkTests {
         try installMetadata(from: bundled, id: "us-ca-sd", into: folder, hasPatches: false)
         var library = PackLibrary(bundled: bundled, storage: PackStorage(directory: folder))
         #expect(library.pack(id: "us-ca-sd") != nil)
-        #expect(library.guildPatchArtwork(scientificName: Self.goose, setID: "us-ca-sd").setID == "us-ca-la")
-        #expect(library.guildPatchArtwork(scientificName: Self.goose, setID: "us-ca-la").note == nil)
+        #expect(library.guildPatchArtwork(scientificName: Self.goose, setID: "us-ca-sd").setID == BundledPack.id)
+        #expect(library.guildPatchArtwork(scientificName: Self.goose, setID: BundledPack.id).note == nil)
         try FileManager.default.removeItem(at: folder.appending(path: "us-ca-sd"))
         try installMetadata(from: bundled, id: "us-ca-sd", into: folder, hasPatches: true)
         library = PackLibrary(bundled: bundled, storage: PackStorage(directory: folder))
@@ -49,7 +50,7 @@ struct GuildPatchArtworkTests {
         try installMetadata(from: bundled, id: "z-edition", into: folder, hasPatches: true)
         try installMetadata(from: bundled, id: "a-edition", into: folder, hasPatches: true)
         let withBundle = PackLibrary(bundled: bundled, storage: PackStorage(directory: folder))
-        #expect(withBundle.guildPatchArtwork(scientificName: Self.goose, setID: nil).setID == "us-ca-la")
+        #expect(withBundle.guildPatchArtwork(scientificName: Self.goose, setID: nil).setID == BundledPack.id)
         let downloadsOnly = PackLibrary(bundled: nil, storage: PackStorage(directory: folder))
         #expect(downloadsOnly.guildPatchArtwork(scientificName: Self.goose, setID: nil).setID == "a-edition")
     }
@@ -62,11 +63,12 @@ struct GuildPatchArtworkTests {
         for edition in [nil, "us-ca-sd"] as [String?] {
             let artwork = library.guildPatchArtwork(scientificName: Self.goose, setID: edition)
             #expect(artwork.setID == edition)
-            #expect(artwork.state == .tagged)
+            // A find that names no set is Uncharted's generic patch (#222), as the viewer's own would be; a set's is its blank.
+            #expect(artwork.state == (edition == nil ? PatchArt.uncharted.map(PatchArtState.painted) : .tagged))
             #expect(artwork.note == nil)
         }
         let withBundle = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: folder))
-        #expect(withBundle.guildPatchArtwork(scientificName: "Nonesuch nonesuch", setID: "us-ca-la").state == .tagged)
+        #expect(withBundle.guildPatchArtwork(scientificName: "Nonesuch nonesuch", setID: BundledPack.id).state == .tagged)
     }
 
     private func temporaryFolder() -> URL {

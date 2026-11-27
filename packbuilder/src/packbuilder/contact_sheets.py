@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 CELL = (288, 384)
@@ -59,3 +62,15 @@ def grid(rows: list[list[tuple[Image.Image | None, str]]], title: str, footer: l
         draw.text((12, y), text, fill=FADED_INK, font=font(15))
         y += line
     return sheet
+
+
+LISTING = "sheets.json"
+
+
+def write_listing(out_dir: Path, rows: list[dict], per_sheet: int) -> Path:
+    """`sheets.json` beside a step's contact sheets: what each numbered cell shows, in the sheets' order, with the sheet
+    it is on. A review page is built from it, and the numbers are the ones a review command takes."""
+    listed = [{**row, "sheet": f"sheet-{index // per_sheet + 1:02d}.jpg"} for index, row in enumerate(rows)]
+    target = Path(out_dir) / LISTING
+    target.write_text(json.dumps(listed, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    return target

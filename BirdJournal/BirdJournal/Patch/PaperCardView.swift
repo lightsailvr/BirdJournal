@@ -6,8 +6,11 @@ import SwiftUI
 /// The paper card behind a patch (issue #134, guide page 10), top to bottom: the edition line and the collector number, the
 /// name in serif with the scientific name in italic, the story title, the lore excerpt, the biology, your history with the
 /// bird here (the count, when it was sewn, the latest sightings, each opening its sighting), then the rest of the lore.
-/// "All 8 sightings", "AI illustration" and Sources stay in the footer. It scrolls inside the patch's footprint; at
-/// accessibility text sizes it grows into a reading view and the page scrolls instead.
+/// "All 8 sightings", "AI illustration" and Sources stay in the footer. It scrolls inside the patch's footprint, and there
+/// the friends who have the bird and the history's own line, "8 sightings here, sewn … in Los Angeles", stay in view over the
+/// footer (issue #214): a full card used to cut the line at the fold, and a long set name wrapped it, so half a sentence
+/// showed. At accessibility text sizes the card grows into a reading view and the page scrolls instead, with both where the
+/// history begins.
 struct PaperCardView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -21,17 +24,26 @@ struct PaperCardView: View {
     private static let latestShown = 3
 
     var body: some View {
-        let species = library.species(scientificName: patch.scientificName)?.species
+        let species = library.species(scientificName: patch.scientificName, setID: patch.placement.setID)?.species
         VStack(spacing: 0) {
             if isReadingView {
-                content(species)
+                content(species, showsHistoryLine: true)
             } else {
                 ScrollView {
-                    content(species)
+                    content(species, showsHistoryLine: false)
                 }
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.visible)
                 .accessibilityIdentifier("card-back-scroll")
+                // Under the scrolling text, whole at any length: they take the lines they need and the text above gives them up.
+                // The friends were in view without scrolling by coming before the history (issue #150); now by staying here.
+                VStack(alignment: .leading, spacing: 6) {
+                    FriendsOnCard(scientificName: patch.scientificName)
+                    PaperRule()
+                    historyLineRow
+                }
+                .padding(.horizontal, 14)
+                .padding(.bottom, 2)
             }
             footer(hasCredits: species != nil)
         }
@@ -41,7 +53,8 @@ struct PaperCardView: View {
         .modifier(CardStockSurface())
     }
 
-    private func content(_ species: PackSpecies?) -> some View {
+    /// - Parameter showsHistoryLine: false where the friends and the history's line stay in view under the scrolling text instead.
+    private func content(_ species: PackSpecies?, showsHistoryLine: Bool) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             editionLine
             VStack(spacing: 1) {
@@ -63,10 +76,12 @@ struct PaperCardView: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
-            // Above the history, so it's in view without scrolling: a card that's full cuts the history off, which says there's more.
-            FriendsOnCard(scientificName: patch.scientificName)
+            // A card that's full cuts the latest sightings off, which says there's more.
+            if showsHistoryLine {
+                FriendsOnCard(scientificName: patch.scientificName)
+            }
             PaperRule()
-            history
+            history(showsLine: showsHistoryLine)
             if let lore = species?.lore {
                 PaperCardMoreLore(lore: lore)
             }
@@ -112,20 +127,26 @@ struct PaperCardView: View {
         }
     }
 
-    private var history: some View {
+    /// The count, large, and the history's line beside it, on as many lines as it needs.
+    private var historyLineRow: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Text(patch.count, format: .number)
+                .font(PatchFont.cardCount)
+                .foregroundStyle(Color.cardInk)
+                .accessibilityHidden(true)
+            Text(historyLine)
+                .font(.caption)
+                .foregroundStyle(Color.cardInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel("\(PatchText.sightings(patch.count)) here, sewn \(PatchText.spokenDate(patch.sewn.confirmedAt))")
+                .accessibilityIdentifier("card-history")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func history(showsLine: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(patch.count, format: .number)
-                    .font(PatchFont.cardCount)
-                    .foregroundStyle(Color.cardInk)
-                    .accessibilityHidden(true)
-                Text(historyLine)
-                    .font(.caption)
-                    .foregroundStyle(Color.cardInk)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel("\(PatchText.sightings(patch.count)) here, sewn \(PatchText.spokenDate(patch.sewn.confirmedAt))")
-                    .accessibilityIdentifier("card-history")
-            }
+            if showsLine { historyLineRow }
             ForEach(sightings.prefix(Self.latestShown)) { sighting in
                 NavigationLink(value: Route.sighting(sighting.persistentModelID)) {
                     ViewThatFits(in: .horizontal) {
@@ -158,7 +179,7 @@ struct PaperCardView: View {
         }
     }
 
-    /// "8 sightings here, sewn Sep 14 in Los Angeles".
+    /// "8 sightings here, sewn Sep 14, 2026 in Los Angeles".
     private var historyLine: String {
         let sewn = patch.sewn.confirmedAt.formatted(date: .abbreviated, time: .omitted)
         let here = patch.placement.setID == nil ? "" : " in \(patch.placement.setName)"

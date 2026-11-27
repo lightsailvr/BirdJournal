@@ -86,6 +86,10 @@ _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fall
 A downloadable bundle for one set's place: species, photos, reference sounds, descriptions, stats, lore and patches. In copy, a field-guide download.
 _Avoid_: region pack, bundle, dataset
 
+**Field-guide offer**:
+The app's one unasked invitation to download a pack (#223): to a birder standing in a set whose pack isn't on the phone, that set's field guide, with its size. Once per set: "Not now" is remembered, and the set's page in the Atlas keeps its ordinary Download. Nothing downloads without a tap.
+_Avoid_: prompt, nag, upsell, recommendation
+
 **Reference sound**:
 A recorded song or call of a species shipped in a pack, for the birder to compare with what they hear.
 _Avoid_: clip (in domain language), sample
@@ -121,7 +125,8 @@ Your patches in one place in Collection, on felt across the whole sheet, in coll
 _Avoid_: grid, shelf
 
 **Blank**:
-An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Uncharted's is the plain canvas round. Never an error patch, and never shown for a bird you haven't found (#138).
+An edition's shape and cord drawn by the app when the phone has no painting of a bird you did find there: its name on a paper tag, or "Being sewn" while its pack downloads. Never an error patch, and never shown for a bird you haven't found (#138). Uncharted has no blank (#222): a bird outside every set wears the generic patch, one finished embroidery (a feather, low on Uncharted's plain canvas round with its brown cord) that ships in the app and is lit like any patch, the same for every bird, with the bird's name on the paper tag a blank would carry. It pictures no bird, so its add has no stitch-in, and it is never a set's blank: a set whose painting is missing or on its way still shows its own.
+_Avoid_: placeholder, empty patch, default patch (for the generic patch)
 
 **Not yet found**:
 A bird in a set with no patch of yours there. It has no patch or pattern anywhere: only a silhouette row on the set's page in the Atlas, with its number and name, and its own no-sightings page. Not a state of any board. In copy, "still out there".
@@ -151,7 +156,7 @@ How unusual a species is at a sighting's place and week, saved at the add as a l
 _Avoid_: score, frequency, abundance
 
 **Set**:
-A place's collection of birds: the species of one pack, in taxonomic order, which a birder collects toward. Its progress counts the patches sewn in it. Sightings outside every set belong to the Uncharted set.
+A place's collection of birds: the species of one pack, in taxonomic order, which a birder collects toward. Its progress counts the patches sewn in it. A set takes sightings only while its pack is on the phone, bundled or downloaded (#207): a sighting goes to the set on the phone whose containing part is smallest among those listing the bird, and a sighting no set on the phone takes belongs to the Uncharted set. Downloading a field guide moves the sightings it now takes into its set; deleting it moves them to another set on the phone that takes them, or to Uncharted. The phone knows more sets than it has packs for (from the pack index and the definitions shipped with the app): the Atlas lists them all, and a place is in its set, whether or not the pack is on the phone.
 _Avoid_: region, board (in copy), collection (for a set), checklist
 
 **Collector number**:

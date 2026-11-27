@@ -6,6 +6,9 @@ import SwiftUI
 struct PatchEdition: Equatable {
     enum Shape: Equatable {
         case circle, oval, hexagon, arch, shield, pentagon, roundedSquare, diamond
+        /// The Continental edition's (issue #214): lying on its long side, its corners softly rounded. The only shape much
+        /// wider than it is tall.
+        case wideRectangle
 
         /// How far down a blank the slot for its paper tag is cut, as a part of the patch's height: lower under a point,
         /// so the tag hangs where the cloth is as wide as it is.
@@ -13,7 +16,7 @@ struct PatchEdition: Equatable {
             switch self {
             case .pentagon: 0.16
             case .diamond: 0.24
-            case .circle, .oval, .hexagon, .arch, .shield, .roundedSquare: 0.1
+            case .circle, .oval, .hexagon, .arch, .shield, .roundedSquare, .wideRectangle: 0.1
             }
         }
     }
@@ -33,6 +36,9 @@ struct PatchEdition: Equatable {
         // A regular pentagon on its flat: 2 sin 72° wide to 1 + cos 36° tall.
         case .pentagon: 1.05
         case .roundedSquare, .diamond: 1
+        // As painted (#213): the seven samples came out 1.35 to 1.57 wide to 1 tall, the two kept ones 1.42 and 1.43 once the
+        // pack has trimmed their rim of card. The builder paints again what is outside 1.3 to 1.55 (`art/patch-prompts.json`).
+        case .wideRectangle: 1.42
         }
     }
 
@@ -50,6 +56,7 @@ struct PatchEdition: Equatable {
         case "us-pnw": PatchEdition(shape: .pentagon, cord: Color(hex: 0x34503F), twill: Color(hex: 0xB4BEC8))
         case "us-ny-nyc": PatchEdition(shape: .roundedSquare, cord: Color(hex: 0x9B2F27), twill: Color(hex: 0xF0E0C6))
         case "us-la-south": PatchEdition(shape: .diamond, cord: Color(hex: 0x5A2A4E), twill: Color(hex: 0xE9D3AC))
+        case "north-america": PatchEdition(shape: .wideRectangle, cord: Color(hex: 0xC98F2A), twill: Color(hex: 0xBFB3C4))
         default: PatchEdition(shape: .circle, cord: Color(hex: 0x6E4B2E), twill: Color(hex: 0xD8CBB0))
         }
     }
@@ -69,6 +76,7 @@ extension PatchEdition {
         case "us-pnw": Color("EditionEvergreen")
         case "us-ny-nyc": Color("EditionBorough")
         case "us-la-south": Color("EditionBayou")
+        case "north-america": Color("EditionContinental")
         case nil: Color("EditionUncharted")
         default: .moss
         }
@@ -88,6 +96,7 @@ extension PatchEdition {
         case "us-pnw": Color(hex: 0x2D6043)
         case "us-ny-nyc": Color(hex: 0x9E2F28)
         case "us-la-south": Color(hex: 0x833E71)
+        case "north-america": Color(hex: 0x7B570E)
         default: tint(setID: setID)
         }
     }
@@ -153,6 +162,9 @@ nonisolated struct PatchOutline: Shape {
             return path
         case .roundedSquare:
             return Path(roundedRect: rect, cornerRadius: min(rect.width, rect.height) * 0.18)
+        case .wideRectangle:
+            // A tenth of its height, as the samples' corners are: tighter than the rounded square's, the shape nearest it.
+            return Path(roundedRect: rect, cornerRadius: min(rect.width, rect.height) * 0.1)
         case .diamond:
             // A square on its corner. Its points are rounded, and it's drawn a little past the rectangle so the rounded
             // points touch the rectangle's sides, as a painting's do the edges of its picture.

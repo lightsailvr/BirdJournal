@@ -106,7 +106,7 @@ final class AfterTheRunUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle-new",
-            "-autoRunStopAfter", "20", "-fakeRunBirds", "Haemorhous mexicanus_House Finch,Sayornis nigricans_Black Phoebe",
+            "-autoRunStopAfter", "20", "-fakeRunBirds", "\(BundledPack.finch.label),\(BundledPack.phoebe.label)",
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith",
         ]
         app.launch()
@@ -183,7 +183,7 @@ final class AfterTheRunUITests: XCTestCase {
     }
 
     /// The bundled pack's first bird, in Griffith Park, as `-seedBoard` adds it.
-    private static let seeded = "birdjournal://patch?species=Buteo%20jamaicensis_Red-tailed%20Hawk&set=us-ca-la"
+    private static let seeded = "birdjournal://patch?species=\(BundledPack.hawk.label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&set=\(BundledPack.id)"
 
     /// A link to the app as it runs, as a widget's tap arrives: `XCUIApplication.open` would launch it again. The system asks
     /// first when a link doesn't come from a widget.
@@ -200,15 +200,15 @@ final class AfterTheRunUITests: XCTestCase {
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 30))
         openWhileRunning(URL(string: Self.seeded)!)
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 15), "the patch didn't open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Los Angeles, '")).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Red-tailed Hawk'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.setName), '")).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS '\(BundledPack.hawk.name)'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor
     func testALinkToAPatchThatsGoneOpensTheCollection() {
         let app = launchBoard()
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 30))
-        openWhileRunning(URL(string: "birdjournal://patch?species=Corvus%20corax_Common%20Raven&set=us-ca-la")!)
+        openWhileRunning(URL(string: "birdjournal://patch?species=\(BundledPack.gnatcatcher.label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&set=\(BundledPack.id)")!)
         XCTAssertTrue(app.tabBars.buttons["Collection"].waitForExistence(timeout: 10))
         let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: app.tabBars.buttons["Collection"])
         wait(for: [selected], timeout: 15)
@@ -231,7 +231,7 @@ final class AfterTheRunUITests: XCTestCase {
         app.launchArguments = ["-albumFile", album, "-collectionIntroShown", "YES"]
         app.open(URL(string: Self.seeded)!)
         XCTAssertTrue(app.buttons["card-flip"].waitForExistence(timeout: 30), "the patch didn't open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'Red-tailed Hawk'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS '\(BundledPack.hawk.name)'")).firstMatch.exists, "the right bird; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor

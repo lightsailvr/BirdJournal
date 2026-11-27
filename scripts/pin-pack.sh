@@ -4,12 +4,12 @@
 # `gh release create` (see packs/README.md). An existing entry keeps its `bundled` flag; a new pack is a download
 # unless --bundled says otherwise (only one pack is bundled: PackIndex.bundledPackID in the Swift Pack module).
 #
-#   scripts/pin-pack.sh us-ca-la            # tag pack-us-ca-la-v<version>, asset us-ca-la.zip
-#   scripts/pin-pack.sh us-ca-sd            # a downloadable pack
+#   scripts/pin-pack.sh us-ca-sd            # tag pack-us-ca-sd-v<version>, asset us-ca-sd.zip
+#   scripts/pin-pack.sh <pack id> --bundled # a new pack that the app bundles
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-pack_id="${1:-us-ca-la}"
+pack_id="${1:?usage: scripts/pin-pack.sh <pack id> [--bundled]}"
 bundled_flag="${2:-}"
 zip="$repo_root/build/packs/$pack_id.zip"
 manifest="$repo_root/packs/manifest.json"
@@ -24,6 +24,11 @@ command -v sqlite3 >/dev/null || { echo "sqlite3 is needed to read the pack's co
 database="$repo_root/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || database="$repo_root/build/packs/$pack_id/pack.sqlite"
 [ -f "$database" ] || { echo "no pack.sqlite for $pack_id under packs/ or build/packs/" >&2; exit 1; }
+# A build of some of the pack's birds (`packbuilder build --only`, issue #215) is for a trial, never for the manifest.
+partial="$(python3 -c 'import json, sys
+partial = json.load(open(sys.argv[1])).get("partial")
+print("{species} of its {listed} species".format(**partial) if partial else "")' "$(dirname "$database")/report.json")"
+[ -z "$partial" ] || { echo "$pack_id was built with --only ($partial): a partial pack is never pinned. Build the whole pack first." >&2; exit 1; }
 species="$(sqlite3 "$database" 'select count(*) from species')"
 photos="$(sqlite3 "$database" 'select count(*) from photo')"
 region="$(sqlite3 "$database" 'select region from pack')"

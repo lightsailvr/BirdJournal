@@ -4,7 +4,7 @@ import ImageIO
 import Testing
 @testable import Pack
 
-/// The bundled Los Angeles pack as `scripts/download-pack.sh` fetched it (issue #12: about 150 species with photos
+/// The bundled pack as `scripts/download-pack.sh` fetched it (issue #12: about 150 species with photos
 /// carrying observer, license and source URL, and Wikipedia-derived descriptions, offline; issue #41: a song and/or
 /// call clip per species with its recordist, license and recording page).
 @Suite("SpeciesPack")
@@ -12,7 +12,7 @@ struct SpeciesPackTests {
     /// Open licenses only (ADR-0001, issue #50): no NonCommercial photo in the bundled pack.
     static let allowedLicenses: Set<String> = ["CC0", "CC BY", "CC BY-SA"]
 
-    @Test("the bundled pack opens with about 150 species in the definition's order")
+    @Test("the bundled pack opens with about 150 species in the definition's order", .tags(.losAngelesContent))
     func bundledPack() throws {
         let pack = try SpeciesPack.bundled()
         #expect(pack.info.id == PackIndex.bundledPackID)

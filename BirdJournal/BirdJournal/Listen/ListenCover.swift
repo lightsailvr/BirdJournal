@@ -7,13 +7,16 @@ import SwiftUI
 struct LocalSet {
     let set: PackSet
     let progress: SetProgress
+    /// Whether the set's pack is on the phone, so that sightings here are sewn into it (issue #207).
+    let isOnPhone: Bool
 
     /// The set shown, with its progress; nil when the phone doesn't know it.
     @MainActor
     init?(setID: String?, library: PackLibrary, collection: CardCollection) {
         guard let setID, let set = library.set(id: setID) else { return nil }
         self.set = set
-        progress = collection.progress(of: set.id)
+        progress = collection.progress(of: set)
+        isOnPhone = library.pack(id: set.id) != nil
     }
 
     /// The set whose regions contain the coordinate; else the set of the newest sighting, so outside every set it's your last
@@ -24,8 +27,10 @@ struct LocalSet {
         return sets.first { $0.id == bundledID }?.id ?? sets.first?.id
     }
 
-    nonisolated static func choose(coordinate: Coordinate?, in collection: CardCollection) -> String? {
-        choose(coordinate: coordinate, newestSetID: newestSetID(in: collection), sets: collection.sets)
+    /// - Parameter sets: every set the phone knows (`PackLibrary.knownCardSets`): a place is in its set whether or not that
+    ///   set's pack is on the phone, though the collection places sightings only among those that are (issue #207).
+    nonisolated static func choose(coordinate: Coordinate?, in collection: CardCollection, among sets: [CardSet]) -> String? {
+        choose(coordinate: coordinate, newestSetID: newestSetID(in: collection), sets: sets)
     }
 
     /// The set of the newest sighting that's in one: an Uncharted one has none, and shouldn't lose your last set.
@@ -108,6 +113,7 @@ struct ListenCoverHeader: View {
 /// "Your local set" (the Listen mock's lower half): the set's name, which opens its page, and how many of its birds are sewn; the
 /// thread; and the latest patches.
 struct LocalSetSection: View {
+    @Environment(FieldGuideOffers.self) private var offers
     @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .body) private var patchSide: CGFloat = 80
     let local: LocalSet
@@ -130,8 +136,12 @@ struct LocalSetSection: View {
             ThreadProgress(local.progress)
                 .id(local.set.id)
             let latest = latestPatches
-            if latest.isEmpty {
-                Text("Birds you add are sewn as patches here, one for every bird in every place.")
+            if let offer = offers.offer(forSet: local.set.id) {
+                // The birder is standing here without the set's field guide (issue #223): the offer, where the plain words were.
+                FieldGuideOfferCard(standingIn: local.set, descriptor: offer) { offers.dismiss(setID: local.set.id) }
+                    .padding(.top, 14)
+            } else if latest.isEmpty {
+                Text(local.isOnPhone ? "Birds you add are sewn as patches here, one for every bird in every place." : Self.notOnPhoneText)
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
                     .padding(.top, 14)
@@ -147,6 +157,10 @@ struct LocalSetSection: View {
         }
         .padding(.top, JournalLayout.sectionGap)
     }
+
+    /// What stands where the latest patches would, for a place whose set's pack isn't on the phone (issue #207), once its
+    /// offer has been dismissed or when there's no download to offer (issue #223).
+    static let notOnPhoneText = "This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set."
 
     /// The set's name is the way to its page. It's the section's heading for VoiceOver, which also says whose set it is.
     private var name: some View {

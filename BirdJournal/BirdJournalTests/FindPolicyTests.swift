@@ -14,7 +14,7 @@ struct FindPolicyTests {
 
     static func input(
         isThreatened: Bool? = false, placeName: String? = "Pasadena", isNewPatch: Bool = false, rarity: RarityLabel? = .common,
-        method: SightingMethod = .heard, patchArt: (packID: String, file: String)? = ("us-ca-la", "patch/sayornis-nigricans.avif")
+        method: SightingMethod = .heard, patchArt: (packID: String, file: String)? = (LosAngelesSet.id, "patch/sayornis-nigricans.avif")
     ) -> FindPolicy.Input {
         FindPolicy.Input(
             identifier: identifier, speciesID: "Sayornis nigricans_Black Phoebe", commonName: "Black Phoebe", method: method,
@@ -38,7 +38,7 @@ struct FindPolicyTests {
         #expect(find == FindPolicy.Find(
             speciesID: "Sayornis nigricans_Black Phoebe", scientificName: "Sayornis nigricans", commonName: "Black Phoebe",
             method: .seen, place: "Pasadena", foundAt: "2026-09-21T14:13:00Z", newPatch: true, edition: nil, rarity: .rare,
-            threatened: false, art: .init(kind: "pack", key: "packs/us-ca-la/patch/sayornis-nigricans.png")
+            threatened: false, art: .init(kind: "pack", key: "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png")
         ))
     }
 
@@ -75,15 +75,15 @@ struct FindPolicyTests {
     @Test("a threatened or city-off find names its region by edition and patch, and nothing finer (decided 2026-11-04)")
     func regionAndNothingFiner() throws {
         var input = Self.input(isThreatened: true, placeName: "Palos Verdes Estates")
-        input.edition = "us-ca-la"
+        input.edition = LosAngelesSet.id
         let threatened = try #require(FindPolicy.find(for: input, sharing: .automatic))
         input.isThreatened = false
         let cityOff = FindPolicy.card(for: input, choices: .init(includeCity: false), circleIDs: ["c"], photoKey: nil)
         #expect(!cityOff.includePlace)
         for (find, place) in [(threatened, "a secret spot"), (cityOff.find, nil)] as [(FindPolicy.Find, String?)] {
             #expect(find.place == place)
-            #expect(find.edition == "us-ca-la")
-            #expect(find.art?.key == "packs/us-ca-la/patch/sayornis-nigricans.png")
+            #expect(find.edition == LosAngelesSet.id)
+            #expect(find.art?.key == "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png")
             let json = String(decoding: try JSONEncoder().encode(find), as: UTF8.self)
             for word in ["Palos Verdes", "latitude", "longitude", "coordinate", "accuracy", "34."] {
                 #expect(!json.contains(word), "\(word) in \(json)")
@@ -94,11 +94,11 @@ struct FindPolicyTests {
     @Test("a find says whether it sewed a new patch and in which edition, and shows the patch's art")
     func newPatchAndEdition() throws {
         var input = Self.input(isNewPatch: true)
-        input.edition = "us-ca-la"
-        input.patchArt = (packID: "us-ca-la", file: "patch/sayornis-nigricans.avif")
+        input.edition = LosAngelesSet.id
+        input.patchArt = (packID: LosAngelesSet.id, file: "patch/sayornis-nigricans.avif")
         let find = try #require(FindPolicy.find(for: input, sharing: .automatic))
-        #expect(find.newPatch && find.edition == "us-ca-la")
-        #expect(find.art == FindPolicy.Find.Art(kind: "pack", key: "packs/us-ca-la/patch/sayornis-nigricans.png"))
+        #expect(find.newPatch && find.edition == LosAngelesSet.id)
+        #expect(find.art == FindPolicy.Find.Art(kind: "pack", key: "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png"))
 
         // Outside every set: no edition, written as null so a repeated put clears it. A pack without patches sends no art,
         // since the watercolours are retired (#137): the viewer draws the edition's blank.
@@ -112,8 +112,8 @@ struct FindPolicyTests {
 
     @Test("the patch's key is what the art CDN and the deployed server take")
     func patchArtKey() {
-        let key = FindPolicy.patchArtKey(packID: "us-ca-la", file: "patch/sayornis-nigricans.avif")
-        #expect(key == "packs/us-ca-la/patch/sayornis-nigricans.png")
+        let key = FindPolicy.patchArtKey(packID: LosAngelesSet.id, file: "patch/sayornis-nigricans.avif")
+        #expect(key == "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png")
         // backend/.../finds.py, `_ART_KEY`.
         #expect(key.range(of: #"^(packs|art)/[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*\.(jpg|jpeg|png|webp)$"#, options: .regularExpression) != nil)
     }
@@ -135,7 +135,7 @@ struct FindPolicyTests {
 
     @Test("the patch's key takes off the last extension only")
     func patchArtKeyStem() {
-        #expect(FindPolicy.patchArtKey(packID: "us-ca-la", file: "patch/x.v2.avif") == "packs/us-ca-la/patch/x.v2.png")
+        #expect(FindPolicy.patchArtKey(packID: LosAngelesSet.id, file: "patch/x.v2.avif") == "packs/\(LosAngelesSet.id)/patch/x.v2.png")
     }
 
     @Test("a find's art is only ever a kind and a key: no painting, no fallback (#137)")

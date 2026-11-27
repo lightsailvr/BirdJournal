@@ -86,7 +86,7 @@ enum PatchText {
     /// The name a patch goes by: a pack's, else the label's own, so a bird no pack describes is still named.
     @MainActor
     static func name(of patch: CardCollection.Patch, library: PackLibrary) -> String {
-        library.species(scientificName: patch.scientificName)?.species.commonName ?? BirdComparison.commonName(ofLabel: patch.speciesID)
+        library.species(scientificName: patch.scientificName, setID: patch.placement.setID)?.species.commonName ?? BirdComparison.commonName(ofLabel: patch.speciesID)
     }
 
     /// "1 sighting", "8 sightings".

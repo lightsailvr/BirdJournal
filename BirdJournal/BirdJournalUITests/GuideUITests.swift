@@ -12,14 +12,14 @@ final class GuideUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.navigationBars["Atlas"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        let tile = app.buttons["guide-set-us-ca-la"]
+        let tile = app.buttons["guide-set-\(BundledPack.id)"]
         XCTAssertTrue(tile.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(tile.label.contains("Los Angeles"), tile.label)
-        XCTAssertTrue(tile.label.contains("Citrus edition"), tile.label)
+        XCTAssertTrue(tile.label.contains(BundledPack.setName), tile.label)
+        XCTAssertTrue(tile.label.contains(BundledPack.editionName), tile.label)
         XCTAssertTrue(tile.label.contains("Ready offline"), tile.label)
-        XCTAssertTrue(tile.label.contains("0 of 160 sewn"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
+        XCTAssertTrue(tile.label.contains("0 of \(BundledPack.speciesCount) sewn"), "nothing collected yet, though the pack is on the phone: \(tile.label)")
         tile.tap()
-        XCTAssertTrue(app.navigationBars["Los Angeles"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.setName].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -72,11 +72,11 @@ final class GuideUITests: XCTestCase {
         XCTAssertTrue(search.waitForExistence(timeout: 15), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(search.isHittable)
         search.tap()
-        search.typeText("Black Phoebe")
-        XCTAssertTrue(app.staticTexts["Sayornis nigricans"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        search.typeText(BundledPack.phoebe.name)
+        XCTAssertTrue(app.staticTexts[BundledPack.phoebe.scientificName].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// Issue #150: a set's page makes its rows as they come on screen, not all 160 when it opens (XCUITest lists what's off
+    /// Issue #150: a set's page makes its rows as they come on screen, not all of them when it opens (XCUITest lists what's off
     /// screen too, so the count is what was made), and the last bird is still there at the end of a scroll.
     @MainActor
     func testASetsPageMakesItsRowsAsTheyScrollIn() {
@@ -86,7 +86,7 @@ final class GuideUITests: XCTestCase {
         let rows = app.buttons.matching(identifier: "set-species-silhouette")
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertLessThan(rows.count, 40, "made at open")
-        let last = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '160, '")).firstMatch
+        let last = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.speciesCount), '")).firstMatch
         for _ in 0..<40 where !last.exists {
             app.swipeUp(velocity: .fast)
         }
@@ -105,8 +105,8 @@ final class GuideUITests: XCTestCase {
         for _ in 0..<3 where !search.exists { app.swipeDown(velocity: .slow) }
         XCTAssertTrue(search.waitForExistence(timeout: 5), "no search field in view; screen: \(app.debugDescription.prefix(3000))")
         search.tap()
-        search.typeText("House Finch")
-        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '130, House Finch'")).firstMatch
+        search.typeText(BundledPack.finch.name)
+        let finch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.paddedNumber), \(BundledPack.finch.name)'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(app.buttons.matching(identifier: "set-species-silhouette").count, 1, "only the match; screen: \(app.debugDescription.prefix(3000))")
         search.typeText("zzz")

@@ -27,9 +27,11 @@ import UIKit
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
 ///   prints what each cost (`SpeedTour`).
 /// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
-/// - `-seedGallery YES` adds fifteen House Finch cards over three weeks, nine in Los Angeles and six in San Diego, for
+/// - `-seedNoLocation "Turdus merula_Common Blackbird,…"` adds a sighting of each of those BirdNET labels just now with no
+///   location, on top of any other seed, the first the newest: Uncharted whatever the bird, with the generic patch (issue #222).
+/// - `-seedGallery YES` adds fifteen cards of the finch (`SampleBirds`) over three weeks, nine in Griffith Park and six in San Diego, for
 ///   the species' patches (issue #134).
-/// - `-autoScreen find` opens a find's page (`-autoFind <owner>/<sighting>`, by default Maya's Black Phoebe), and `circle-info` a
+/// - `-autoScreen find` opens a find's page (`-autoFind <owner>/<sighting>`, by default Maya's phoebe), and `circle-info` a
 ///   Guild's Info sheet (issue #150). `-fakeCircles one|shared|reference` seeds one Guild, finds in two, and the reference picture's.
 /// - `-autoScreen <name>` opens a screen: `listen`, `listening` (starts a phone run; `-autoPhoneListening <wav>`
 ///   feeds that file), `review` (the first heard candidate), `journal` or `cards` (the Patches view), `sightings`,
@@ -38,7 +40,7 @@ import UIKit
 ///   card, front or back up, or with `-autoCardSpecies <scientific name>` that species' newest),
 ///   `species` or `gallery` (the patches of the newest sighting's species, or `-autoCardSpecies`'s, found or not), `species-list` (the
 ///   Species view with its set progress), `set` (a set's page in the Field Guide: the bundled pack's, or
-///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the Black Phoebe, or `-autoCardSpecies`'s),
+///   `-autoSet <id>`), `sighting` (the newest, or `-autoCardSpecies`'s), `map` (the newest sighting's full map), `share` ("A story to share" for the same sighting, issue #66), `guide`, `profile` (the phoebe, or `-autoCardSpecies`'s),
 ///   `packs`, `pack` (the bundled pack), `credits`, `settings`, `app-icon`, `account` (Settings → Account; `-fakeAccount
 ///   signedOut|signedIn` fakes the sign-in), `support` (the tip jar; `-autoTipThanks YES` shows its
 ///   thank-you), `source` (the audio source sheet), and the Circle tab (issue #61; with `-fakeAccount
@@ -68,14 +70,17 @@ import UIKit
 /// - `-stitchInSeconds <n>` makes the stitch-in that long, so a UI test or a screenshot can catch it part way;
 ///   `-stitchInSweep YES` plays it round and round and logs frame times under the `stitch-in` category (issue #135).
 /// - `-captionWriter fixed` writes every add's caption as a fixed line (`FixedCaptionWriter`), for simulators without
-///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded Black Phoebe has a caption.
+///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded phoebe has a caption.
 /// - `-autoLocation denied` answers the location request as denied instead of prompting, for the UI tests; `griffith` answers
 ///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
-///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
+///   and `chicago` are outside every regional set (`DebugPlace`): the North America set's, once its pack is on the phone (issue #215). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
 ///   picks the Listen painting (issue #150).
 /// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
 ///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
-/// - `-fakeRunBirds "Haemorhous mexicanus_House Finch,…"` makes a run's list these BirdNET labels and hold still, the first
+/// - `-autoLocation testland` is inside the pack fixtures' set and no real one, and `-packIndexURL <file URL>` reads an index a
+///   UI test wrote, whose downloads can be files too: a field guide offered, downloaded and installed with no network (issue
+///   #223). `-resetFieldGuideOffers YES` forgets which sets' offers were dismissed, as a new install has none.
+/// - `-fakeRunBirds "<scientific name>_<common name>,…"` makes a run's list these BirdNET labels and hold still, the first
 ///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
 ///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
 ///   reveal; `-fakeRunReorderEvery <seconds>` keeps those heard earlier swapping places, so the list keeps re-sorting;
@@ -89,7 +94,7 @@ import UIKit
 ///   `-circleCacheFile <name>` gives its store a cache in tmp to relaunch over (issue #150); `-autoScrollTo guild-settings` scrolls a Guild's page to its
 ///   settings (issue #119's screenshots of the states).
 /// - `-autoScreen glasses-run` with `-autoGlassesListening <wav>` pairs the mock glasses and starts a real glasses run on the
-///   Listen tab, the file standing in for the stream; `-autoLensAdd "House Finch,Dark-eyed Junco"` adds those birds on the
+///   Listen tab, the file standing in for the stream; `-autoLensAdd "<common name>,<common name>"` adds those birds on the
 ///   lens with mock inputs as they're heard, and `-autoLensBackInBackground YES` ends the run from the lens when the app
 ///   goes to the background (issue #135). `-albumFile <name>` keeps the album in a file of its own, for relaunching over it.
 /// - `-fakeCamera ready|denied|unavailable` puts a stand-in behind "Capture a sighting" (issue #186: the simulator has no
@@ -97,15 +102,15 @@ import UIKit
 ///   refused, or with no camera to give (`-fakeCameraZoom 2.6` and `-fakeCameraFocus 0.3,0.4` open it zoomed and with focus
 ///   held there, issue #187). `-autoScreen capture` starts a phone run as `listening` does and opens the camera
 ///   over it; `-autoScreen name-bird` goes on to "Name this bird" with a stand-in photo, and `-autoQuery <text>` searches
-///   there once. `-autoSeen "Calypte anna,Selasphorus sasin"` names a stand-in photo as each of those birds once the run is
+///   there once. `-autoSeen "<scientific name>,<scientific name>"` names a stand-in photo as each of those birds once the run is
 ///   on, past its reveal: rows under "Seen this run". `-autoUnnamed <n>` takes that many stand-in photos on the run and leaves
-///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedSeen "Selasphorus sasin"` puts a sighting the birder
+///   them unnamed (issue #188), before `-autoRunStops` ends it; `-seedSeen "<scientific name>"` puts a sighting the birder
 ///   named of each of those birds in the album at launch, seen in Griffith Park in the last hours, and `-autoChangeBird YES`
 ///   opens "Change bird" on a sighting's page (issue #190); `-seedUnnamed <n>` puts that many in the album at launch, taken
 ///   in Griffith Park on earlier days, as earlier runs would have left them: the Collection's "To name".
 /// - `-autoScreen idle-capture` opens the camera from the idle Listen tab, with no run (issue #191), and `idle-name-bird`
 ///   goes on to "Name this bird" with a stand-in photo taken there; `-autoLocation` says where the phone is. With
-///   `-autoScreen listen`, `-autoIdleSeen "Calypte anna"` names a stand-in photo taken with no run as that bird, past its
+///   `-autoScreen listen`, `-autoIdleSeen "<scientific name>"` names a stand-in photo taken with no run as that bird, past its
 ///   reveal: the acknowledgment on the idle tab.
 /// - `-autoLensCapture <n>` on a `glasses-run` takes that many photos from the lens's "Capture a sighting" (issue #193), by Mock
 ///   Device Kit's inputs, before `-autoLensAdd` adds its birds; `-autoGlassesCamera YES` gives that run's stand-in stream a
@@ -159,6 +164,7 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
+            if let labels = defaults.string(forKey: "seedNoLocation") { DebugSeeds.seedNoLocation(labels.split(separator: ",").map(String.init), context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
             for index in 0..<defaults.integer(forKey: "seedUnnamed") {
@@ -368,7 +374,7 @@ struct DebugLaunch: ViewModifier {
                 tab = .guide
             case "profile":
                 tab = .guide
-                let scientificName = defaults.string(forKey: "autoCardSpecies") ?? "Sayornis nigricans"
+                let scientificName = defaults.string(forKey: "autoCardSpecies") ?? SampleBirds.phoebe.scientificName
                 guidePath.append(Route.species(scientificName: scientificName, commonName: library.species(scientificName: scientificName)?.species.commonName ?? scientificName))
             case "packs":
                 tab = .guide
@@ -405,7 +411,7 @@ struct DebugLaunch: ViewModifier {
             case "circles":
                 tab = .circles
             case "find":
-                // A find's page (issue #150): `-autoFind <owner>/<sighting>`, on the first Guild, by default Maya's Black Phoebe.
+                // A find's page (issue #150): `-autoFind <owner>/<sighting>`, on the first Guild, by default Maya's phoebe.
                 tab = .circles
                 await circles.refresh()
                 await circles.loadMergedFeed()
@@ -476,7 +482,9 @@ struct DeniedLocationProvider: LocationProvider {
 
 /// The places `-autoLocation` names: one in each set, and one outside them all.
 enum DebugPlace: String {
-    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas, chicago
+    /// The pack fixtures' made-up place (`test-pack`'s set, a square degree of sea off West Africa), outside every real set.
+    case testland
 
     var coordinate: Coordinate {
         switch self {
@@ -486,11 +494,13 @@ enum DebugPlace: String {
         case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
         case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
         case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        case .chicago: Coordinate(latitude: 41.8781, longitude: -87.6298, accuracy: 10)
+        case .testland: Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
         }
     }
 }
 
-/// Stands in for Core Location with a fix in one place (`-autoLocation griffith`, issue #135: a run in the Los Angeles set, so
+/// Stands in for Core Location with a fix in one place (`-autoLocation griffith`, issue #135: a run in Griffith Park, inside the bundled pack's set, so
 /// an add there sews a patch with a painting), with no permission prompt for a UI test to answer.
 struct FixedLocationProvider: LocationProvider {
     let place: DebugPlace
@@ -726,7 +736,7 @@ enum DebugSeeds {
     /// Six sightings over nine days with generated frames (a ring at the centre of a 640 × 480 frame with a black
     /// border, so the 2x crop is visible as such), one with a note, three from the phone without a frame, two without
     /// a location. The located ones are spread over about a kilometre of Griffith Park, so the full map (issue #44)
-    /// shows pins apart. The House Finch is there twice, so the Patches view shows its patch seen twice (the older
+    /// shows pins apart. The finch is there twice, so the Patches view shows its patch seen twice (the older
     /// heard from the phone, issue #132). The located ones carry the rarity the real geomodel
     /// gives them; the oldest, a Common Blackbird no pack describes, has no place, no rarity and no art (issue #52).
     static func seedJournal(context: ModelContext, frames: FrameStore?) {
@@ -734,11 +744,11 @@ enum DebugSeeds {
         let byThePond = Coordinate(latitude: 34.1402, longitude: -118.2898, accuracy: 12)
         let byTheTrailhead = Coordinate(latitude: 34.1334, longitude: -118.2996, accuracy: 25)
         let seeds: [(label: String, minutesAgo: Double, location: Coordinate?, confidence: Double, source: SightingSource, frame: Bool, note: String?)] = [
-            ("Haemorhous mexicanus_House Finch", 3, bySidewalk, 0.82, .glasses, true, nil),
-            ("Sayornis nigricans_Black Phoebe", 9, byThePond, 0.77, .glasses, true, "Tail dipping over the pond, then off after a fly."),
-            ("Zenaida macroura_Mourning Dove", 26 * 60, byTheTrailhead, 0.64, .phone, false, nil),
-            ("Calypte anna_Anna's Hummingbird", 27 * 60, nil, 0.71, .glasses, true, nil),
-            ("Haemorhous mexicanus_House Finch", 50 * 60, byTheTrailhead, 0.68, .phone, false, nil),
+            (SampleBirds.finch.label, 3, bySidewalk, 0.82, .glasses, true, nil),
+            (SampleBirds.phoebe.label, 9, byThePond, 0.77, .glasses, true, "Tail dipping over the pond, then off after a fly."),
+            (SampleBirds.dove.label, 26 * 60, byTheTrailhead, 0.64, .phone, false, nil),
+            (SampleBirds.hummingbird.label, 27 * 60, nil, 0.71, .glasses, true, nil),
+            (SampleBirds.finch.label, 50 * 60, byTheTrailhead, 0.68, .phone, false, nil),
             ("Turdus merula_Common Blackbird", 9 * 24 * 60, nil, 0.58, .phone, false, nil),
         ]
         let rarity = BundledIdentification.rarityReader()
@@ -754,7 +764,7 @@ enum DebugSeeds {
                 note: seed.note
             )
             sighting.rarity = try? rarity?.snapshot(scientificName: sighting.scientificName, location: seed.location, at: sighting.confirmedAt)
-            if seed.label.hasPrefix("Sayornis") {
+            if seed.label == SampleBirds.phoebe.label {
                 sighting.caption = CardCaption(text: "By the pond at morning, the dark sentinel kept its low perch.", generatorVersion: FixedCaptionWriter.versionString)
             }
             context.insert(sighting)
@@ -765,16 +775,16 @@ enum DebugSeeds {
     /// The birds `5-compare.png` says are yours (issue #150), for its side-by-side: two you share with Maya, and three only you have.
     static func seedReferenceBirds(context: ModelContext) {
         let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
-        let birds = ["Sayornis nigricans_Black Phoebe", "Haemorhous mexicanus_House Finch", "Calypte anna_Anna's Hummingbird", "Zenaida macroura_Mourning Dove", "Branta canadensis_Canada Goose"]
+        let birds = [SampleBirds.phoebe, SampleBirds.finch, SampleBirds.hummingbird, SampleBirds.dove, SampleBirds.goose].map(\.label)
         for (index, label) in birds.enumerated() {
             context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(Double(-index - 1) * 3600), location: griffithPark, soundConfidence: 0.8, frameImagePath: nil, source: .phone, note: nil))
         }
         try? context.save()
     }
 
-    /// Fifteen House Finch sightings over three weeks for the species' patches (issue #53): nine around Griffith Park in Los
-    /// Angeles and six in Balboa Park in San Diego, two of them on one day, some Seen, some with a glasses photo, each
-    /// with the rarity the real geomodel gives it: a Los Angeles patch seen nine times and a San Diego one seen six.
+    /// Fifteen sightings of the finch over three weeks for the species' patches (issue #53): nine around Griffith Park
+    /// and six in Balboa Park in San Diego, two of them on one day, some Seen, some with a glasses photo, each
+    /// with the rarity the real geomodel gives it: a patch of the set Griffith Park is in seen nine times and a San Diego one seen six.
     static func seedGallery(context: ModelContext, frames: FrameStore?) {
         let griffithPark = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         let balboaPark = Coordinate(latitude: 32.7341, longitude: -117.1446, accuracy: 15)
@@ -784,7 +794,7 @@ enum DebugSeeds {
             let location = [3, 4, 5, 9, 10, 12].contains(index) ? balboaPark : griffithPark
             let frame = index.isMultiple(of: 3) ? try? frames?.write(jpeg: frameJPEG()) : nil
             let sighting = Sighting(
-                speciesID: "Haemorhous mexicanus_House Finch",
+                speciesID: SampleBirds.finch.label,
                 confirmedAt: Date.now.addingTimeInterval(-hours * 3600),
                 location: location,
                 soundConfidence: 0.7,
@@ -798,9 +808,18 @@ enum DebugSeeds {
         try? context.save()
     }
 
-    /// A House Finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
+    /// The finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
     static func seedNewest(at place: DebugPlace, context: ModelContext) {
-        context.insert(Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        context.insert(Sighting(speciesID: SampleBirds.finch.label, confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        try? context.save()
+    }
+
+    /// Birds heard just now with no location saved, on top of any other seed, the first the newest: outside every set, whatever
+    /// the bird.
+    static func seedNoLocation(_ labels: [String], context: ModelContext) {
+        for (index, label) in labels.enumerated() {
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(-Double(index)), location: nil, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        }
         try? context.save()
     }
 
@@ -820,7 +839,7 @@ enum DebugSeeds {
     }
 
     /// A big album for profiling (issue #150): `count` sightings of the bundled pack's birds over three years, most of them in
-    /// Los Angeles, some in San Diego and some far from every set, in a repeatable order. Does nothing to an album that's
+    /// Griffith Park, some in San Diego and some far from every set, in a repeatable order. Does nothing to an album that's
     /// already that big.
     static func seedLarge(context: ModelContext, count: Int) {
         let existing = (try? context.fetchCount(FetchDescriptor<Sighting>())) ?? 0

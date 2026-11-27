@@ -57,10 +57,14 @@ let package = Package(
         .testTarget(name: "LensSessionTests", dependencies: ["LensSession", "Identification"]),
 
         .target(name: "Pack", resources: [.copy("Packs"), .copy("Covers")]),
-        .testTarget(name: "PackTests", dependencies: ["Pack"], resources: [.copy("Fixtures")]),
+        .testTarget(name: "PackTests", dependencies: ["Pack", "PackFixture"], resources: [.copy("Fixtures")]),
 
         .target(name: "Album"),
-        .testTarget(name: "AlbumTests", dependencies: ["Album"]),
+        .testTarget(name: "AlbumTests", dependencies: ["Album", "PackFixture"], resources: [.copy("Fixtures")]),
+
+        // What the tests know of the bundled pack (#209): its id, its set's name, its birds. The app's test targets
+        // compile the same file in.
+        .target(name: "PackFixture", path: "Tests/Support"),
     ],
     swiftLanguageModes: [.v6]
 )

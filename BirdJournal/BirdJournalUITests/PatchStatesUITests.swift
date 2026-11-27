@@ -48,12 +48,12 @@ final class PatchStatesUITests: XCTestCase {
         let app = launch(seeded + ["-autoScreen", "set"])
         let row = app.buttons.matching(identifier: "set-species-silhouette").firstMatch
         XCTAssertTrue(row.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(row.label, "001, Canada Goose, still out there")
-        XCTAssertTrue(app.staticTexts["157 still out there"].exists, "one count, once, as a heading; screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertEqual(row.label, "\(BundledPack.goose.paddedNumber), \(BundledPack.goose.name), still out there")
+        XCTAssertTrue(app.staticTexts["\(BundledPack.speciesCount - 3) still out there"].exists, "one count, once, as a heading; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.staticTexts["Not yet found here"].exists)
         row.tap()
-        XCTAssertTrue(app.staticTexts["Canada Goose"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(app.staticTexts["Branta canadensis"].exists, "the Atlas profile")
+        XCTAssertTrue(app.staticTexts[BundledPack.goose.name].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.goose.scientificName].exists, "the Atlas profile")
     }
 
     @MainActor
@@ -65,17 +65,17 @@ final class PatchStatesUITests: XCTestCase {
         let yours = element(app, "profile-your-cards")
         XCTAssertTrue(yours.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         yours.tap()
-        XCTAssertTrue(app.staticTexts["No sightings of Canada Goose yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts["No sightings of \(BundledPack.goose.name) yet"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(element(app, "species-set-number").exists, "its number")
-        XCTAssertEqual(element(app, "species-set-number").label, "Number 1 of 160 in Los Angeles")
+        XCTAssertEqual(element(app, "species-set-number").label, "Number \(BundledPack.goose.number) of \(BundledPack.speciesCount) in \(BundledPack.setName)")
         XCTAssertFalse(app.buttons["board-patch"].exists, "no patch for a bird you haven't found")
         app.buttons["Open in Atlas"].tap()
-        XCTAssertTrue(app.staticTexts["Branta canadensis"].waitForExistence(timeout: 10), "its Atlas profile: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.goose.scientificName].waitForExistence(timeout: 10), "its Atlas profile: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
     func testAnUnfoundBirdsStartListeningGoesToListen() throws {
-        let app = launch(seeded + ["-autoCardSpecies", "Branta canadensis", "-autoScreen", "species"])
+        let app = launch(seeded + ["-autoCardSpecies", BundledPack.goose.scientificName, "-autoScreen", "species"])
         let start = app.buttons["Start listening"]
         XCTAssertTrue(start.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         start.tap()
@@ -89,7 +89,7 @@ final class PatchStatesUITests: XCTestCase {
     @MainActor
     func testATaggedBlankOpensItsPageAndTurnsOverToACompleteCard() throws {
         let app = launch(seeded + ["-fakePatchArt", "missing", "-autoScreen", "cards"])
-        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Black Phoebe, Citrus edition patch'")).firstMatch
+        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.phoebe.name), \(BundledPack.editionName) patch'")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(tile.label.contains("art on its way"), tile.label)
         // Where the paper tag hangs: the tag takes no touch of its own.
@@ -107,7 +107,7 @@ final class PatchStatesUITests: XCTestCase {
     @MainActor
     func testABlankBeingSewnSaysSoAndOpensItsPage() throws {
         let app = launch(seeded + ["-fakePatchArt", "sewing", "-autoScreen", "cards"])
-        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Black Phoebe, Citrus edition patch' AND label ENDSWITH ', art on its way'")).firstMatch
+        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.phoebe.name), \(BundledPack.editionName) patch' AND label ENDSWITH ', art on its way'")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
         let face = element(app, "patch-face")
@@ -117,7 +117,7 @@ final class PatchStatesUITests: XCTestCase {
 
     @MainActor
     func testANewPatchWithoutItsPaintingGoesStraightToTheFinishedPage() throws {
-        let app = launch(seeded + ["-fakePatchArt", "missing", "-autoScreen", "reveal", "-autoCardSpecies", "Sayornis nigricans"])
+        let app = launch(seeded + ["-fakePatchArt", "missing", "-autoScreen", "reveal", "-autoCardSpecies", BundledPack.phoebe.scientificName])
         XCTAssertTrue(element(app, "revealed-patch").waitForExistence(timeout: 15), "no stitching without a painting: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.buttons["Done"].exists, "the page is the same however the art stands")
     }
@@ -127,7 +127,7 @@ final class PatchStatesUITests: XCTestCase {
     @MainActor
     func testUnchartedPatchesAreOnTheirBoardAndTheCardSaysOutsideEverySet() throws {
         let app = launch(seeded + ["-autoBoard", "uncharted", "-autoScreen", "cards"])
-        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH \"Anna's Hummingbird, Uncharted patch\"")).firstMatch
+        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH \"\(BundledPack.hummingbird.name), Uncharted patch\"")).firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["2 outside every set"].exists, "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
@@ -145,7 +145,7 @@ final class PatchStatesUITests: XCTestCase {
     /// process of its own, so the flags can't reach another suite's tests).
     @MainActor
     private func patchPixels(_ flags: [String]) throws -> (bytes: [UInt8], image: XCUIScreenshot) {
-        let app = launch(seeded + ["-autoScreen", "card", "-autoCardSpecies", "Sayornis nigricans"] + flags)
+        let app = launch(seeded + ["-autoScreen", "card", "-autoCardSpecies", BundledPack.phoebe.scientificName] + flags)
         let face = element(app, "patch-face")
         XCTAssertTrue(face.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         // Past the page's push and the patch's decode.

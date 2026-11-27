@@ -18,7 +18,7 @@ struct PlaceTests {
         CardSet(id: id, name: id, edition: "\(id) edition", species: ["Sayornis nigricans"], regions: [CardSet.Region(name: id, polygons: [[ring(corners)]])])
     }
 
-    nonisolated static let losAngeles = set("us-ca-la", [(-119, 33.7), (-117.6, 33.7), (-117.6, 34.8), (-119, 34.8)])
+    nonisolated static let losAngeles = set(BundledPack.id, [(-119, 33.7), (-117.6, 33.7), (-117.6, 34.8), (-119, 34.8)])
     nonisolated static let desert = set("us-ca-desert", [(-117, 33), (-115, 33), (-115, 34.5), (-117, 34.5)])
     nonisolated static let griffith = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
     nonisolated static let joshuaTree = Coordinate(latitude: 33.87, longitude: -115.90, accuracy: 10)
@@ -33,21 +33,21 @@ struct PlaceTests {
     }
 
     nonisolated static let choices: [Choice] = [
-        Choice(because: "the place's own set, over the newest sighting's", coordinate: joshuaTree, newest: "us-ca-la", sets: [losAngeles, desert], shows: "us-ca-desert"),
+        Choice(because: "the place's own set, over the newest sighting's", coordinate: joshuaTree, newest: BundledPack.id, sets: [losAngeles, desert], shows: "us-ca-desert"),
         Choice(because: "the place's own set, with no sightings", coordinate: joshuaTree, newest: nil, sets: [losAngeles, desert], shows: "us-ca-desert"),
-        Choice(because: "the place's own set, though it isn't the bundled one", coordinate: griffith, newest: "us-ca-desert", sets: [desert, losAngeles], shows: "us-ca-la"),
+        Choice(because: "the place's own set, though it isn't the bundled one", coordinate: griffith, newest: "us-ca-desert", sets: [desert, losAngeles], shows: BundledPack.id),
         Choice(because: "outside every set, your last set", coordinate: portland, newest: "us-ca-desert", sets: [losAngeles, desert], shows: "us-ca-desert"),
-        Choice(because: "outside every set with no sightings, the bundled set", coordinate: portland, newest: nil, sets: [desert, losAngeles], shows: "us-ca-la"),
+        Choice(because: "outside every set with no sightings, the bundled set", coordinate: portland, newest: nil, sets: [desert, losAngeles], shows: BundledPack.id),
         Choice(because: "no location, the newest sighting's set", coordinate: nil, newest: "us-ca-desert", sets: [losAngeles, desert], shows: "us-ca-desert"),
-        Choice(because: "no location and no sightings, the bundled set", coordinate: nil, newest: nil, sets: [desert, losAngeles], shows: "us-ca-la"),
-        Choice(because: "a sighting's set the phone no longer knows, the bundled set", coordinate: nil, newest: "us-ca-gone", sets: [desert, losAngeles], shows: "us-ca-la"),
+        Choice(because: "no location and no sightings, the bundled set", coordinate: nil, newest: nil, sets: [desert, losAngeles], shows: BundledPack.id),
+        Choice(because: "a sighting's set the phone no longer knows, the bundled set", coordinate: nil, newest: "us-ca-gone", sets: [desert, losAngeles], shows: BundledPack.id),
         Choice(because: "no bundled set, the first the phone knows", coordinate: nil, newest: nil, sets: [desert], shows: "us-ca-desert"),
-        Choice(because: "no sets at all, none", coordinate: joshuaTree, newest: "us-ca-la", sets: [], shows: nil),
+        Choice(because: "no sets at all, none", coordinate: joshuaTree, newest: BundledPack.id, sets: [], shows: nil),
     ]
 
     @Test("the fallback order: the set here, the newest sighting's, the bundled one", arguments: choices)
     func theFallbackOrder(_ choice: Choice) {
-        #expect(LocalSet.choose(coordinate: choice.coordinate, newestSetID: choice.newest, sets: choice.sets, bundledID: "us-ca-la") == choice.shows, "\(choice.because)")
+        #expect(LocalSet.choose(coordinate: choice.coordinate, newestSetID: choice.newest, sets: choice.sets, bundledID: BundledPack.id) == choice.shows, "\(choice.because)")
     }
 
     @Test("an Uncharted newest sighting doesn't lose your last set")
@@ -98,7 +98,7 @@ struct PlaceTests {
         let suite = "place-\(UUID().uuidString)"
         let defaults = Self.defaults(name: suite)
         let place = Self.place(library, at: Self.joshuaTree, defaults: defaults)
-        #expect(place.setID == "us-ca-la")
+        #expect(place.setID == BundledPack.id)
         #expect(place.painting == nil, "init never decodes on the main actor")
         await place.prepareForLaunch()
         #expect(place.painting != nil)
@@ -127,8 +127,8 @@ struct PlaceTests {
         let backInLA = Self.place(library, at: Self.griffith, defaults: defaults)
         #expect(backInLA.setID == "us-ca-desert", "the last place, until the read")
         await backInLA.refresh()
-        #expect(backInLA.setID == "us-ca-la")
-        #expect(defaults.string(forKey: CurrentPlace.rememberedKey) == "us-ca-la")
+        #expect(backInLA.setID == BundledPack.id)
+        #expect(defaults.string(forKey: CurrentPlace.rememberedKey) == BundledPack.id)
     }
 
     @Test("a phone that has never read the index still moves to the desert, with its painting")
@@ -150,7 +150,7 @@ struct PlaceTests {
         let library = try Self.library()
         let defaults = Self.defaults()
         defaults.set("us-tx-gone", forKey: CurrentPlace.rememberedKey)
-        #expect(Self.place(library, at: nil, defaults: defaults).setID == "us-ca-la")
+        #expect(Self.place(library, at: nil, defaults: defaults).setID == BundledPack.id)
     }
 
     @Test("with no location the read moves nothing, and asks nothing of the phone")
@@ -161,15 +161,44 @@ struct PlaceTests {
         await place.prepareForLaunch()
         let painting = place.painting
         await place.refresh()
-        #expect(place.setID == "us-ca-la")
+        #expect(place.setID == BundledPack.id)
         #expect(place.painting === painting, "nothing decoded again")
+    }
+
+    // MARK: - Standing in a set
+
+    /// A square degree of sea off West Africa, outside every set there is.
+    nonisolated static let atSea = Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
+
+    @Test("a read that finds the birder inside a set says they're standing in it; a remembered set, a fallback and no location don't (issue #223)")
+    func standingInASet() async throws {
+        let library = try Self.library()
+        let defaults = Self.defaults()
+        let inTheDesert = Self.place(library, at: Self.joshuaTree, defaults: defaults)
+        #expect(inTheDesert.standingInSetID == nil, "nothing is known before a read")
+        await inTheDesert.refresh()
+        #expect(inTheDesert.standingInSetID == "us-ca-desert")
+
+        let remembered = Self.place(library, at: nil, defaults: defaults)
+        #expect(remembered.setID == "us-ca-desert" && remembered.standingInSetID == nil, "the last place is shown, not stood in")
+        await remembered.refresh()
+        #expect(remembered.standingInSetID == nil, "with no location")
+
+        let away = Self.place(library, at: Self.atSea, defaults: defaults)
+        await away.refresh()
+        #expect(away.setID == library.bundled?.info.id, "outside every set the page falls back to one")
+        #expect(away.standingInSetID == nil, "which the birder isn't standing in")
+
+        let back = Self.place(library, at: Self.joshuaTree, defaults: defaults)
+        await back.refresh()
+        #expect(back.setID == "us-ca-desert" && back.standingInSetID == "us-ca-desert", "the painting and the place change together")
     }
 
     // MARK: - The accent
 
     @Test("each set has its edition's thread; Uncharted has its own, and a set the app doesn't know keeps the aqua")
     func tints() {
-        #expect(PatchEdition.tint(setID: "us-ca-la") == Color("EditionCitrus"))
+        #expect(PatchEdition.tint(setID: LosAngelesSet.id) == Color("EditionCitrus"))
         #expect(PatchEdition.tint(setID: "us-ca-sd") == Color("EditionCoastal"))
         #expect(PatchEdition.tint(setID: "us-ca-bay") == Color("EditionFog"))
         #expect(PatchEdition.tint(setID: "us-ca-desert") == Color("EditionDesert"))
@@ -177,6 +206,7 @@ struct PlaceTests {
         #expect(PatchEdition.tint(setID: "us-pnw") == Color("EditionEvergreen"))
         #expect(PatchEdition.tint(setID: "us-ny-nyc") == Color("EditionBorough"))
         #expect(PatchEdition.tint(setID: "us-la-south") == Color("EditionBayou"))
+        #expect(PatchEdition.tint(setID: "north-america") == Color("EditionContinental"))
         #expect(PatchEdition.tint(setID: nil) == Color("EditionUncharted"))
         #expect(PatchEdition.tint(setID: "us-tx-houston") == .moss)
     }
@@ -234,7 +264,7 @@ struct ThreadProgressTests {
             // Swift Testing runs suites side by side, and other screens show these sets: this asks for the memory of nothing.
             let one = ThreadProgress(value: 1, total: 160, sentence: "1 of 160", thread: .edition(setID: "us-ca-desert"))
             #expect(try await drawn(one, sized: "EditionDesert", in: traits) == 1)
-            let half = ThreadProgress(value: 80, total: 160, sentence: "80 of 160", thread: .edition(setID: "us-ca-la"))
+            let half = ThreadProgress(value: 80, total: 160, sentence: "80 of 160", thread: .edition(setID: LosAngelesSet.id))
             #expect(try await drawn(half, sized: "EditionCitrus", in: traits) == 12)
             let downloading = ThreadProgress(value: 1, total: 2, sentence: "Downloading", thread: .edition(setID: "us-fl-orlando"))
             #expect(try await drawn(downloading, sized: "EditionWetland", in: traits) == 12, "the set being downloaded")

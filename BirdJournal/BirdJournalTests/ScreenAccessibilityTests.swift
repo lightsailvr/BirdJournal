@@ -36,20 +36,25 @@ struct ScreenAccessibilityTests {
         let pushes: PushCenter
         let places = PlaceNames()
         let place: CurrentPlace
+        let offers: FieldGuideOffers
 
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
         ///   - location: what a phone run is told of where it is, and the camera opened with no run (issue #191); by default
         ///     that it may not know.
-        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied]) throws {
+        ///   - standingAt: the phone's last known position, which picks the place (issue #150) and what's offered there
+        ///     (issue #223); by default it has none.
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied], standingAt: Coordinate? = nil) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
             collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
-            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
+            let lastKnown: any LocationProvider = standingAt.map { PlaceTests.Place(coordinate: $0) } ?? ScriptedLocationProvider([.denied])
+            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: lastKnown, defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
+            offers = FieldGuideOffers(library: library, place: { [place] in place.standingInSetID }, defaults: UserDefaults(suiteName: "screen-ax-offers-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: signedIn)
             let client = FakeCircleClient(seeded: true)
@@ -91,6 +96,7 @@ struct ScreenAccessibilityTests {
             .environment(circles)
             .environment(collectionStore)
             .environment(place)
+            .environment(offers)
             .environment(outbox)
             .environment(pushes)
             .environment(places)
@@ -193,11 +199,11 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains("Start listening"), "\(labels)")
         #expect(labels.contains("Settings"), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("iPhone microphone") }, "the source row: \(labels)")
-        #expect(labels.contains("Your local set, Los Angeles"), "\(labels)")
-        #expect(labels.contains { $0.contains("of 160 sewn in Los Angeles") }, "the thread reads a sentence: \(labels)")
-        #expect(labels.contains("Los Angeles cover, AI illustration"), "\(labels)")
+        #expect(labels.contains("Your local set, \(BundledPack.setName)"), "\(labels)")
+        #expect(labels.contains { $0.contains("of \(BundledPack.speciesCount) sewn in \(BundledPack.setName)") }, "the thread reads a sentence: \(labels)")
+        #expect(labels.contains("\(BundledPack.setName) cover, AI illustration"), "\(labels)")
         let start = try #require(labels.firstIndex(of: "Start listening"))
-        let local = try #require(labels.firstIndex(of: "Your local set, Los Angeles"))
+        let local = try #require(labels.firstIndex(of: "Your local set, \(BundledPack.setName)"))
         #expect(start < local, "Start listening comes before the local set")
     }
 
@@ -211,8 +217,8 @@ struct ScreenAccessibilityTests {
         Self.expectClean(labels, screen: "Compare")
         Self.expectOneWordPerThing(labels, screen: "Compare")
         #expect(labels.contains("Maya has these. Go find them."), "\(labels)")
-        #expect(labels.contains("Acorn Woodpecker. You: Not yet. Maya: Heard."), "\(labels)")
-        #expect(labels.contains("Black Phoebe. You: Heard. Maya: Seen."), "\(labels)")
+        #expect(labels.contains("\(BundledPack.woodpecker.name). You: Not yet. Maya: Heard."), "\(labels)")
+        #expect(labels.contains("\(BundledPack.phoebe.name). You: Heard. Maya: Seen."), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("You have ") && $0.contains("Maya has") }, "the tally stays: \(labels)")
         let lead = try #require(labels.firstIndex(of: "Maya has these. Go find them."))
         let both = try #require(labels.firstIndex(of: "You both have"))
@@ -250,8 +256,8 @@ struct ScreenAccessibilityTests {
     func setFaces(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let client = try #require(harness.circles.client as? FakeCircleClient)
-        let goose = FriendBirds.Species(speciesID: "Branta canadensis_Canada Goose", scientificName: "Branta canadensis", commonName: "Canada Goose", method: .seen)
-        let egyptian = FriendBirds.Species(speciesID: "Alopochen aegyptiaca_Egyptian Goose", scientificName: "Alopochen aegyptiaca", commonName: "Egyptian Goose", method: .seen)
+        let goose = FriendBirds.Species(speciesID: BundledPack.goose.label, scientificName: BundledPack.goose.scientificName, commonName: BundledPack.goose.name, method: .seen)
+        let egyptian = FriendBirds.Species(speciesID: BundledPack.otherGoose.label, scientificName: BundledPack.otherGoose.scientificName, commonName: BundledPack.otherGoose.name, method: .seen)
         client.setMoreCompared([goose, egyptian], friendID: "maya")
         client.setMoreCompared([egyptian], friendID: "jo")
         let labels = try await Self.walk(SetView(id: PackIndex.bundledPackID), harness: harness, typeSize: typeSize) { labels in
@@ -259,10 +265,10 @@ struct ScreenAccessibilityTests {
         }
         Self.expectClean(labels, screen: "Set's friends")
         Self.expectOneWordPerThing(labels, screen: "Set's friends")
-        #expect(labels.contains("001, Canada Goose, still out there, Maya Ortiz has this bird"), "\(labels)")
-        #expect(labels.contains("002, Egyptian Goose, still out there, Jo Park and Maya Ortiz have this bird"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.goose.paddedNumber), \(BundledPack.goose.name), still out there, Maya Ortiz has this bird"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.otherGoose.paddedNumber), \(BundledPack.otherGoose.name), still out there, Jo Park and Maya Ortiz have this bird"), "\(labels)")
         if typeSize == .large {
-            #expect(labels.contains("021, Anna's Hummingbird, still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
+            #expect(labels.contains("\(BundledPack.hummingbird.paddedNumber), \(BundledPack.hummingbird.name), still out there"), "Jo has it, and so do you, Uncharted: by species, no face: \(labels)")
         }
     }
 
@@ -310,20 +316,20 @@ struct ScreenAccessibilityTests {
         let sunday = try #require(harness.circles.circles.first { $0.name == "Sunday Group" })
         let sighting = "00000000-0000-4000-8000-000000000052"
         client.add(FeedItem(
-            sightingID: sighting, speciesID: "x", scientificName: "Haemorhous mexicanus", commonName: "Call me 555-1234", method: .seen, place: nil,
+            sightingID: sighting, speciesID: "x", scientificName: BundledPack.finch.scientificName, commonName: "Call me 555-1234", method: .seen, place: nil,
             foundAt: .now, newPatch: true, rarity: .common, art: nil, owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"),
-            circleFirst: false, isMine: false, edition: "us-ca-la"
+            circleFirst: false, isMine: false, edition: BundledPack.id
         ), to: sunday.id)
         await harness.circles.loadFeed(circleID: sunday.id)
         let row = try await Self.walk(CirclePageView(id: sunday.id), harness: harness) { labels in
-            labels.contains { $0.contains("House Finch") }
+            labels.contains { $0.contains(BundledPack.finch.name) }
         }
-        #expect(row.contains { $0.contains("House Finch") }, "\(row)")
+        #expect(row.contains { $0.contains(BundledPack.finch.name) }, "\(row)")
         #expect(!row.contains { $0.contains("555") }, "\(row)")
         let page = try await Self.walk(FindPageView(route: FindRoute(itemID: "maya/\(sighting)")), harness: harness) { labels in
-            labels.contains("House Finch")
+            labels.contains(BundledPack.finch.name)
         }
-        #expect(page.contains("House Finch"), "\(page)")
+        #expect(page.contains(BundledPack.finch.name), "\(page)")
         #expect(!page.contains { $0.contains("555") }, "\(page)")
     }
 
@@ -375,7 +381,7 @@ struct ScreenAccessibilityTests {
     func cardFriends(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         await harness.circles.loadFriendsBirds()
-        let patch = try #require(harness.collectionStore.collection.patches.first { $0.scientificName == "Sayornis nigricans" })
+        let patch = try #require(harness.collectionStore.collection.patches.first { $0.scientificName == BundledPack.phoebe.scientificName })
         let labels = try await Self.walk(PatchDetailView(key: patch.id, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.contains("this bird.") }
         }
@@ -383,8 +389,8 @@ struct ScreenAccessibilityTests {
         #expect(labels.contains("Jo Park and Maya Ortiz have this bird."), "\(labels)")
     }
 
-    /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have Anna's Hummingbird and the
-    /// Common Blackbird, which no pack describes; the House Finch's patches are all in Los Angeles.
+    /// A row as a run lists it. With no run on, an add here would be Uncharted, where the seeds have the hummingbird and the
+    /// Common Blackbird, which no pack describes; the finch's patches are all in the bundled pack's set.
     @Test("A run's rows: a new patch waiting in words, your patch and its count, and each row's one button", arguments: sizes)
     func runRows(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
@@ -392,16 +398,16 @@ struct ScreenAccessibilityTests {
             Candidate(species: Species(index: 0, scientificName: scientific, commonName: common, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
         }
         let screen = VStack {
-            CandidateRow(candidate: candidate("Haemorhous mexicanus", "House Finch"), isCalling: true) {}
-            CandidateRow(candidate: candidate("Calypte anna", "Anna's Hummingbird")) {}
+            CandidateRow(candidate: candidate(BundledPack.finch.scientificName, BundledPack.finch.name), isCalling: true) {}
+            CandidateRow(candidate: candidate(BundledPack.hummingbird.scientificName, BundledPack.hummingbird.name)) {}
             CandidateRow(candidate: candidate("Turdus merula", "Common Blackbird")) {}
         }
         let labels = try await Self.walk(screen, harness: harness, typeSize: typeSize) { $0.contains("Review Common Blackbird") }
         Self.expectClean(labels, screen: "Run rows")
-        #expect(labels.contains("House Finch, calling now, new patch waiting"), "\(labels)")
-        #expect(labels.contains("Sew it, House Finch"), "\(labels)")
-        #expect(labels.contains("Anna's Hummingbird, heard just now, you have this patch, seen once"), "\(labels)")
-        #expect(labels.contains("Add Anna's Hummingbird"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.finch.name), calling now, new patch waiting"), "\(labels)")
+        #expect(labels.contains("Sew it, \(BundledPack.finch.name)"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.hummingbird.name), heard just now, you have this patch, seen once"), "\(labels)")
+        #expect(labels.contains("Add \(BundledPack.hummingbird.name)"), "\(labels)")
         #expect(labels.contains("Common Blackbird, heard just now, you have this patch, seen once"), "\(labels)")
         #expect(labels.contains("Review Common Blackbird"), "a bird no pack describes: \(labels)")
         #expect(!labels.contains("Add Common Blackbird"), "\(labels)")
@@ -448,13 +454,13 @@ struct ScreenAccessibilityTests {
     @Test("A bird's profile: the Atlas leads with its photo then its story, found or not, with no patch; a found bird has a link in words", arguments: sizes)
     func profileIsAGuidebook(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let labels = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"), harness: harness, typeSize: typeSize) { labels in
+        let labels = try await Self.walk(BirdProfileView(scientificName: BundledPack.phoebe.scientificName, commonName: BundledPack.phoebe.name), harness: harness, typeSize: typeSize) { labels in
             labels.contains { $0.hasPrefix("Your patch") } && labels.contains("About this bird")
         }
         Self.expectClean(labels, screen: "Profile")
         #expect(!labels.contains { $0.contains("edition patch") }, "no patch: \(labels)")
-        let name = try #require(labels.firstIndex(of: "Black Phoebe"))
-        let link = try #require(labels.firstIndex(of: "Your patch, Los Angeles"), "\(labels)")
+        let name = try #require(labels.firstIndex(of: BundledPack.phoebe.name))
+        let link = try #require(labels.firstIndex(of: "Your patch, \(BundledPack.setName)"), "\(labels)")
         let photo = try #require(labels.firstIndex { $0.hasPrefix("Reference photo") || $0.contains("Photo:") }, "\(labels)")
         let lore = try #require(labels.firstIndex { $0.contains("Lore written from") }, "\(labels)")
         let about = try #require(labels.firstIndex(of: "About this bird"))
@@ -464,7 +470,7 @@ struct ScreenAccessibilityTests {
         #expect(lore < about)
 
         // A bird you haven't found reads the same, with no link.
-        let unfound = try await Self.walk(BirdProfileView(scientificName: "Branta canadensis", commonName: "Canada Goose"), harness: harness, typeSize: typeSize) { labels in
+        let unfound = try await Self.walk(BirdProfileView(scientificName: BundledPack.goose.scientificName, commonName: BundledPack.goose.name), harness: harness, typeSize: typeSize) { labels in
             labels.contains("About this bird")
         }
         #expect(!unfound.contains { $0.hasPrefix("Your patch") }, "\(unfound)")
@@ -473,8 +479,8 @@ struct ScreenAccessibilityTests {
         #expect(unfoundPhoto < unfoundLore)
         #expect(unfoundLore < (unfound.firstIndex(of: "About this bird") ?? 0))
 
-        let candidate = Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
-        let review = try await Self.walk(BirdProfileView(scientificName: "Sayornis nigricans", commonName: "Black Phoebe", match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
+        let candidate = Candidate(species: Species(index: 0, scientificName: BundledPack.phoebe.scientificName, commonName: BundledPack.phoebe.name, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 3, admittedAt: 3)
+        let review = try await Self.walk(BirdProfileView(scientificName: BundledPack.phoebe.scientificName, commonName: BundledPack.phoebe.name, match: candidate), harness: harness, typeSize: typeSize) { $0.contains("About this bird") }
         #expect(!review.contains { $0.contains("edition patch") || $0.hasPrefix("Your patch") }, "a review keeps its own order: \(review)")
     }
 
@@ -494,16 +500,16 @@ struct ScreenAccessibilityTests {
     func collection(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(JournalView(state: CollectionState()), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.contains("House Finch") } && labels.contains("Patches")
+            labels.contains { $0.contains(BundledPack.finch.name) } && labels.contains("Patches")
         }
         Self.expectClean(labels, screen: "Collection")
-        #expect(labels.contains("Los Angeles"), "the set's name, which is the menu of the others: \(labels)")
-        #expect(labels.contains("Los Angeles, 3 of 160 sewn, Citrus edition"), "its count: \(labels)")
+        #expect(labels.contains(BundledPack.setName), "the set's name, which is the menu of the others: \(labels)")
+        #expect(labels.contains("\(BundledPack.setName), 3 of \(BundledPack.speciesCount) sewn, \(BundledPack.editionName)"), "its count: \(labels)")
         #expect(!labels.contains { $0.hasSuffix(", 6 sightings") }, "the total across sets is in the menu: \(labels)")
         for mode in ["Patches", "Sightings", "Species"] {
             #expect(labels.contains(mode), "\(mode): \(labels)")
         }
-        #expect(labels.contains { $0.contains("House Finch") }, "\(labels)")
+        #expect(labels.contains { $0.contains(BundledPack.finch.name) }, "\(labels)")
         #expect(labels.contains { $0.contains("edition patch, seen ") && $0.contains(", sewn ") }, "a patch in words: \(labels)")
         #expect(!labels.contains { $0.contains("not yet found") }, "a bird you haven't found has no patch: \(labels)")
         #expect(!labels.contains { $0.contains("Legendary") }, "no Legendary: \(labels)")
@@ -512,14 +518,14 @@ struct ScreenAccessibilityTests {
     @Test("A patch's page: the patch in one sentence, its words in type, Turn over, and nothing of the paper card until it is turned", arguments: sizes)
     func patchPage(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
         let labels = try await Self.walk(PatchDetailView(key: key), harness: harness, typeSize: typeSize) { labels in
-            labels.contains("Turn over") && labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch") }
+            labels.contains("Turn over") && labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch") }
         }
         Self.expectClean(labels, screen: "Patch page")
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
-        #expect(labels.contains("Black Phoebe"), "the name in type below it: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch, seen once, sewn ") }, "the patch in words: \(labels)")
+        #expect(labels.contains(BundledPack.phoebe.name), "the name in type below it: \(labels)")
         #expect(labels.contains("Turn over"), "the visible action: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("All ") && $0.contains("sighting") }, "the card stays hidden: \(labels)")
         #expect(!labels.contains { $0.hasPrefix("Wingspan") }, "the card stays hidden: \(labels)")
@@ -528,26 +534,26 @@ struct ScreenAccessibilityTests {
     @Test("The paper card: the name, the story, the biology and the history, and nothing of the patch's face", arguments: sizes)
     func paperCard(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
         let labels = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
             labels.contains("Turn back") && labels.contains { $0.hasPrefix("1 sighting") }
         }
         Self.expectClean(labels, screen: "Paper card")
-        #expect(labels.contains("Black Phoebe"), "the name: \(labels)")
-        #expect(labels.contains("Sayornis nigricans"), "\(labels)")
+        #expect(labels.contains(BundledPack.phoebe.name), "the name: \(labels)")
+        #expect(labels.contains(BundledPack.phoebe.scientificName), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
         #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
         #expect(labels.contains("Sources"), "\(labels)")
         #expect(labels.contains("AI illustration"), "\(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch") }, "only the face showing: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch") }, "only the face showing: \(labels)")
         #expect(!labels.contains("Turn over"), "\(labels)")
     }
 
     @Test("The paper card's footer stays a few lines when it stacks: as the text grows, the card's room goes to the story", arguments: [DynamicTypeSize.xLarge, .xxLarge, .xxxLarge])
     func paperCardFooter(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         let key = CardCollection.Patch.Key(speciesID: phoebe.speciesID, setID: PackIndex.bundledPackID)
         CardFlipAccessibilityTests.enableAccessibility()
         let host = UIHostingController(rootView: harness.hosted(PatchDetailView(key: key, startsTurned: true), typeSize: typeSize))
@@ -589,28 +595,29 @@ struct ScreenAccessibilityTests {
         let state = CollectionState()
         state.board = .uncharted
         let board = try await Self.walk(JournalView(state: state), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("Anna's Hummingbird, Uncharted patch") }
+            labels.contains { $0.hasPrefix("\(BundledPack.hummingbird.name), Uncharted patch") }
         }
         Self.expectClean(board, screen: "Uncharted board")
-        #expect(board.contains { $0.hasPrefix("Anna's Hummingbird, Uncharted patch, seen once, sewn ") }, "\(board)")
+        #expect(board.contains { $0.hasPrefix("\(BundledPack.hummingbird.name), Uncharted patch, seen once, sewn ") }, "\(board)")
 
-        let hummingbird = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Calypte anna" })
+        let hummingbird = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.hummingbird.scientificName })
         let key = CardCollection.Patch.Key(speciesID: hummingbird.speciesID, setID: nil)
         let card = try await Self.walk(PatchDetailView(key: key, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
             labels.contains("Turn back") && labels.contains("Uncharted, outside every set")
         }
         Self.expectClean(card, screen: "Uncharted card")
         #expect(card.contains("Uncharted, outside every set"), "\(card)")
-        #expect(!card.contains("AI illustration"), "no painting to credit: \(card)")
+        #expect(card.contains("AI illustration"), "the generic patch is one (#222): \(card)")
     }
 
     // A set the phone knows from the index and whose pack it doesn't have: Coastal (a stand-in for San Diego, around the
-    // seeded gallery's Balboa Park), with its download held open.
+    // seeded gallery's Balboa Park), with its download held open. It takes no sighting until its pack is on the phone
+    // (issue #207), so the gallery's six sightings there are the bird's Uncharted patch.
 
     private static let sanDiego = try! PackSet.decode(from: Data("""
     {"id": "us-ca-sd", "name": "San Diego", "edition": {"name": "Coastal edition", "theme": "Sea cliffs"}, "taxonomy": "IOC",
      "regions": [{"name": "SD", "source": "test", "polygons": [[[[-118, 32], [-116, 32], [-116, 34], [-118, 34], [-118, 32]]]]}],
-     "species": [{"scientificName": "Haemorhous mexicanus", "commonName": "House Finch"}]}
+     "species": [{"scientificName": "\(BundledPack.finch.scientificName)", "commonName": "\(BundledPack.finch.name)"}]}
     """.utf8))
 
     private static let sanDiegoPack = PackDescriptor(
@@ -633,61 +640,66 @@ struct ScreenAccessibilityTests {
         return harness
     }
 
-    @Test("A patch whose pack isn't on the phone is a tagged blank; while the pack downloads it's being sewn, in words, and afterwards a blank again")
-    func beingSewnOnTheRealPath() async throws {
+    @Test("A bird found in a set whose pack isn't on the phone is its Uncharted patch, the generic one, with nothing on its way while that pack downloads")
+    func aSetNotOnThePhoneTakesNoSighting() async throws {
         let harness = try Self.sanDiegoHarness()
         let state = CollectionState()
-        state.board = .set(id: "us-ca-sd")
-        let finch = "House Finch, Coastal edition patch, seen 6 times, sewn "
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged)
+        state.board = .uncharted
+        // The six seeded in San Diego: only a set whose pack is on the phone takes a sighting (issue #207).
+        let finch = "\(BundledPack.finch.name), Uncharted patch, seen 6 times, sewn "
+        #expect(harness.library.set(id: "us-ca-sd") != nil && harness.library.pack(id: "us-ca-sd") == nil)
+        #expect(harness.collectionStore.collection.patch(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") == nil)
         let waiting = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) } }
         Self.expectClean(waiting, screen: "Board, pack not on the phone")
         #expect(waiting.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(waiting)")
+        #expect(!waiting.contains { $0.contains("Coastal edition patch") }, "\(waiting)")
 
         harness.library.startDownload(Self.sanDiegoPack)
-        for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .beingSewn {
+        for _ in 0..<40 where harness.library.patchArtState(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") != .beingSewn {
             try await Task.sleep(for: .milliseconds(50))
         }
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .beingSewn)
-        let sewing = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") } }
-        Self.expectClean(sewing, screen: "Board, pack on its way")
-        #expect(sewing.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(sewing)")
-        let key = CardCollection.Patch.Key(speciesID: "Haemorhous mexicanus_House Finch", setID: "us-ca-sd")
+        #expect(harness.library.patchArtState(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") == .beingSewn, "the download is in flight")
+        // Nothing is on its way for an Uncharted patch: the sightings move to the set when its pack is on the phone.
+        let downloading = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) } }
+        Self.expectClean(downloading, screen: "Board, pack on its way")
+        #expect(downloading.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(downloading)")
+        let key = CardCollection.Patch.Key(speciesID: BundledPack.finch.label, setID: nil)
         let page = try await Self.walk(PatchDetailView(key: key), harness: harness) { $0.contains("Turn over") }
         Self.expectClean(page, screen: "Page, pack on its way")
-        #expect(page.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(page)")
+        #expect(page.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(page)")
 
         harness.library.cancelDownload(id: "us-ca-sd")
-        for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .tagged {
+        for _ in 0..<40 where harness.library.patchArtState(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") != .tagged {
             try await Task.sleep(for: .milliseconds(50))
         }
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged, "a cancelled download leaves the tagged blank")
+        #expect(harness.library.patchArtState(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") == .tagged, "a cancelled download leaves nothing on its way")
     }
 
-    @Test("A bird's patches across places: each reads the bird's name, the blank of a set whose pack isn't on the phone too", arguments: sizes)
+    @Test("A bird's patches across places: each reads the bird's name, the Uncharted one of a set whose pack isn't on the phone too", arguments: sizes)
     func speciesPatches(typeSize: DynamicTypeSize) async throws {
         let harness = try Self.sanDiegoHarness()
-        let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Atlas")
+        let labels = try await Self.walk(SpeciesPatchesView(scientificName: BundledPack.finch.scientificName, commonName: BundledPack.finch.name), harness: harness, typeSize: typeSize) { labels in
+            labels.contains { $0.hasPrefix("\(BundledPack.finch.name), Uncharted patch") } && labels.contains("Open in Atlas")
         }
         Self.expectClean(labels, screen: "Species patches")
-        #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.finch.name), \(BundledPack.editionName) patch, seen 9 times, sewn ") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.finch.name), Uncharted patch, seen 6 times, sewn ") }, "the Uncharted patch: \(labels)")
+        #expect(!labels.contains { $0.contains("Coastal edition patch") }, "\(labels)")
         #expect(labels.contains("Open in Atlas"), "\(labels)")
     }
 
     @Test("The species page includes sightings with different stored labels for the same scientific name, newest first")
     func speciesSightingsUseScientificName() async throws {
         let harness = try Harness(seeded: false)
-        let older = Sighting(speciesID: "Haemorhous mexicanus_Original common name", confirmedAt: .now.addingTimeInterval(-3600), soundConfidence: 0.7, source: .phone)
+        let older = Sighting(speciesID: "\(BundledPack.finch.scientificName)_Original common name", confirmedAt: .now.addingTimeInterval(-3600), soundConfidence: 0.7, source: .phone)
         older.note = "The earlier encounter"
-        let newer = Sighting(speciesID: "Haemorhous mexicanus_House Finch", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        let newer = Sighting(speciesID: BundledPack.finch.label, confirmedAt: .now, soundConfidence: 0.7, source: .phone)
         newer.note = "The newest encounter"
-        let other = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, soundConfidence: 0.7, source: .phone)
+        let other = Sighting(speciesID: BundledPack.phoebe.label, confirmedAt: .now, soundConfidence: 0.7, source: .phone)
         other.note = "A different species"
         for sighting in [older, newer, other] { harness.album.mainContext.insert(sighting) }
         try harness.album.mainContext.save()
-        let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness) { labels in
+        let labels = try await Self.walk(SpeciesPatchesView(scientificName: BundledPack.finch.scientificName, commonName: BundledPack.finch.name), harness: harness) { labels in
             labels.contains { $0.contains("The earlier encounter") } && labels.contains { $0.contains("The newest encounter") }
         }
         Self.expectClean(labels, screen: "Species inline sightings")
@@ -725,22 +737,22 @@ struct ScreenAccessibilityTests {
     @Test("A record: the facts, Heard and Seen, and two closed disclosures that VoiceOver can find", arguments: sizes)
     func record(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
-        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         let labels = try await Self.walk(SightingDetailView(id: phoebe.persistentModelID), harness: harness, typeSize: typeSize) { labels in
             labels.contains("Rarity") && labels.contains("Identification")
         }
         Self.expectClean(labels, screen: "Record")
-        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        #expect(labels.contains(BundledPack.phoebe.name), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("How") && $0.contains("Heard with Ray-Ban Display") }, "\(labels)")
         #expect(labels.contains("Your glasses snapshot from this sighting"), "\(labels)")
         #expect(labels.contains("Rarity") && labels.contains("Identification"), "\(labels)")
         #expect(!labels.contains { $0.contains("Model score") }, "closed: \(labels)")
 
-        let dove = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Zenaida macroura" })
+        let dove = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.dove.scientificName })
         let withPatch = try await Self.walk(SightingDetailView(id: dove.persistentModelID), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch") }
+            labels.contains { $0.hasPrefix("\(BundledPack.dove.name), \(BundledPack.editionName) patch") }
         }
-        #expect(withPatch.contains { $0.hasPrefix("Mourning Dove, Citrus edition patch, seen once, sewn ") }, "\(withPatch)")
+        #expect(withPatch.contains { $0.hasPrefix("\(BundledPack.dove.name), \(BundledPack.editionName) patch, seen once, sewn ") }, "\(withPatch)")
     }
 
     @Test("The Atlas: a tile leads with the set's name, and says the plate last", arguments: sizes)
@@ -770,11 +782,11 @@ struct ScreenAccessibilityTests {
     @Test("The map: each patch says which bird and when, and a cluster how many")
     func mapPatches() async throws {
         let harness = try Harness()
-        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         let labels = try await Self.walk(SightingMapView(focus: phoebe), harness: harness) { labels in
-            labels.contains { $0.hasPrefix("Black Phoebe, ") }
+            labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), ") }
         }
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), ") }, "\(labels)")
     }
 
     @Test("A map of many sightings still offers its own controls to VoiceOver, on top of the patches on screen")
@@ -833,11 +845,11 @@ struct ScreenAccessibilityTests {
     func atlas(typeSize: DynamicTypeSize) async throws {
         let harness = try Harness()
         let labels = try await Self.walk(FieldGuideView(), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.contains("Los Angeles") } && labels.contains { $0.contains("Ready offline") }
+            labels.contains { $0.contains(BundledPack.setName) } && labels.contains { $0.contains("Ready offline") }
         }
         Self.expectClean(labels, screen: "Atlas")
         Self.expectOneWordPerThing(labels, screen: "Atlas")
-        #expect(labels.contains { $0.contains("Los Angeles") }, "\(labels)")
+        #expect(labels.contains { $0.contains(BundledPack.setName) }, "\(labels)")
         #expect(labels.contains { $0.contains("Ready offline") }, "\(labels)")
         #expect(labels.contains { $0.contains(" sewn") }, "\(labels)")
     }
@@ -911,7 +923,7 @@ struct ScreenAccessibilityTests {
         }
         Self.expectClean(labels, screen: "A find")
         Self.expectOneWordPerThing(labels, screen: "A find")
-        #expect(labels.contains("California Gnatcatcher"), "\(labels)")
+        #expect(labels.contains(BundledPack.gnatcatcher.name), "\(labels)")
         #expect(labels.contains { $0.contains("Sam Okafor") }, "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Heard at a secret spot") }, "the feed's words, no more: \(labels)")
         #expect(labels.contains { $0.contains("First for the Guild") && $0.contains("Rare") }, "\(labels)")
@@ -930,15 +942,15 @@ struct ScreenAccessibilityTests {
         let id = "maya/00000000-0000-4000-8000-000000000000"
         let route = FindRoute(itemID: id, surface: .guild(sunday.id))
         let page = FindPageView(route: route)
-        var labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
-        #expect(labels.contains("Black Phoebe"), "\(labels)")
+        var labels = try await Self.walk(page, harness: harness) { $0.contains(BundledPack.phoebe.name) }
+        #expect(labels.contains(BundledPack.phoebe.name), "\(labels)")
 
         // A read with Maya's phoebe off its pages, as from a pull on the page beneath.
         try await client.deleteFriendFind(id, circleID: sunday.id)
         await circles.loadFeed(circleID: sunday.id)
         #expect(circles.feeds[sunday.id]?.items.contains { $0.id == id } == false)
-        labels = try await Self.walk(page, harness: harness) { $0.contains("Black Phoebe") }
-        #expect(labels.contains("Black Phoebe"), "the page keeps it: \(labels)")
+        labels = try await Self.walk(page, harness: harness) { $0.contains(BundledPack.phoebe.name) }
+        #expect(labels.contains(BundledPack.phoebe.name), "the page keeps it: \(labels)")
         #expect(!labels.contains("This find isn't here any more"), "\(labels)")
 
         try await client.setBlocked(true, accountID: "maya", accessToken: "t")
@@ -991,6 +1003,6 @@ struct ScreenAccessibilityTests {
         Self.expectClean(labels, screen: "Guilds, signed out")
         Self.expectOneWordPerThing(labels, screen: "Guilds, signed out")
         #expect(labels.contains { $0.contains("Find wonder together.") }, "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Sample patches") && $0.contains("Black Phoebe") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Sample patches") && $0.contains(BundledPack.phoebe.name) }, "\(labels)")
     }
 }

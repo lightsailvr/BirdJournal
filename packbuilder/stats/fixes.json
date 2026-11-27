@@ -13,6 +13,10 @@
       "name": "Bubulcus ibis",
       "why": "Western Cattle Egret moved to Ardea (Clements 2023)"
     },
+    "Astur atricapillus": {
+      "name": "Accipiter gentilis",
+      "why": "American Goshawk split from Northern Goshawk (Clements 2023) and moved to Astur (Clements 2024); AVONET's row is the species before the split"
+    },
     "Astur cooperii": {
       "name": "Accipiter cooperii",
       "why": "Cooper's Hawk moved to Astur (Clements 2024)"
@@ -52,6 +56,7 @@
     "Vireo bellii": "Least Bell's Vireo, the subspecies of southern California, is listed as Endangered under the US Endangered Species Act"
   },
   "borrowed": {
+    "Astur atricapillus": "AVONET's row is the Northern Goshawk before the split (see avonet above); its habitat and migration are the wider species'",
     "Larus smithsonianus": "AVONET's row is the Herring Gull before the split (see avonet above); where it lives and whether it migrates are the wider species', not this one's",
     "Numenius hudsonicus": "AVONET's row is the Whimbrel before the split; its habitat and migration are the wider species'",
     "Setophaga aestiva": "AVONET's row is the Yellow Warbler before the split; its habitat and migration are the wider species'",

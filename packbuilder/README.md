@@ -3,8 +3,8 @@
 Builds BirdJournal species packs (issue #8, spec "Pack builder"). One command from a clean checkout:
 
 ```sh
-scripts/build-pack.sh                      # builds packs/us-ca-la/ and build/packs/us-ca-la.zip
-scripts/build-pack.sh us-ca-la --limit 60  # more candidates per species; any `packbuilder build` flag passes through
+scripts/build-pack.sh                      # builds the bundled pack: packs/<id>/ and build/packs/<id>.zip
+scripts/build-pack.sh us-ca-sd --limit 60  # a pack by id, to build/packs/; any `packbuilder build` flag passes through
 ```
 
 Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Python 3.12+ environment from
@@ -33,6 +33,11 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    (the file's `comment` says how it was made). A region made of several places (the counties around Orlando) lists
    them as `inat_place_ids` instead of `inat_place_id`; the photos come from their union.
 
+   Two more keys say how the pack is built where the default would not do (issue #215, both set for North America):
+   `"photos_per_species": 3` keeps three photos a species where every other pack keeps five (`build --max-photos`
+   overrides it for one build), and `"rarity_calibration": false` leaves the pack out of the rarity calibration
+   ("Rarity calibration" below). `"sound_countries"` is under step 3.
+
    A new pack's list starts from `packbuilder draft` (`species_list.py`), which ranks research-grade observations of
    birds in the places, maps each taxon to its BirdNET+ label (reusing the committed packs' entries, then the label
    file's binomial, then its common name, which is logged as a rename to check), skips hybrids and `--exclude`d
@@ -45,7 +50,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 
    `--season` takes the most-observed species of those months too (a trip pack wants the wintering ducks and the
    migrants a yearly ranking buries); `--add` takes a species by hand (the ones heard far more than seen). A taxon the
-   label file does not name is printed as unresolved for a person to map or drop.
+   label file does not name is printed as unresolved for a person to map or drop. A continent-wide pack's list comes
+   from `packbuilder draft-continental` instead ("Continental list" below).
 2. **Describe.** Each species' English Wikipedia article (plain-text extract, cached under `cache/wikipedia/` by
    title so a rebuild is offline and gives the same text) is cut by rule into a `summary` (the lead's first sentences,
    60 words), `field_marks` (the Description section's plumage sentences, skipping measurements, 20 words: the lens
@@ -60,7 +66,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
 3. **Sounds** (issue #41, `sounds.py`). One **song** and one **call** per species, each an 8 s clip, from
    [xeno-canto](https://xeno-canto.org) (API v3, `xenocanto.py`): one search per species for its recordings in the
    pack's country (`country` in `pack.json`, default United States; a worldwide search only when the country has no
-   usable song or call), ranked A/B grade first, then open licenses (CC0, CC BY, CC BY-SA) before NonCommercial
+   usable song or call; a pack of several countries lists them as `sound_countries`, searched in order, each only when
+   those before it have no usable song or call: North America's are the United States, then Canada, issue #215), ranked A/B grade first, then open licenses (CC0, CC BY, CC BY-SA) before NonCommercial
    (CC BY-NC, CC BY-NC-SA), then grade, MP3 over WAV, 5–60 s long, no background species, the country, the newest.
    No-derivatives recordings are refused (the clip is an adaptation), as are juveniles' calls, subsong and birds
    answering playback. A species xeno-canto leaves without any clip falls back to iNaturalist's research-grade
@@ -109,8 +116,8 @@ Tests: `cd packbuilder && uv run pytest` (they never see the key and make no req
    (`scoring.py`): big birds on dark, sharp backgrounds read best on the additive lens display. Crops under 0.4
    sharpness are dropped before ranking. The score cannot tell a hand-held or dead bird from a perched one; that
    is what `overrides.json` is for (see the Los Angeles file for examples).
-9. **Select.** Top five per species (at most one photo per observation), overrides first; fewer than three is a
-   logged gap (`selection.py`).
+9. **Select.** Top five per species, or as many as the definition's `photos_per_species` says (at most one photo per
+   observation), overrides first; fewer than three is a logged gap (`selection.py`).
 10. **Pack art.** One painting per species in the set's edition theme, painted from its best-lit photo (below).
 11. **Fact sheet and lore.** Each species' sourced facts, and lore written from them by a Claude model (below).
 12. **Write.** `pack.sqlite` (tables `pack`, `species`, `photo`, `sound`, `lookalike`, and since schema 4 `set_definition` with the
@@ -126,8 +133,10 @@ The Swift `Pack` module (`SpeciesPack`) reads the output; `SCHEMA_VERSION` in `w
 A pack's species make a set the birder collects toward (issue #54). The `set` section of `pack.json` names the edition
 (`name`, shown on cards that are not Legendary, and `theme`, what pack art is painted in) and the region boundary as
 named parts, each one of `census_county` (the five-digit FIPS code; US Census Bureau TIGERweb, public domain),
-`nps_park` (the NPS unit code; NPS Land Resources Division boundaries, public domain) or `polygon` (a hand-drawn
-GeoJSON file beside `pack.json`, for a region that is neither, such as the Coachella Valley in `us-ca-desert/regions/`).
+`nps_park` (the NPS unit code; NPS Land Resources Division boundaries, public domain), `polygon` (a hand-drawn
+GeoJSON file beside `pack.json`, for a region that is neither, such as the Coachella Valley in `us-ca-desert/regions/`)
+or `natural_earth_countries` (a list of countries merged into one outline, by `ADM0_A3` code: `["USA", "CAN"]`;
+Natural Earth 1:10m Admin 0 – Countries, public domain; see "A set bounded by countries" below).
 
 `uv run packbuilder set packs/<id>` fetches the boundaries into `cache/boundaries/`, simplifies each part with
 Douglas–Peucker (0.5 km by default, `--tolerance-km`), drops islets and holes under 1 km², orders the species by the
@@ -139,6 +148,74 @@ phone gives a sighting to the smallest containing part (Anza-Borrego beats San D
 
 `uv run packbuilder index --out <file>` writes the pack index from `packs/manifest.json` with each pack's `set.json`;
 `scripts/publish-pack-index.sh` runs it before uploading.
+
+### A set bounded by countries
+
+The North America set's boundary is the United States and Canada (issue #210, `countries.py`). Its source is Natural
+Earth's 1:10m "Admin 0 – Countries" and "Minor Islands", version 5.1.2, fetched once from Natural Earth's own
+repository (`nvkelso/natural-earth-vector` at the `v5.1.2` tag) into `cache/boundaries/` and checked against the
+SHA-256s in `countries.py`. Natural Earth is in the public domain ("All versions of Natural Earth raster + vector map data found on
+this website are in the public domain", [terms of use](https://www.naturalearthdata.com/about/terms-of-use/), read
+2026-11-26), so the outline may ship in the index, the packs and the app; no credit is required, and the part's
+`source` line, which the pack's `LICENSE` repeats, names it all the same. Natural Earth draws dependencies as units of
+their own (Puerto Rico `PRI`, Guam `GUM`, the US Virgin Islands `VIR`, American Samoa `ASM`, the Northern Marianas
+`MNP`, the minor outlying islands `UMI`), so `USA` is the 50 states and DC, and the Great Lakes are inside the two
+countries' polygons.
+
+The countries file leaves out islands of a few square kilometres or less; the minor islands file draws many of them
+but does not say whose they are. An islet goes to the part when the nearest country's land is one of the part's and
+no farther than 200 km (`ISLET_REACH_KM`): Monhegan, the Dry Tortugas, the Farallones, Santa Barbara Island and
+French Frigate Shoals are in this way (264 islets in all, none of them a territory's or a neighbour's). What neither
+file draws stays outside when it lies beyond the push: Machias Seal Island, Seal Island (Nova Scotia), Funk Island and
+Triangle Island as built. A definition can add such a place as a part of its own (a hand-drawn `polygon`, or an
+`nps_park`).
+
+A country part is not simplified like a county. The countries and their islets are merged and then:
+
+1. **Pushed 15 km offshore** (`OFFSHORE_KM`), so a pier or a boat counts; sea the push encloses is filled in.
+2. **Simplified to 10 km** (`COAST_TOLERANCE_KM`, Douglas–Peucker). The tolerance is less than the push, so the line
+   never comes back onto land: it runs between 4 and 25 km off the coast as Natural Earth draws it. The simplifier
+   is the builder's own: GEOS's also drops a ring's first point, and then moved the line 12 km.
+3. **Cut back at a land border.** Every other country's land is taken out again, so the push goes out to sea and not
+   into Mexico. The border keeps a 2 km margin on the neighbour's side (`BORDER_MARGIN_KM`) and is simplified to 1 km
+   (`BORDER_TOLERANCE_KM`), so no place in the named countries falls outside (Santa Ana NWR and Border Field State
+   Park are on the line) and at most 3 km of the neighbour is inside (about 5,200 km² of Mexico along 3,100 km).
+4. **Cut at 180°**, so the western Aleutians are polygons of their own east of the antimeridian and the phone's plain
+   longitude test holds. Coordinates are rounded to three decimals (about 110 m).
+
+As built on 2026-11-26 the United States and Canada are 62 polygons of 1,632 points, 28,602 bytes in the index
+(about 10.6 KB gzipped), beside 13 to 44 KB for a regional set's whole definition. `--tolerance-km` does not apply to
+a country part; change the constants, and the `source` line changes with them, so `build` and `index` refuse the
+stale `set.json`. Other settings measured the same day (bytes of the part in the index): 10 km push and 5 km
+tolerance 54 KB, 12 and 8 36 KB, 20 and 15 20 KB.
+
+No pack definition has this boundary until the North America list is approved, so it is pinned as a fixture where
+the Album package's placement test reads it:
+`uv run packbuilder set ../BirdJournal/BirdJournalKit/Tests/AlbumTests/Fixtures/united-states-and-canada` rebuilds it,
+and `tests/test_sets.py` checks the sample places against it and, when Natural Earth is in the cache, that the fixture
+is what the builder draws.
+
+## Some of a pack's birds
+
+`packbuilder build packs/<id> --only 8,9 --only "Northern Cardinal" ...` builds only the species it names, by their
+numbers in `pack.json` (the contact sheets' numbers), their ids or their common names (issue #215: the North America
+tracer built ten of the 300 this way, before the full run). It asks iNaturalist, xeno-canto and the stats join about
+those species alone, and writes a **partial pack**: the set it carries is still the whole pack's, so a collector number
+is the real one, but only the named species have photos, text, sounds and patches, and `report.json` says so
+(`"partial": {"species": 10, "listed": 300}`). A partial pack is for a trial on a simulator; it is never pinned or
+published (`scripts/pin-pack.sh` refuses one).
+
+- **The locks keep the rest.** Every lock is by species, and a partial build writes only its own species' entries:
+  the other species' recordings stay in `sounds.lock.json` (a whole build drops a species that left the pack), and the
+  art, patch, silhouette and lore locks never drop anything.
+- **The sheets keep the pack's numbers.** A sheet of the tracer's ten shows 002, 006, 008 and so on, the numbers
+  `patch-review` and `silhouette-review` take, and the patches and silhouettes each write `sheets.json` beside their
+  sheets: every cell's number, species, state and sheet (and a patch's flags), for a review page. `packbuilder patches
+  --only` names species the same way.
+- **The tracer's ten** (2026-11-26): `--only 2,6,8,9,14,97,190,193,195,283`, the Red-tailed Hawk, Mallard, American
+  Robin, American Crow, Downy Woodpecker, American Yellow Warbler, Northern Cardinal, Black-capped Chickadee, Western
+  Meadowlark and American White Ibis. Their photos, references, settings and markings are in the pack's
+  `overrides.json`, and their locks are the first entries of the full run's.
 
 ## Stats and type lines
 
@@ -253,6 +330,7 @@ uv run packbuilder patch-review packs/us-ca-la --gap "Black Phoebe" --why "threa
 - **What a patch is painted from**: that reference bird (the photo and isolation seed in `art.lock.json`, the bird in `<cache>/art/isolated/`). FLUX.3 Image Klein paints it with the `patch-art` workflow and the `patch-prompts.json` template: a merit-badge-style patch of the set's edition (its shape, the merrowed cord's colour, the twill and a few stitched shapes of its motif), lying flat on white card under even light, so the app does the lighting. The bird stands where it lives, from its `art.setting` in `overrides.json`: ducks on water, shorebirds on sand, woodpeckers on bark (the maintainer's review of the Los Angeles patches; version 1 put every bird on a branch). No prompt names the species.
 - **Pinning a patch** (`art.patch` in `overrides.json`): `reference` paints from another of the pack's photos, a well-lit adult (Heermann's Gull's pack art reference is a brown immature), isolated from its original in `<cache>/photos/original/` when the cache lacks it; `box` gives the bird's place in that photo (x0, y0, x1, y1 as fractions) when the detector can't see it, as with a poorwill on bark mulch; `markings` states plumage facts the thread keeps getting wrong ("The head and neck are solid black, the bill is white and the eye is red"), describing the bird and never naming it. A dark bird (median L* of the isolated bird under `dark_lightness`, 22) gets the black-thread clause; for every bird, the clause blackened a House Finch's blue-grey belly. `dark_clause: false` leaves it out for a bird that is black all over (a crow, a cowbird): the clause keeps the reference's contrast, so the sheen on black feathers was stitched as white patches whatever the markings said.
 - **Cut and measured**: the patch is cut from its card (`cut_from_card`: the card is what reaches the edge and stays card-coloured; the soft shadow is dropped and the convex hull of the rest is the patch, since every edition's shape is convex; BiRefNet takes the bird as often as the patch). The bird inside it is found by BiRefNet on the patch's interior with everything outside the cord filled with the twill, and measured against the reference (ΔE and IoU, `packbuilder.fidelity`). The measure only ranks and flags: thread colour moved a good House Finch about as far as a failed Black Phoebe, so there are no automatic retries and no colour fit (the interior mask can take in the leaves beside the bird).
+- **An edition's canvas and proportions** (#214): an edition in `patch-prompts.json` can name the `canvas` it is painted on, where the card's 864 x 1152 doesn't hold its shape, and the `aspect` its cut patch must have, the least and greatest width over height. The model fits a badge to its picture, so the Continental edition's wide rectangle (`north-america`) came out 1.26 to 1.41 wide to 1 tall on the card's canvas, close to New York's rounded square, and 1.35 to 1.57 on 1152 x 864. `shape_fit` can't see that: it measures in the patch's own bounding box, where a square fills a rectangle's outline as well as a wide one does. A patch outside its edition's `aspect` (1.3 to 1.55 for the Continental edition, which the app draws 1.42 wide) is painted again with the next seed, as one with a peeled corner or the wrong outline is, at most three times, and the nearest is kept; the lock records its `aspect` and the sheet marks it WRONG ASPECT. The canvas is among what the lock compares (`edition.canvas`), so another canvas paints the edition again; the eight regional editions have neither key and nothing of theirs is repainted.
 - **Reviewed**: every patch is reviewed on the contact sheets in `build/pack-art/<pack id>/patches/` (the reference bird beside its patch, with its state, measure and whether the dark clause was used). `patch.lock.json` pins each: the reference photo and isolation seed, the workflow and prompts versions, the edition's patch, the seed, the cut patch's SHA-256 (`<cache>/art/patches/<sha256>.png`, with `-raw.png` the painting as it came) and the review, as for pack art. A rejected patch is painted again with the next seed by the next run, with the current templates; a new prompts version alone leaves reviewed patches alone.
 - **In the pack (schema 5)**: an approved patch is written, without the pale rim of card its cut can leave along one side (`trim_rim`: that only changes the alpha, so the lock stands), as `patch/<species id>.avif`, its colour on transparency at 720 px on its longest side, and `patch/<species id>-layers.avif` at half size, its height map (thread relief plus the raised cord) in red, the cord's mask (25 px deep at 720 px) in green and the stitch order (one thread colour at a time, the largest first, the cord last) in blue (`patch_art.layers`), with a `patch` row: the files, its size, the bare twill's colour, the stitch layers' starts and its source photo. About 120 KB a species; a build with patches writes no pack art, which keeps Los Angeles inside its 200 MB budget.
 - **Running it**: about 20 s a patch on the box itself; from the Mac it waits on the tailnet (about a minute a patch on 2026-11-03). To run it on the box, copy `packbuilder/src`, `art/`, the pack's definition and locks and the isolated birds to a checkout-shaped folder there and run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli patches packbuilder/packs/<id> --comfy http://127.0.0.1:8189 --cache packbuilder/cache`, then copy `patch.lock.json`, `<cache>/art/patches/` and the sheets back.
@@ -312,13 +390,73 @@ uv run packbuilder mascot-assets                            # the app's art from
 - **The cache** is `packbuilder/cache/mascot/` and gitignored; `mascot-review` needs the candidate you pick in it, and `mascot` paints a lost one again from its seed.
 - **Running it**: about 12 s a painting, plus a peeled retry now and then. On the box itself: copy `packbuilder/src`, the `art` files and the icons to a checkout-shaped folder (`~/birdjournal-art/mascot-run`), run `PYTHONPATH=packbuilder/src ~/comfyui-flux3/.venv/bin/python -m packbuilder.cli mascot --comfy http://127.0.0.1:8189 --cache packbuilder/cache/mascot`, then copy `art/mascot/mascot.lock.json`, the cache and `build/mascot/` back.
 
+## Continental list
+
+`packbuilder draft-continental` (`continental.py`; issue #211, spec #206) drafts the species list of a pack for a whole
+continent, the North America set. Observation counts would be the list of its biggest cities, so it reads the BirdNET
+geomodel (the repo's `models/`, as the rarity calibration does) at the cities of a committed sample, for every bird
+and all 48 weeks:
+
+```sh
+uv run packbuilder draft-continental --cities cities/north-america.json --count 300 \
+    --report ../build/north-america-draft.md > species.json
+```
+
+It prints the `species` array of a `pack.json`, in the order the birds were taken, and with `--report` writes the
+draft as Markdown for the review: the birds in taxonomic order with the collector numbers they would have, every
+city's coverage with the birds it most misses, the birds no committed pack lists, the next 30 in line (`--runners-up`)
+and the birds without an acoustic class. Nothing is written into `packs/`: the approved list is committed by hand as
+the pack's definition. A run takes a few seconds, plus a second for each bird new to the project the first time
+(below).
+
+The North America list was approved on issue #212 and is `packs/north-america/pack.json`: the command above with
+`--exclude 'Gallus gallus' --add 'Tyto furcata' --add 'Pyrocephalus rubinus'`, as its `comment` records. An exclusion
+reorders the last birds taken, so the second addition keeps the draft's last bird in and the list is the approved
+draft less the junglefowl plus the barn owl. It is fixed at version 1 of the pack, since a later addition renumbers
+the set. A rerun now counts the pack's own birds as already in the project.
+
+- **The sample** is `cities/north-america.json`: 90 cities of the lower 48 states and southern Canada, chosen so the
+  Southwest, Texas, Florida, the Northwest, the Plains and the Maritimes are all in it. Alaska and Hawaii are left out
+  on purpose. Changing the file changes the draft.
+- **Present** means an occurrence at or above the identification floor, 0.03: the reading under which the app does
+  not admit a bird it hears at a place. Readings under it count for nothing.
+- **Coast-to-coast birds first**: the birds present for two months or more (8 of the 48 weeks, in a row or not) in
+  at least 90 % of the cities, in the order of their mean occurrence over every city and week.
+- **Coverage** of a city is the share of its occurrence weight that the list's birds hold. A bird's weight there is
+  its occurrence summed over the weeks it is present; the city's is that of every bird the geomodel has, with or
+  without an acoustic class. The geomodel's insects, frogs and mammals are no part of it.
+- **Then one bird at a time**, each the one that most lifts the cities furthest behind: the bird that most reduces
+  the sum over the cities of the squared shortfall, (1 − coverage)². A point of coverage so counts in proportion to
+  how far its city is behind, twice as much at 60 % as at 80 %. A tie goes to the higher mean occurrence, then to
+  the scientific name, so the same inputs give the same list.
+- **Names** are the BirdNET+ label file's. A geomodel class is the label of the same binomial (the entry a committed
+  pack already has for it is reused whole); failing that, the one label of the same common name, printed as a rename
+  to check (the geomodel's *Leuconotopicus* woodpeckers are the label file's *Dryobates*); failing that the bird has
+  no acoustic class and is left out. The sample file's `geomodel_names` says which label a class means where its own
+  binomial is another bird's label (the geomodel's world-wide whimbrel is the Hudsonian Whimbrel here).
+- **By hand**: `--add` takes a bird whatever the geomodel says (it takes one of the places, so the count holds; a bird
+  the geomodel has no class for, the American Barn Owl, can only come in this way) and `--exclude` never takes one.
+  Both name the label's scientific name, and a name that is not a label stops the command. The pack's `comment`
+  records the command, as the regional definitions record theirs.
+- **New birds**: a bird in no committed pack gets iNaturalist's taxon of the same name and its Wikipedia link, cached
+  under `cache/api/`; one iNaturalist names differently is printed as unresolved and its entry has no taxon.
+
+The coverage figures weigh every bird by the geomodel's occurrence, which reads like a range map more than a count:
+common birds are met far more often than their weight says, and a wader the geomodel expects near every city for
+two months of passage counts as coast to coast. So the draft is read over by a birder before it becomes a list.
+
 ## Rarity calibration
 
 `uv run packbuilder calibrate-rarity --version <n>` reads the BirdNET geomodel (from the repo's `models/`) for every
-species of every definition under `packs/`, over a 6 × 6 grid across each pack's bounding box and all 48 weeks, and
-writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
+species of every definition under `packs/` that it pools, over a 6 × 6 grid across each pack's bounding box and all
+48 weeks, and writes the label thresholds the app ships to `BirdJournal/BirdJournalKit/Sources/Identification/RarityCalibration.json`
 (`rarity.py`; ADR-0006, issue #52). It takes a few seconds. Run it again only for a new calibration, with the next
 version: cards keep the version they were labelled under.
+
+A definition with `"rarity_calibration": false` is not pooled, and North America's says so (issue #215, spec #206):
+its bounding box is the continent, so its 300 birds read over all of it would outweigh every regional pack and move
+the thresholds. The committed calibration is version 1, over the five packs that existed then, and
+`tests/test_continental_pack.py` pins its thresholds; nothing in #206 runs a new one.
 
 ## Fact sheet and lore
 
@@ -393,10 +531,11 @@ nothing, cites a fact the sheet lacks or misses the counts is sent back with wha
 | `packs/<id>/pack.json`, `overrides.json`, `wikipedia.lock.json`, `sounds.lock.json`, `art.lock.json`, `patch.lock.json`, `silhouette.lock.json`, `lore.lock.json` | Pack definitions, manual overrides, the Wikipedia revisions the text came from, the recordings the sounds came from, the pack art's, patches' and silhouettes' sources and review, and the lore with its facts and review (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, the committed definitions against the BirdNET label file, the art prompts, workflows and crops, fidelity and the colour fit, and the ComfyUI client and the bake-off's retries against a stub server. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `packs/<id>/set.json`, `packs/<id>/regions/*.geojson` | The pinned set definition `packbuilder set` builds, and hand-drawn boundary parts (committed). |
+| `cities/north-america.json` | The sample cities the North America list is drafted from (committed). |
 | `stats/fixes.json`, `stats/type-lines.json` | The stats join's name fixes, known gaps and threatened hand list, and the type-line words (committed). |
 | `tests/` | pytest over synthetic fixtures: license filter, scoring order, selection and overrides, crops, Open Data join, Wikipedia text rules, the pipeline through fakes, writer output, and the committed definitions against the BirdNET label file. The detector test runs only when the model and some photos are cached; the label test only when the models are downloaded. |
 | `cache/wikipedia/` | Fetched article pages (gitignored with the rest of `cache/`). |
-| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks), `art/` (the paintings by SHA-256 and the isolated reference birds). |
+| `cache/` | Downloads (gitignored): `models/`, `api/`, `wikipedia/`, `photos/large/`, `photos/original/`, `sounds/` (xeno-canto and iNaturalist answers and files, and the encoded clips), `boundaries/` (counties, parks and the Natural Earth countries) and `taxonomy/` (the set's sources), `datasets/` (the stats workbooks), `art/` (the paintings by SHA-256 and the isolated reference birds). |
 
 Output goes to the repo's `packs/<id>/`, which is not committed: the built pack is published as a GitHub Release asset
 and fetched by `scripts/download-pack.sh` (see `packs/README.md`).

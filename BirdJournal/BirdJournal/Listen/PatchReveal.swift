@@ -133,7 +133,12 @@ private struct NewPatchReveal: View {
     /// The patch decoded and the clock over its threads. Once it's here, the stitch-in is on, whatever the settings do.
     @State private var prepared: (art: PatchArt, loaded: PatchTextures.Loaded, timeline: StitchTimeline)?
 
-    private var art: PatchArt? { reveal.artState(in: library).art }
+    /// The bird's own painting. Uncharted's generic patch is no bird's, and has no stitch-in: its add goes straight to the
+    /// finished patch, as it did when Uncharted was a blank (issue #222).
+    private var art: PatchArt? {
+        guard let art = reveal.artState(in: library).art, !art.isGeneric else { return nil }
+        return art
+    }
 
     private var stitches: Bool {
         StitchCeremony.stitches(

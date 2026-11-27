@@ -19,6 +19,7 @@ their own (issue #113), in lore.lock.json (`lore.py`).
 `packbuilder thumbnails <pack-dir> --out <dir>`: writes the pack-art thumbnails for the art CDN (`thumbnails.py`).
 `packbuilder index --out <file>`: writes the pack index the phone reads, with every pack's set (`index.py`).
 `packbuilder draft --place <id> ...`: prints a first species list for a new pack (`species_list.py`).
+`packbuilder draft-continental --cities <file> ...`: prints a continent-wide pack's species list from the geomodel (`continental.py`).
 `packbuilder calibrate-rarity --version <n>`: writes the rarity label thresholds the app ships (`rarity.py`)."""
 
 from __future__ import annotations
@@ -51,7 +52,8 @@ def main(argv: list[str] | None = None) -> int:
     build.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
     build.add_argument("--limit", type=int, default=60, help="cleared candidates per species to download and detect (default 60)")
     build.add_argument("--min-photos", type=int, default=3, help="photos per species below which a gap is logged (default 3)")
-    build.add_argument("--max-photos", type=int, default=5, help="photos kept per species (default 5)")
+    build.add_argument("--max-photos", type=int, default=None, help="photos kept per species (default: the definition's photos_per_species, 5 unless it says otherwise)")
+    build.add_argument("--only", action="append", default=[], metavar="SPECIES", help="build only these of the pack's species: their numbers in pack.json (8,9), species ids or common names (repeat). The result is a partial pack for a trial, never one to pin or publish; the other species' lock entries stay")
     build.add_argument("--zip", type=Path, metavar="PATH", help="also write a zip of the pack at PATH")
     build.add_argument("--built-at", help="ISO timestamp to record instead of now (for reproducible output)")
     build.add_argument("--workers", type=int, default=8, help="concurrent photo downloads per species (default 8)")
@@ -154,7 +156,7 @@ def main(argv: list[str] | None = None) -> int:
     patches.add_argument("--comfy", default=COMFY, help=f"the FLUX.3 ComfyUI that paints (default {COMFY}, on the tailnet)")
     patches.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="the art cache: isolated birds in <cache>/art/isolated, patches written to <cache>/art/patches (default: packbuilder/cache)")
     patches.add_argument("--sheets", type=Path, help="folder for the contact sheets (default build/pack-art/<pack id>/patches)")
-    patches.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species ids (repeat), for a trial")
+    patches.add_argument("--only", action="append", default=[], metavar="SPECIES", help="only these species: the sheets' numbers (8,9), species ids or common names (repeat); the sheets keep the pack's numbers")
     patch_review = commands.add_parser("patch-review", help="record the maintainer's review of the patches in patch.lock.json")
     patch_review.add_argument("definition", type=Path, help="folder holding pack.json and patch.lock.json")
     patch_review.add_argument("--approve", action="append", default=[], metavar="SPECIES", help="approve a patch (species id or common name; repeat)")
@@ -175,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
     set_command = commands.add_parser("set", help="build the set definition (boundary, taxonomic order, edition) into set.json")
     set_command.add_argument("definition", type=Path, help="folder holding pack.json")
     set_command.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
-    set_command.add_argument("--tolerance-km", type=float, default=None, help="boundary simplification tolerance in km (default sets.DEFAULT_TOLERANCE_KM)")
+    set_command.add_argument("--tolerance-km", type=float, default=None, help="simplification tolerance in km for counties, parks and hand-drawn parts (default sets.DEFAULT_TOLERANCE_KM); a part bounded by countries has its own in countries.py")
     index_command = commands.add_parser("index", help="write the pack index from packs/manifest.json and every pack's set.json")
     index_command.add_argument("--out", type=Path, required=True, help="index file to write")
     index_command.add_argument("--repo", default="lightsailvr/BirdJournal", help="GitHub repository the pack zips are released on")
@@ -191,7 +193,15 @@ def main(argv: list[str] | None = None) -> int:
     draft.add_argument("--add", action="append", default=[], help="a species taken by hand, by scientific name (repeat)")
     draft.add_argument("--exclude", action="append", default=[], help="a species never taken, by scientific name (repeat)")
     draft.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
-    calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition")
+    continental = commands.add_parser("draft-continental", help="print a species list for a continent-wide pack from the geomodel's occurrence at sample cities")
+    continental.add_argument("--cities", type=Path, required=True, help="the sample cities file, such as packbuilder/cities/north-america.json")
+    continental.add_argument("--count", type=int, default=300, help="how many species (default 300)")
+    continental.add_argument("--add", action="append", default=[], help="a species taken by hand, by its BirdNET+ label's scientific name (repeat)")
+    continental.add_argument("--exclude", action="append", default=[], help="a species never taken, by its BirdNET+ label's scientific name (repeat)")
+    continental.add_argument("--report", type=Path, help="also write the draft as Markdown for review: taxonomic order, each city's coverage, the new birds")
+    continental.add_argument("--runners-up", type=int, default=30, help="how many of the next birds in line the report names (default 30)")
+    continental.add_argument("--cache", type=Path, default=Path(__file__).resolve().parents[2] / "cache", help="download cache (default: packbuilder/cache)")
+    calibrate = commands.add_parser("calibrate-rarity", help="write the rarity label thresholds from the geomodel over every pack definition it pools (all but North America)")
     calibrate.add_argument("--version", type=int, required=True, help="the calibration version; bump it for any new calibration")
     calibrate.add_argument("--out", type=Path, help="file to write (default: the Identification module's RarityCalibration.json)")
     mascot = commands.add_parser("mascot", help="paint the mascot patches art/mascot/mascot.lock.json lacks and draw their contact sheets (issue #150)")
@@ -212,6 +222,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "draft":
         return _draft(args)
+    if args.command == "draft-continental":
+        return _draft_continental(args)
     if args.command == "set":
         return _set(args)
     if args.command == "index":
@@ -262,6 +274,13 @@ def main(argv: list[str] | None = None) -> int:
     # The pinned set first, so a stale one stops the build before any download (issue #54).
     card_set = load_set(args.definition / "set.json")
     check_set(card_set, definition)
+    # Some of the pack's birds (#215): the set stays the whole pack's, and everything below builds only the named ones.
+    try:
+        definition = _only(definition, args.only)
+    except KeyError as error:
+        parser.error(error.args[0])
+    if definition.partial:
+        logging.getLogger("packbuilder").info("building %d of %s's %d species: a partial pack, never to pin or publish", len(definition.species), definition.id, definition.listed)
     # The stats join next (issue #55): an unmapped species fails here too, not after an hour of photos.
     from packbuilder.stats import Datasets, StatsFixes, TypeLines, join
 
@@ -333,8 +352,6 @@ def _license_set(value: str) -> frozenset[str]:
 def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
     """The sounds stage (issue #41): xeno-canto first, through its paced, capped client, then iNaturalist; the clips
     checked with the app's BirdNET model; `sounds.lock.json` beside the definition pinning what was chosen."""
-    import json
-
     from packbuilder.audio import BirdNETCheck, ClipMaker
     from packbuilder.definition import load_overrides
     from packbuilder.sounds import SoundLock, SoundOverrides, SoundPicker
@@ -342,7 +359,6 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
     from packbuilder.xenocanto import XenoCantoClient, XenoCantoSoundSource, api_key_from_environment, xeno_canto_pacer
 
     repo = Path(__file__).resolve().parents[3]
-    country = json.loads((args.definition / "pack.json").read_text()).get("country", "United States")
     sound_overrides = {
         name: SoundOverrides.from_mapping(data.get("sounds"))
         for name, data in load_overrides(args.definition / "overrides.json").items() if isinstance(data, dict)
@@ -350,11 +366,11 @@ def _sound_picker(args: argparse.Namespace, definition: PackDefinition):
     names = {name: overrides.xeno_canto_name for name, overrides in sound_overrides.items() if overrides.xeno_canto_name}
     cache = args.cache / "sounds"
     client = XenoCantoClient(cache / "xeno-canto", api_key_from_environment(), pacer=xeno_canto_pacer(args.xc_interval), max_requests=args.xc_max_requests)
-    xeno_canto = XenoCantoSoundSource(client, country=country, names=names)
+    xeno_canto = XenoCantoSoundSource(client, countries=definition.sound_countries, names=names)
     inaturalist = INaturalistSoundSource(cache / "inaturalist")
     return SoundPicker(
         sources=[xeno_canto, inaturalist], clips=ClipMaker(), check=BirdNETCheck(repo / "models"),
-        clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=country, max_tries=args.sound_tries,
+        clip_dir=cache / "clips", lock=SoundLock(args.definition / "sounds.lock.json"), country=definition.sound_countries[0], max_tries=args.sound_tries,
     )
 
 
@@ -496,6 +512,12 @@ def _named_species(definition: PackDefinition, values: list[str]) -> list[str]:
     return found
 
 
+def _only(definition: PackDefinition, named: list[str]) -> PackDefinition:
+    """The definition cut down to the species `--only` names (the sheets' numbers, ids or common names), or whole when
+    it names none. Raises KeyError for a name the pack lacks."""
+    return definition.only(_named_species(definition, named)) if named else definition
+
+
 def _silhouette_review(args: argparse.Namespace) -> int:
     from packbuilder.silhouettes import APPROVED, GAP, LOCK_FILE, PENDING, REJECTED, SilhouetteLock, review
 
@@ -579,10 +601,15 @@ def _patches(args: argparse.Namespace) -> int:
 
     logging.basicConfig(level=logging.INFO, format="%(message)s", stream=sys.stderr)
     definition = PackDefinition.load(args.definition / "pack.json")
-    species = [entry.id for entry in definition.species if not args.only or entry.id in args.only]
+    try:
+        definition = _only(definition, args.only)
+    except KeyError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    species = [entry.id for entry in definition.species]
     artist = _make_patch_artist(args, definition, ComfyClient(args.comfy))
     patches = artist.paint(species)
-    sheets = artist.sheets(species, patches, args.sheets or _art_sheets_path(definition.id) / "patches")
+    sheets = artist.sheets(species, patches, args.sheets or _art_sheets_path(definition.id) / "patches", numbers={species_id: definition.number(species_id) for species_id in species})
     print(f"{definition.id} patches: {artist.painted} painted; contact sheets {', '.join(map(str, sheets))}", file=sys.stderr)
     return 0
 
@@ -836,6 +863,8 @@ def _thumbnails(args: argparse.Namespace) -> int:
 
 
 def _set(args: argparse.Namespace) -> int:
+    import json
+
     from packbuilder.sets import DEFAULT_TOLERANCE_KM, PublicBoundaries, Taxonomy, build_set, dump_set, polygon_area_km2
 
     definition = PackDefinition.load(args.definition / "pack.json")
@@ -846,7 +875,8 @@ def _set(args: argparse.Namespace) -> int:
     for region in document["regions"]:
         points = sum(len(ring) for polygon in region["polygons"] for ring in polygon)
         area = sum(polygon_area_km2(polygon) for polygon in region["polygons"])
-        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km²", file=sys.stderr)
+        size = len(json.dumps(region, ensure_ascii=False, separators=(",", ":")))
+        print(f"{region['name']}: {len(region['polygons'])} polygons, {points} points, {area:,.0f} km², {size:,} bytes in the index", file=sys.stderr)
     print(f"wrote {args.definition / 'set.json'}: {len(document['species'])} species, {len(text):,} bytes", file=sys.stderr)
     return 0
 
@@ -891,19 +921,61 @@ def _draft(args: argparse.Namespace) -> int:
     return 0
 
 
+def _draft_continental(args: argparse.Namespace) -> int:
+    import json
+    import statistics
+
+    from packbuilder import species_list
+    from packbuilder.continental import draft, load_sample, read_geomodel, report, species_entries
+    from packbuilder.sets import Taxonomy
+
+    repo = Path(__file__).resolve().parents[3]
+    sample = load_sample(args.cities)
+    occurrence, geomodel = read_geomodel(repo / "models")
+    labels = species_list.birdnet_labels(repo / "models" / "BirdNET+_V3.0-preview3.1_Global_11K_Labels.csv")
+    try:
+        result = draft(
+            occurrence, geomodel, labels, sample.cities, args.count, add=args.add, exclude=set(args.exclude),
+            geomodel_names=sample.geomodel_names, runners_up=args.runners_up if args.report else 0,
+        )
+    except ValueError as error:
+        print(error.args[0], file=sys.stderr)
+        return 1
+    known: dict[str, dict] = {}
+    for entry in species_list.known_entries(sorted((repo / "packbuilder" / "packs").iterdir())).values():
+        known.setdefault(entry["scientific_name"], entry)
+    entries = species_entries(result.picks, known, lambda name: species_list.named_taxon(name, args.cache))
+    for geomodel_name, label_name in result.renamed:
+        print(f"renamed   the geomodel's {geomodel_name} as BirdNET's {label_name}: check", file=sys.stderr)
+    for name in entries.unresolved:
+        print(f"UNRESOLVED {name} ({labels[name]}): iNaturalist has no species of that name, so its entry has no taxon", file=sys.stderr)
+    weakest = min(range(len(sample.cities)), key=lambda c: result.coverage[c])
+    print(
+        f"{len(result.picks)} species, {len(entries.new)} new to the project; coverage median {100 * statistics.median(result.coverage):.1f} %, "
+        f"weakest {sample.cities[weakest].name} at {100 * result.coverage[weakest]:.1f} %", file=sys.stderr,
+    )
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(report(result, sample.cities, entries, Taxonomy.load(args.cache)), encoding="utf-8")
+        print(f"wrote {args.report}", file=sys.stderr)
+    json.dump(entries.species, sys.stdout, indent=2, ensure_ascii=False)
+    print()
+    return 0
+
+
 def _calibrate_rarity(args: argparse.Namespace) -> int:
     import json
 
     import onnxruntime
 
-    from packbuilder.rarity import GRID_SIZE, Region, calibration, readings
+    from packbuilder.rarity import GRID_SIZE, Region, calibration, pooled, readings
 
     repo = Path(__file__).resolve().parents[3]
     model = "BirdNET+_Geomodel_V3.0.4_Global_14K_FP16.onnx"
     session = onnxruntime.InferenceSession(str(repo / "models" / model))
     labels_file = repo / "models" / "BirdNET+_Geomodel_V3.0.4_Global_14K_Labels.txt"
     labels = [line.split("\t")[1] for line in labels_file.read_text(encoding="utf-8").splitlines() if line]
-    definitions = [PackDefinition.load(folder / "pack.json") for folder in sorted((repo / "packbuilder" / "packs").iterdir())]
+    definitions = pooled([PackDefinition.load(folder / "pack.json") for folder in sorted((repo / "packbuilder" / "packs").iterdir())])
     regions = [Region(d.bounding_box, [s.scientific_name for s in d.species]) for d in definitions]
     values, unknown = readings(lambda inputs: session.run(["probabilities"], {"input": inputs})[0], labels, regions)
     document = calibration(values, version=args.version, geomodel=model, packs=[d.id for d in definitions], grid_size=GRID_SIZE, unknown=unknown)

@@ -180,7 +180,7 @@ struct CaptureWhenIdleTests {
         #expect(sighting.location == Self.griffithPlace && sighting.confirmedAt == photo.takenAt)
         #expect(sighting.source == .phone)
         #expect(harness.captures.isEmpty, "it is a sighting now")
-        #expect(addition.sewsPatch && addition.placement.setID == "us-ca-la")
+        #expect(addition.sewsPatch && addition.placement.setID == LosAngelesSet.id)
         #expect(run.reveal?.addition == addition, "the stitch-in plays at the add")
         #expect(run.reveal?.hasPlayed == false)
         #expect(run.acknowledgment?.text == "Your first House Finch in Los Angeles")

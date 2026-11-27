@@ -66,7 +66,7 @@ struct UnnamedSightingTests {
         #expect(fixture.sightings.isEmpty, "not a sighting")
         #expect(fixture.ledger.seen.isEmpty && fixture.ledger.entries.isEmpty && fixture.ledger.identifiers.isEmpty)
         #expect(fixture.collection.patchCount == 0, "no patch")
-        #expect(fixture.collection.progress(of: "us-ca-la").collected == 0, "no set's progress")
+        #expect(fixture.collection.progress(of: LosAngelesSet.id).collected == 0, "no set's progress")
         #expect(fixture.prior.asked.isEmpty, "no rarity is read for a bird with no name")
         await outbox.flush()
         #expect(client.calls.isEmpty, "no find")
@@ -138,7 +138,7 @@ struct UnnamedSightingTests {
         #expect(fixture.ledger.seen.map(\.identifier) == [addition.identifier])
         #expect(fixture.ledger.seen.first?.seenAt == Self.taken)
         #expect(fixture.ledger.identifiers == [addition.identifier])
-        #expect(fixture.collection.progress(of: "us-ca-la").collected == 1)
+        #expect(fixture.collection.progress(of: LosAngelesSet.id).collected == 1)
     }
 
     @Test("a capture the glasses took is a sighting from the glasses once named; one with no place is named with none, in Uncharted and without rarity")
