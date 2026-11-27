@@ -13,6 +13,10 @@ final class CurrentPlace {
     private(set) var setID: String?
     /// Its cover, decoded: `setID` and this change together, so the painting never lags the words and the tint.
     private(set) var painting: UIImage?
+    /// The set the birder is standing in: the last read of the phone's position was inside it. Nil until a read says so, with
+    /// no position, and outside every set, where `setID` falls back to a set the birder isn't in. A field guide is offered
+    /// only here (issue #223). It changes with `setID`.
+    private(set) var standingInSetID: String?
 
     @ObservationIgnored private var shownCover: SetCover?
     @ObservationIgnored private let library: PackLibrary
@@ -46,14 +50,22 @@ final class CurrentPlace {
     /// One read of the last known position, and the set it picks. If that's a different set (or a better cover of the same one),
     /// its cover decodes off the main actor and then everything changes at once.
     func refresh() async {
-        guard let id = LocalSet.choose(coordinate: location.lastKnownCoordinate(), in: collection(), among: library.knownCardSets) else { return }
+        let coordinate = location.lastKnownCoordinate()
+        let sets = library.knownCardSets
+        guard let id = LocalSet.choose(coordinate: coordinate, in: collection(), among: sets) else { return }
+        // The set the position is inside, which `choose` puts first; its fallbacks are sets the birder isn't in.
+        let here = coordinate.flatMap { CardSet.containing($0, in: sets) }?.id
         if defaults.string(forKey: Self.rememberedKey) != id { defaults.set(id, forKey: Self.rememberedKey) }
         let cover = library.cover(setID: id)
-        guard id != setID || cover != shownCover else { return }
+        guard id != setID || cover != shownCover else {
+            if standingInSetID != here { standingInSetID = here }
+            return
+        }
         let image = await SetCoverImage.load(cover)
         guard !Task.isCancelled else { return }
         setID = id
         shownCover = cover
         painting = image
+        standingInSetID = here
     }
 }

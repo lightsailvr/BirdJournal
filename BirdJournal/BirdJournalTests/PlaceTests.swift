@@ -165,6 +165,35 @@ struct PlaceTests {
         #expect(place.painting === painting, "nothing decoded again")
     }
 
+    // MARK: - Standing in a set
+
+    /// A square degree of sea off West Africa, outside every set there is.
+    nonisolated static let atSea = Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
+
+    @Test("a read that finds the birder inside a set says they're standing in it; a remembered set, a fallback and no location don't (issue #223)")
+    func standingInASet() async throws {
+        let library = try Self.library()
+        let defaults = Self.defaults()
+        let inTheDesert = Self.place(library, at: Self.joshuaTree, defaults: defaults)
+        #expect(inTheDesert.standingInSetID == nil, "nothing is known before a read")
+        await inTheDesert.refresh()
+        #expect(inTheDesert.standingInSetID == "us-ca-desert")
+
+        let remembered = Self.place(library, at: nil, defaults: defaults)
+        #expect(remembered.setID == "us-ca-desert" && remembered.standingInSetID == nil, "the last place is shown, not stood in")
+        await remembered.refresh()
+        #expect(remembered.standingInSetID == nil, "with no location")
+
+        let away = Self.place(library, at: Self.atSea, defaults: defaults)
+        await away.refresh()
+        #expect(away.setID == library.bundled?.info.id, "outside every set the page falls back to one")
+        #expect(away.standingInSetID == nil, "which the birder isn't standing in")
+
+        let back = Self.place(library, at: Self.joshuaTree, defaults: defaults)
+        await back.refresh()
+        #expect(back.setID == "us-ca-desert" && back.standingInSetID == "us-ca-desert", "the painting and the place change together")
+    }
+
     // MARK: - The accent
 
     @Test("each set has its edition's thread; Uncharted has its own, and a set the app doesn't know keeps the aqua")
