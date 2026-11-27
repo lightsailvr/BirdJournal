@@ -19,7 +19,8 @@
    "reference": 768366048,
    "_why": "the best-lit of the first three was a bird landing, wings spread, on a snag; this adult perches upright on a bare branch, breast and belly band showing",
    "patch": {
-    "markings": "The crown, nape and cheeks are light brown, clearly darker than the white throat, never white. The breast and belly are creamy white, with a band of dark brown streaks across the belly. The folded wings are dark brown. The bill is dark with a yellow base and the feet are yellow."
+    "markings": "The bird is a hawk, perched upright and facing the viewer as in <ref_image_0>, with a short, strongly hooked bill, dark at the tip and yellow at the base, a broad chest and thick yellow feet. The crown, nape and cheeks are light brown, clearly darker than the white throat, never white. The breast and belly are creamy white, with a band of dark brown streaks across the belly. The folded wings are dark brown. The bill is dark with a yellow base and the feet are yellow.",
+    "_why": "the first painting (2026-11-26, pending) turned the bird side-on and gave it a songbird's straight bill and shape (dE 29.5, IoU 0.61); these words are for the next seed, if the maintainer rejects it"
    }
   }
  },
@@ -176,7 +177,8 @@
    "reference": 767899172,
    "_why": "side-on, whole, cap, bib, cheek and buff flank all showing; the birds on branches hide the bib or have a twig across them",
    "patch": {
-    "markings": "The cap and a bib under the bill are solid black; the cheek between them is white; the single dark eye sits inside the black cap; the back is grey, the wing feathers dark with white edges, and the flanks warm buff."
+    "markings": "The cap and a bib under the bill are solid black; the cheek between them is white; the single dark eye sits inside the black cap; the back is grey, the wing feathers dark with white edges, and the flanks warm buff. The bird sits on a thin branch that runs under its whole body, and both feet are closed around that branch; it does not float.",
+    "_why": "the reference stands on a glove, which is no part of the bird, and the first painting (2026-11-26, pending) gave it no perch at all, legs dangling; these words are for the next seed, if the maintainer rejects it"
    }
   }
  },
