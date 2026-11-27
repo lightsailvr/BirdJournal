@@ -33,16 +33,17 @@ struct FieldGuideOfferCard: View {
                 ViewThatFits(in: .horizontal) {
                     HStack(alignment: .bottom, spacing: 6) {
                         PackTransferStatus(status: status, descriptor: descriptor)
-                        notNow
+                        notNow(inset: 12)
                     }
                     VStack(alignment: .leading, spacing: 0) {
                         PackTransferStatus(status: status, descriptor: descriptor)
-                        notNow
+                        notNow(inset: 0)
                     }
                 }
             case .failed:
+                // What went wrong and its recovery, then the way out, on the same edge.
                 PackTransferStatus(status: status, descriptor: descriptor)
-                notNow
+                notNow(inset: 0)
             default:
                 // Under way: its progress and Cancel are the answer now.
                 PackTransferStatus(status: status, descriptor: descriptor)
@@ -56,7 +57,8 @@ struct FieldGuideOfferCard: View {
     }
 
     /// Quieter than Download, and still 44 points to the finger.
-    private var notNow: some View {
+    /// - Parameter inset: room at its sides, beside Download; none under it, where its words start on the card's edge.
+    private func notNow(inset: CGFloat) -> some View {
         Button {
             library.dismissFailure(id: descriptor.id)
             dismiss()
@@ -64,8 +66,8 @@ struct FieldGuideOfferCard: View {
             Text("Not now")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.inkSecondary)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 44)
+                .padding(.horizontal, inset)
+                .frame(minWidth: 44, minHeight: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.journalPress)

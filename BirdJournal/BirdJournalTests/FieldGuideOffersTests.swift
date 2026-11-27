@@ -76,4 +76,14 @@ struct FieldGuideOffersTests {
         #expect(phone.offers(standingIn: phone.here).here == nil, "the place's field guide is on the phone")
         #expect(phone.offers(standingIn: Self.elsewhere).here != nil, "the other still isn't")
     }
+
+    @Test("the offer's words are the glossary's: the set by name, its edition, and the field-guide download")
+    func theWords() throws {
+        let marsh = try PackSet.decode(from: Data(#"{"id":"test-marsh","name":"Salt Marsh","edition":{"name":"Reed edition","theme":"x"},"taxonomy":"IOC World Bird List 15.1","regions":[],"species":[]}"#.utf8))
+
+        #expect(FieldGuideOfferCard.placeTitle(marsh) == "You're in the Salt Marsh set")
+        #expect(FieldGuideOfferCard.placeMessage(marsh) == "Its field-guide download brings the Reed edition: the birds you find here are sewn as this set's patches, with its photos, sounds and field notes.")
+        #expect(FieldGuideOfferCard.notNowHint == "Hides this offer. The download stays on the set's page in the Atlas.")
+        ScreenAccessibilityTests.expectOneWordPerThing([FieldGuideOfferCard.placeTitle(marsh), FieldGuideOfferCard.placeMessage(marsh), FieldGuideOfferCard.notNowHint], screen: "The offer")
+    }
 }
