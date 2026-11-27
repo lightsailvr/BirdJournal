@@ -27,17 +27,25 @@ public struct SpeciesPack: Sendable, Hashable {
     /// The set's cover (issue #114), an illustrated landscape for the Atlas and the Listen tab; nil for a pack built
     /// before covers or whose cover isn't approved yet, which the app shows with its designed fallback.
     public let cover: PackCover?
+    /// Where each species, photo and sound is in `species`, by its key (issue #208).
+    private let index: Index
+
+    init(info: PackInfo, directory: URL, species: [PackSpecies], set: PackSet?, cover: PackCover?) {
+        self.info = info
+        self.directory = directory
+        self.species = species
+        self.set = set
+        self.cover = cover
+        index = Index(species)
+    }
 
     public func species(scientificName: String) -> PackSpecies? {
-        species.first { $0.scientificName == scientificName }
+        index.speciesByName[scientificName].map { species[$0] }
     }
 
     /// The photo with this pack-wide id (`PackPhoto.id`), if any.
     public func photo(id: String) -> PackPhoto? {
-        for entry in species {
-            if let photo = entry.photos.first(where: { $0.id == id }) { return photo }
-        }
-        return nil
+        index.photos[id].map { species[$0.species].photos[$0.item] }
     }
 
     /// Every photo in the pack, in species order then rank: the credits screen's list.
@@ -59,10 +67,7 @@ public struct SpeciesPack: Sendable, Hashable {
 
     /// The sound with this pack-wide id (`PackSound.id`), if any: what the lens names a clip by.
     public func sound(id: String) -> PackSound? {
-        for entry in species {
-            if let sound = entry.sounds.first(where: { $0.id == id }) { return sound }
-        }
-        return nil
+        index.sounds[id].map { species[$0.species].sounds[$0.item] }
     }
 
     public func soundURL(for sound: PackSound) -> URL {
@@ -95,8 +100,42 @@ public struct SpeciesPack: Sendable, Hashable {
 
     /// The pack's photos a painting was painted from, for its credit; empty for a painting from text.
     public func sourcePhotos(of art: PackArt) -> [PackPhoto] {
-        let species = species.first { $0.id == art.speciesID }
+        let species = index.speciesByID[art.speciesID].map { self.species[$0] }
         return art.sourcePhotoIDs.compactMap { id in species?.photos.first { $0.inatPhotoID == id } }
+    }
+
+    /// The lookups' keys (issue #208), built once when the pack is read: a lookup is a dictionary read, not a scan of every
+    /// species and its photos or sounds. A key that somehow appears twice keeps its first place, as a scan found it.
+    private struct Index: Sendable, Hashable {
+        /// A photo or a sound: its species' position in the pack, and its own among that species'.
+        struct Place: Sendable {
+            let species: Int
+            let item: Int
+        }
+
+        var speciesByName: [String: Int] = [:]
+        var speciesByID: [String: Int] = [:]
+        var photos: [String: Place] = [:]
+        var sounds: [String: Place] = [:]
+
+        init(_ species: [PackSpecies]) {
+            speciesByName.reserveCapacity(species.count)
+            speciesByID.reserveCapacity(species.count)
+            for (position, entry) in species.enumerated() {
+                if speciesByName[entry.scientificName] == nil { speciesByName[entry.scientificName] = position }
+                if speciesByID[entry.id] == nil { speciesByID[entry.id] = position }
+                for (item, photo) in entry.photos.enumerated() where photos[photo.id] == nil {
+                    photos[photo.id] = Place(species: position, item: item)
+                }
+                for (item, sound) in entry.sounds.enumerated() where sounds[sound.id] == nil {
+                    sounds[sound.id] = Place(species: position, item: item)
+                }
+            }
+        }
+
+        // It follows from `species` alone, so it adds nothing to telling two packs apart.
+        static func == (lhs: Index, rhs: Index) -> Bool { true }
+        func hash(into hasher: inout Hasher) {}
     }
 }
 
