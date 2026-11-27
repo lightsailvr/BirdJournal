@@ -71,6 +71,37 @@ class PackScriptTests(unittest.TestCase):
         self.assertIn("scripts/pin-pack.sh <pack id>", result.stderr)
         self.assertEqual(self.manifest.read_text(), before)
 
+    def built_pack(self, pack_id, report):
+        """A built pack as the pin script finds it: its zip, its database and its report, with a definition."""
+        import sqlite3
+
+        folder = self.repo / "build" / "packs" / pack_id
+        folder.mkdir(parents=True)
+        (self.repo / "build" / "packs" / f"{pack_id}.zip").write_bytes(b"a zip")
+        with sqlite3.connect(folder / "pack.sqlite") as db:
+            db.executescript("create table species (id text); create table photo (id text); create table sound (id text);"
+                             "create table pack (region text, schema_version integer); insert into pack values ('Somewhere', 5); insert into species values ('a-bird');")
+        (folder / "report.json").write_text(json.dumps(report))
+        definition = self.repo / "packbuilder" / "packs" / pack_id
+        definition.mkdir(parents=True)
+        (definition / "pack.json").write_text(json.dumps({"name": "A Download", "version": 3}))
+
+    def test_pin_refuses_a_build_of_some_of_a_packs_birds(self):
+        """`packbuilder build --only` (#215) writes a partial pack for a trial: it must never reach the manifest."""
+        self.built_pack("a-download", {"pack": "a-download", "partial": {"species": 1, "listed": 300}})
+        before = self.manifest.read_text()
+        result = self.run_script("pin-pack.sh", "a-download")
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("1 of its 300 species", result.stderr)
+        self.assertEqual(self.manifest.read_text(), before)
+
+    def test_pin_records_a_whole_build(self):
+        self.built_pack("a-download", {"pack": "a-download"})
+        result = self.run_script("pin-pack.sh", "a-download")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        entry = next(pack for pack in json.loads(self.manifest.read_text())["packs"] if pack["id"] == "a-download")
+        self.assertEqual((entry["version"], entry["species"], entry["bundled"]), (3, 1, False))
+
 
 if __name__ == "__main__":
     unittest.main()

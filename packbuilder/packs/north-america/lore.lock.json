@@ -1,0 +1,1432 @@
+{
+  "comment": "Lore (issue #56), written by `packbuilder build` and `packbuilder lore-review`; read it in build/lore/<pack id>/review.md. Per species: the fact sheet the lore was written from (shipped with it), the sentences with the fact ids each rests on, the tagline, the model and prompt version, and the review: pending, approved (in the pack) or rejected (written again by the next build, with the reason). The story title (issue #113) has its own citations, model, prompt version and review.",
+  "species": {
+    "anas-platyrhynchos": {
+      "common_name": "Mallard",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The mallard or wild duck is a dabbling duck that breeds throughout the temperate and subtropical Americas, Eurasia, and North Africa.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f2",
+          "text": "The female lays 8 to 13 creamy white to greenish-buff spotless eggs, on alternate days.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f3",
+          "text": "The female will often call with a sequence of 2–10 quacks in a row, starting loud and with the volume gradually decreasing.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f4",
+          "text": "Mallards usually form pairs until the female lays eggs at the start of the nesting season, which is around the beginning of spring.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f5",
+          "text": "Common loons are similarly territorial and aggressive towards other birds in such disputes, and will frequently drive mallards away from their territory.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f6",
+          "text": "Two months after hatching, the fledgling period has ended, and the duckling is now a juvenile.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f7",
+          "text": "Incubation takes 27 to 28 days and fledging takes 50 to 60 days.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f8",
+          "text": "When incubating a nest, or when offspring are present, females vocalise differently, making a call that sounds like a truncated version of the usual quack.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Mallard&oldid=1374348462"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is about 88 cm.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 843 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on water plants.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in wetlands.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "Some of its populations migrate and others stay all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time on or in water.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cup, a cavity or an old nest another bird built.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 4 to 18 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Listen at the marsh edge: a hen mallard calls, loud at first, each quack softer than the last.",
+          "facts": [
+            "f3",
+            "f12"
+          ]
+        },
+        {
+          "text": "She is the wild duck, a dabbler breeding across the Americas, Eurasia and North Africa.",
+          "facts": [
+            "f1"
+          ]
+        },
+        {
+          "text": "Mallards keep in pairs until spring nesting, when she lays creamy white or greenish-buff eggs, spotless, one every other day.",
+          "facts": [
+            "f4",
+            "f2"
+          ]
+        },
+        {
+          "text": "Then her voice changes: while she sits on the nest or has young near, her quack comes out clipped short.",
+          "facts": [
+            "f8"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "The wild duck's quacks fall softer, one after another.",
+        "facts": [
+          "f1",
+          "f3"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "She Whose Quacks Grow Softer",
+        "facts": [
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "buteo-jamaicensis": {
+      "common_name": "Red-tailed Hawk",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The red-tailed hawk is a bird of prey and one of the most common hawks in North America.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f2",
+          "text": "It breeds from central Alaska, the Yukon, and the Northwest Territories east to southern Quebec and the Maritime Provinces of Canada, and south to Florida, the West Indies, and Central America.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f3",
+          "text": "In general, the red-tailed hawk only takes a new mate when its original mate dies.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f4",
+          "text": "The red-tailed hawk frequently vocalizes while hunting or soaring, but vocalizes loudest in annoyance or anger, in response to a predator or a rival hawk's intrusion into its territory.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f5",
+          "text": "Shorter primaries result in wingtips that don't reach the tail in perched birds.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f6",
+          "text": "The species feeds on a wide range of small animals, such as rodents, birds, and reptiles.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f7",
+          "text": "Its preferred habitat is mixed forest and field, with high bluffs or trees that may be used as perch sites.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f8",
+          "text": "The same nesting territory may be defended by the pair for years.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1359989883"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is about 122 cm.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 1.1 kg.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on other vertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in woodland.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It migrates between breeding and wintering grounds.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It lays 2 to 4 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Where mixed forest meets open field, the red-tailed hawk keeps watch from high bluffs and trees.",
+          "facts": [
+            "f7"
+          ]
+        },
+        {
+          "text": "It feeds on a wide range of small animals: rodents, birds and reptiles.",
+          "facts": [
+            "f6"
+          ]
+        },
+        {
+          "text": "It calls often while it hunts or soars, but its loudest cry comes in anger, when a predator or a rival hawk enters its territory.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "A pair may guard the same nesting ground for years.",
+          "facts": [
+            "f8"
+          ]
+        },
+        {
+          "text": "Most keep one mate, taking a new one only when the first dies.",
+          "facts": [
+            "f3"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "One mate, one territory, guarded for years.",
+        "facts": [
+          "f3",
+          "f8"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Guardian of the Long-Held Ground",
+        "facts": [
+          "f8",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "cardinalis-cardinalis": {
+      "common_name": "Northern Cardinal",
+      "model": "claude-opus-5-5",
+      "prompt_version": 5,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The northern cardinal, also commonly known as the common cardinal, red cardinal, or simply cardinal, is a bird in the genus Cardinalis.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f2",
+          "text": "The northern cardinal is mainly granivorous but also feeds on insects and fruit.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f3",
+          "text": "The diet of the adult northern cardinal consists mainly of weed seeds, grains, and fruits.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f4",
+          "text": "Pairs may mate for successive years, but some also \"divorce\" between seasons or choose a new mate when one dies.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f5",
+          "text": "The northern cardinal has a distinctive alarm call, a short metallic chip sound.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f6",
+          "text": "Bird feeders attract it by using feeders containing seeds, particularly sunflower seeds and safflower seeds.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f7",
+          "text": "The male behaves territorially, marking out his territory with song.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f8",
+          "text": "It is a ground feeder and finds food while hopping on the ground through trees or shrubbery.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Northern_cardinal&oldid=1366149563"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 28 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 43 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It eats a wide mix of foods.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in shrubland.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It stays in its range all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cup.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 1 to 5 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Down in the shrubland, a seed-seeker hops along the ground, hunting weed seeds, grains and fruit beneath the branches.",
+          "facts": [
+            "f12",
+            "f8",
+            "f3"
+          ]
+        },
+        {
+          "text": "It will take insects too, though seeds come first.",
+          "facts": [
+            "f2"
+          ]
+        },
+        {
+          "text": "The male marks out his ground with song.",
+          "facts": [
+            "f7"
+          ]
+        },
+        {
+          "text": "When danger stirs, it gives its alarm: a short chip that rings like metal.",
+          "facts": [
+            "f5"
+          ]
+        },
+        {
+          "text": "Pairs may keep together year after year, yet some part between seasons, and some choose anew when a mate dies.",
+          "facts": [
+            "f4"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "Hopping for seeds, singing out his ground.",
+        "facts": [
+          "f8",
+          "f7"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Keeper of the Sung Border",
+        "facts": [
+          "f7"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-fl-orlando"
+    },
+    "corvus-brachyrhynchos": {
+      "common_name": "American Crow",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The American crow is a large passerine bird species of the family Corvidae.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f2",
+          "text": "The American crow can be difficult to distinguish from the fish crow; however, the fish crow tends to fluff its throat feathers when calling.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f3",
+          "text": "It will feed on invertebrates of all types, carrion, scraps of human food, fruits, nuts such as walnuts and almonds, seeds, eggs and nestlings, stranded fish on the shore, and various grains.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f4",
+          "text": "Offspring from a previous nesting season will usually remain with the family to assist in rearing new nestlings.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f5",
+          "text": "American crows are sometimes considered a pest, often due to their loud calls.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f6",
+          "text": "Outside the nesting season, these birds often gather in large communal roosts of thousands or even millions of crows at night.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f7",
+          "text": "In Canada, American crows have no protections, aside from Quebec, which bans their hunting during the nesting season.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f8",
+          "text": "The most usual call is a loud, short, and rapid caaw-caaw-caaw.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_crow&oldid=1373965036"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 90 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 449 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It eats a wide mix of foods.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in towns, farms and other places people have changed.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "Some of its populations migrate and others stay all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time on the ground.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cup.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 3 to 7 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Caaw-caaw-caaw!",
+          "facts": [
+            "f8"
+          ]
+        },
+        {
+          "text": "Loud, short and rapid, that is the American crow's most usual call.",
+          "facts": [
+            "f8"
+          ]
+        },
+        {
+          "text": "Some people count this large crow a pest, often for those loud calls.",
+          "facts": [
+            "f1",
+            "f5"
+          ]
+        },
+        {
+          "text": "Yet it keeps its family close: last season's young usually stay home to help raise the new nestlings.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "When nesting is done, crows gather at night in great shared roosts, sometimes millions strong.",
+          "facts": [
+            "f6"
+          ]
+        },
+        {
+          "text": "They will eat almost anything, from walnuts and almonds to fish stranded on the shore.",
+          "facts": [
+            "f3"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "A loud voice, a helpful family, a crowded night roost.",
+        "facts": [
+          "f8",
+          "f4",
+          "f6"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "The Helper Who Stays Home",
+        "facts": [
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "dryobates-pubescens": {
+      "common_name": "Downy Woodpecker",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The downy woodpecker is a species of woodpecker, the smallest in North America.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f2",
+          "text": "The bird nests in tree cavities and feeds primarily on insects, although it supplements its diet with seeds and berries.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f3",
+          "text": "Downy woodpeckers nest in a tree cavity excavated by the nesting pair in a dead tree or limb.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f4",
+          "text": "They breed every year of their mature life, possibly returning to the same nest holes that they used in years prior.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f5",
+          "text": "The downy woodpecker gives a number of vocalizations, including a short pik call.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f6",
+          "text": "Adult males have a red patch on the back of the head whereas juvenile males display a red cap.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f7",
+          "text": "In the winter, they roost in tree cavities.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f8",
+          "text": "A female will typically lay 4–5 white eggs, but can lay up to 7.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Downy_woodpecker&oldid=1371443514"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 29 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 26 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in woodland.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It stays in its range all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cavity.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 3 to 7 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "A short call rings out: pik!",
+          "facts": [
+            "f5"
+          ]
+        },
+        {
+          "text": "There goes the smallest woodpecker in North America.",
+          "facts": [
+            "f1"
+          ]
+        },
+        {
+          "text": "This little digger and its mate carve their nest hole together in a dead tree or limb.",
+          "facts": [
+            "f3"
+          ]
+        },
+        {
+          "text": "Insects are its main meal, with seeds and berries on the side.",
+          "facts": [
+            "f2"
+          ]
+        },
+        {
+          "text": "It breeds every year of its grown life, and it may come home to the same old hole again and again.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "When winter comes, it roosts tucked inside a tree cavity.",
+          "facts": [
+            "f7"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "The smallest woodpecker, carving its home in dead wood.",
+        "facts": [
+          "f1",
+          "f3"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Little Carver of Dead Wood",
+        "facts": [
+          "f1",
+          "f3"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "eudocimus-albus": {
+      "common_name": "American White Ibis",
+      "model": "claude-opus-5-5",
+      "prompt_version": 5,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The American white ibis is a species of bird in the ibis family, Threskiornithidae.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f2",
+          "text": "Their diet consists primarily of small aquatic prey, such as insects and small fishes.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f3",
+          "text": "American white ibis generally only preen themselves, not engaging in allopreening unless part of courtship behavior.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f4",
+          "text": "Nesting begins as soon as suitable foraging and nesting habitat is available.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f5",
+          "text": "John James Audubon reported that the American white ibis was hunted and sold in Louisiana, and mainly eaten by American Indians.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f6",
+          "text": "The species is known to wander, and has been sighted, sometimes in small flocks, in states far out of its usual range.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f7",
+          "text": "The preservation of colony sites and freshwater foraging areas is important to maintaining populations; however, the highly mobile nature of breeding colonies makes this challenging.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f8",
+          "text": "Once fledged, the juvenile American white ibis has largely brown plumage and only the rump, underwing and underparts are white.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_white_ibis&oldid=1368876767"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is about 96 cm.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 890 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on fish and other animals it catches in water.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in wetlands.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "Some of its populations migrate and others stay all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time on the ground.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a platform.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 2 to 3 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "In the wetlands it keeps, it hunts small things that live in the water: insects and little fishes.",
+          "facts": [
+            "f12",
+            "f2"
+          ]
+        },
+        {
+          "text": "It preens only itself, except in courtship.",
+          "facts": [
+            "f3"
+          ]
+        },
+        {
+          "text": "When the feeding grounds and nesting places are ready, it begins to nest at once, on a platform.",
+          "facts": [
+            "f4",
+            "f15"
+          ]
+        },
+        {
+          "text": "Its colonies move from place to place, and some birds wander far beyond their usual range, sometimes in small flocks.",
+          "facts": [
+            "f7",
+            "f6"
+          ]
+        },
+        {
+          "text": "Its young first fly in brown, with white only beneath and on the rump.",
+          "facts": [
+            "f8"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "A wetland wanderer, ready to nest the moment it can.",
+        "facts": [
+          "f12",
+          "f6",
+          "f4"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "The Restless Nesters",
+        "facts": [
+          "f7",
+          "f4"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-fl-orlando"
+    },
+    "poecile-atricapillus": {
+      "common_name": "Black-capped Chickadee",
+      "model": "claude-opus-5-5",
+      "prompt_version": 5,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The black-capped chickadee is a small, nonmigratory, North American passerine bird that lives in deciduous and mixed forests.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f2",
+          "text": "The bird is well known for its vocalizations, including its fee-bee song and its chick-a-dee-dee-dee call, from which it derives its name.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f3",
+          "text": "Insects form a large part of their diet in summer.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f4",
+          "text": "In the spring, the winter flocks will disperse into the constituent pairs.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f5",
+          "text": "One of the most recognizable sounds produced, particularly by the males, is the two-note fee-bee song.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f6",
+          "text": "Black-capped chickadees have a slower, hoarser, two-part song, whereas Carolina chickadees have a three-part song.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f7",
+          "text": "It feeds primarily on insects and seeds, and is known for its ability to cache food for use during the winter.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f8",
+          "text": "The birds hop along tree branches searching for food, sometimes hanging upside down or hovering; they may make short flights to catch insects in the air.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Black-capped_chickadee&oldid=1380656247"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 20 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 11 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in forest.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It stays in its range all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It lays 6 to 8 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Upside down on a branch in the leafy woods, a small singer hangs, searching for food.",
+          "facts": [
+            "f8",
+            "f1"
+          ]
+        },
+        {
+          "text": "It hops, it hovers, it darts out on short flights to snatch insects from the air.",
+          "facts": [
+            "f8"
+          ]
+        },
+        {
+          "text": "It never leaves its home woods, and it hides food away to eat in winter.",
+          "facts": [
+            "f1",
+            "f7"
+          ]
+        },
+        {
+          "text": "In spring the winter flocks break into pairs, and the males most of all sing a slow, hoarse fee-bee.",
+          "facts": [
+            "f4",
+            "f5",
+            "f6"
+          ]
+        },
+        {
+          "text": "Yet the name it carries comes from another call: chick-a-dee-dee-dee.",
+          "facts": [
+            "f2"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "It hangs upside down to hunt and hides food for winter.",
+        "facts": [
+          "f8",
+          "f7"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "The Upside-Down Hunter",
+        "facts": [
+          "f8"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-pnw"
+    },
+    "setophaga-aestiva": {
+      "common_name": "American Yellow Warbler",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The American yellow warbler, also known as the northern yellow warbler, is a New World warbler.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f2",
+          "text": "Outside the breeding season, these warblers are usually encountered in small groups, but while breeding they are fiercely territorial and will try to chase away any conspecific intruder that comes along.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f3",
+          "text": "As usual for members of the Parulidae, yellow warblers nest in trees, building a small but very sturdy cup nest.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f4",
+          "text": "The song is a musical strophe that can be rendered sweet sweet sweet, I'm so sweet, although it varies considerably between populations.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f5",
+          "text": "Yellow warblers, in particular the young, devour many pest insects during the breeding season.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f6",
+          "text": "Young males soon acquire breast and, where appropriate, head coloration.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f7",
+          "text": "Roughly 60% of their diet is caterpillars.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f8",
+          "text": "Females and males rear the young about equally, but emphasize different tasks: females are more involved with building and maintaining the nest, and incubating and brooding the offspring.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_yellow_warbler&oldid=1365070189"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 19 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 10 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It spends most of its time perched in trees and shrubs.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It nests in a cup.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f14",
+          "text": "It lays 1 to 6 eggs in a clutch.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "\"Sweet sweet sweet, I'm so sweet!\"",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "So its song is often written, though the tune changes a lot between populations.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "Come the breeding season, this sweet singer turns fierce, chasing off any other yellow warbler that comes along.",
+          "facts": [
+            "f2"
+          ]
+        },
+        {
+          "text": "In the trees, the female leads the building of a small but very sturdy cup nest.",
+          "facts": [
+            "f3",
+            "f8"
+          ]
+        },
+        {
+          "text": "Both parents share the raising of the young, and the young devour many pest insects.",
+          "facts": [
+            "f8",
+            "f5"
+          ]
+        },
+        {
+          "text": "Roughly 60% of their food is caterpillars.",
+          "facts": [
+            "f7"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "A sweet song, a sturdy cup, and a fierce heart.",
+        "facts": [
+          "f4",
+          "f3",
+          "f2"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Sweet Singer, Fierce Defender",
+        "facts": [
+          "f4",
+          "f2"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "sturnella-neglecta": {
+      "common_name": "Western Meadowlark",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "It is found across western and central North America and is a partial migrant, breeding in western Canada and western United States west of the Great Lakes, and in northern Mexico.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f2",
+          "text": "The western meadowlark nests on the ground in open grasslands and shrublands.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f3",
+          "text": "Western meadowlarks forage on the ground or in low to semi-low vegetation.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f4",
+          "text": "The nest is built by the female soon after arrival on the breeding grounds.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f5",
+          "text": "The sometimes-spirited debate included state representative Rich Vial playing the meadowlark's song on his smartphone over the House microphone.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f6",
+          "text": "Despite having \"lark\" in their name due to their melodic song, they are not true larks, but are instead in the New World blackbird family.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f7",
+          "text": "In regions where their range overlaps with the eastern species, this species prefers thinner, drier vegetation; the two species generally do not interbreed but do defend territory against one another.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f8",
+          "text": "It feeds on bugs and seeds.",
+          "source": "https://en.wikipedia.org/w/index.php?title=Western_meadowlark&oldid=1366152409"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is estimated at about 35 cm from its wing length.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 100 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in grassland.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "Some of its populations migrate and others stay all year.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It spends most of its time on the ground.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cup or a domed nest.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 3 to 7 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Named a lark for its sweet song, the western meadowlark is no true lark, but kin to the New World blackbirds.",
+          "facts": [
+            "f6"
+          ]
+        },
+        {
+          "text": "It keeps to the open grasslands and shrublands of western and central North America.",
+          "facts": [
+            "f1",
+            "f2"
+          ]
+        },
+        {
+          "text": "It seeks bugs and seeds on the ground or in low plants.",
+          "facts": [
+            "f3",
+            "f8"
+          ]
+        },
+        {
+          "text": "The female builds a ground nest soon after she arrives to breed.",
+          "facts": [
+            "f2",
+            "f4"
+          ]
+        },
+        {
+          "text": "Where the eastern species lives too, it picks thinner, drier growth, and the two defend territory against each other.",
+          "facts": [
+            "f7"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "A blackbird's kin with a lark's sweet song.",
+        "facts": [
+          "f6"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Singer of the Dry Grass",
+        "facts": [
+          "f6",
+          "f7",
+          "f12"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    },
+    "turdus-migratorius": {
+      "common_name": "American Robin",
+      "model": "claude-opus-5-5",
+      "prompt_version": 4,
+      "facts": [
+        {
+          "id": "f1",
+          "text": "The American robin is a migratory bird of the true thrush genus and Turdidae, the wider thrush family.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f2",
+          "text": "The species is active mostly during the day and assembles in large flocks at night.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f3",
+          "text": "The species is one of the first North American birds to lay eggs, and normally has two to three broods per breeding season, which lasts from April to July.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f4",
+          "text": "The male, as with many thrushes, has a complex and almost continuous song.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f5",
+          "text": "The Tlingit people of northwestern North America held it to be a culture hero created by Raven to please the people with its song.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f6",
+          "text": "Juveniles and eggs are preyed upon by squirrels, snakes, and some birds.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f7",
+          "text": "Its diet consists of invertebrates, fruits, and berries.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f8",
+          "text": "The flocks break up during the day when the birds feed on fruits and berries in smaller groups.",
+          "source": "https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1373725929"
+        },
+        {
+          "id": "f9",
+          "text": "Its wingspan is about 39 cm.",
+          "source": "wingspan"
+        },
+        {
+          "id": "f10",
+          "text": "It weighs about 78 g.",
+          "source": "avonet"
+        },
+        {
+          "id": "f11",
+          "text": "It feeds mostly on insects and other invertebrates.",
+          "source": "avonet"
+        },
+        {
+          "id": "f12",
+          "text": "It lives mostly in forest.",
+          "source": "avonet"
+        },
+        {
+          "id": "f13",
+          "text": "It migrates between breeding and wintering grounds.",
+          "source": "avonet"
+        },
+        {
+          "id": "f14",
+          "text": "It forages in the air, on the ground and in the trees alike.",
+          "source": "avonet"
+        },
+        {
+          "id": "f15",
+          "text": "It nests in a cup.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f16",
+          "text": "It lays 2 to 4 eggs in a clutch.",
+          "source": "birdbase"
+        },
+        {
+          "id": "f17",
+          "text": "The IUCN Red List rates it Least Concern.",
+          "source": "birdbase"
+        }
+      ],
+      "sentences": [
+        {
+          "text": "By night the robins gather in great flocks; by day the flocks break apart, and small bands go seeking fruit and berries.",
+          "facts": [
+            "f2",
+            "f8"
+          ]
+        },
+        {
+          "text": "Few North American birds lay eggs sooner, and the robin raises brood after brood from April to July.",
+          "facts": [
+            "f3"
+          ]
+        },
+        {
+          "text": "And the male sings, his song complex and almost without pause.",
+          "facts": [
+            "f4"
+          ]
+        },
+        {
+          "text": "The Tlingit people of northwestern North America held that Raven made the robin to please the people with that song.",
+          "facts": [
+            "f5"
+          ]
+        }
+      ],
+      "tagline": {
+        "text": "The thrush that Raven made to sing.",
+        "facts": [
+          "f1",
+          "f5"
+        ]
+      },
+      "review": "approved",
+      "title": {
+        "text": "Made to Please the People",
+        "facts": [
+          "f5"
+        ],
+        "model": "claude-opus-5-5",
+        "prompt_version": 5,
+        "review": "approved"
+      },
+      "shared_from": "us-ca-la"
+    }
+  }
+}

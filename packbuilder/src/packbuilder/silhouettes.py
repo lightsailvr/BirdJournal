@@ -32,7 +32,7 @@ import numpy as np
 from PIL import Image
 from scipy import ndimage
 
-from packbuilder.contact_sheets import grid
+from packbuilder.contact_sheets import grid, write_listing
 from packbuilder.definition import PackDefinition
 from packbuilder.pack_art import APPROVED, GAP, PENDING, REJECTED, UNPAINTED, ArtLock
 from packbuilder.patch_art import cached_isolations
@@ -294,19 +294,23 @@ class SilhouetteMaker:
     def _file(self, digest: str) -> Path:
         return self.cache_dir / "silhouettes" / f"{digest}.png"
 
-    def sheets(self, species_ids: list[str], made: dict[str, Silhouette], out_dir: Path, per_sheet: int = 20) -> list[Path]:
+    def sheets(self, species_ids: list[str], made: dict[str, Silhouette], out_dir: Path, per_sheet: int = 20, numbers: dict[str, int] | None = None) -> list[Path]:
         """Contact sheets for the review: each species' isolated bird beside its silhouette in the app's tile, numbered
-        as in the pack, what the recipe noticed under it, plus one overview of every silhouette."""
+        as in the pack, what the recipe noticed under it, plus one overview of every silhouette, and `sheets.json`
+        listing what each number is. `numbers` are the species' numbers in the whole pack, for sheets of some of its
+        birds (#215); without them a species' number is its place among `species_ids`."""
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         for old in [*out_dir.glob("sheet-*.jpg"), out_dir / "overview.jpg"]:
             old.unlink(missing_ok=True)
-        cells = []
+        cells, listing = [], []
         for number, species_id in enumerate(species_ids, start=1):
+            number = (numbers or {}).get(species_id, number)
             entry = self.lock.species.get(species_id, {})
             source = self.sources.get(species_id)
             name = entry.get("common_name") or (source.common_name if source else species_id)
             silhouette = made.get(species_id)
+            listing.append({"number": number, "species": species_id, "common_name": name, "review": silhouette.review if silhouette else UNPAINTED})
             picture = _in_tile(silhouette.file) if silhouette and silhouette.file and silhouette.file.exists() else None
             cells.append(((self._bird(entry), f"{number:03d} {name}\n{(silhouette.review if silhouette else UNPAINTED).upper()}"),
                           (picture, _noticed(entry))))
@@ -322,6 +326,7 @@ class SilhouetteMaker:
             target = out_dir / "overview.jpg"
             grid(overview, f"{self.pack_id} silhouettes, all {len(cells)}", [], cell=(120, 120)).save(target, quality=88)
             sheets.append(target)
+        write_listing(out_dir, listing, per_sheet)
         return sheets
 
     def _bird(self, entry: dict) -> Image.Image | None:

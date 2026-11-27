@@ -73,7 +73,7 @@ import UIKit
 ///   Apple Intelligence; `none` writes none, so the card shows the lore's tagline. The seeded phoebe has a caption.
 /// - `-autoLocation denied` answers the location request as denied instead of prompting, for the UI tests; `griffith` answers
 ///   with a fix in Griffith Park. `san-diego`, `oakland`, `joshua-tree` and `orlando` are places in the other sets, and `kansas`
-///   is outside every set (`DebugPlace`). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
+///   and `chicago` are outside every regional set (`DebugPlace`): the North America set's, once its pack is on the phone (issue #215). With `-autoPhoneListening <wav>` they answer a run, and at any launch the read that
 ///   picks the Listen painting (issue #150).
 /// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
 ///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
@@ -482,7 +482,7 @@ struct DeniedLocationProvider: LocationProvider {
 
 /// The places `-autoLocation` names: one in each set, and one outside them all.
 enum DebugPlace: String {
-    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+    case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas, chicago
     /// The pack fixtures' made-up place (`test-pack`'s set, a square degree of sea off West Africa), outside every real set.
     case testland
 
@@ -494,6 +494,7 @@ enum DebugPlace: String {
         case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
         case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
         case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        case .chicago: Coordinate(latitude: 41.8781, longitude: -87.6298, accuracy: 10)
         case .testland: Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
         }
     }

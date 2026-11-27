@@ -7,8 +7,9 @@ search, a file download, each redirect hop and each retry, goes through one `Pac
 least `DEFAULT_INTERVAL` seconds apart (at most 900 an hour), never in parallel, and a lock on the cache keeps a second build from making requests
 beside it; a run stops after `max_requests`; the first 429, 503 or 403 stops the
 run instead of retrying; and every answer and file is cached on disk, so a rerun resumes where the last one stopped and
-a rebuild asks for nothing it already has. Each species costs one search (the first page of up to 500 recordings, a
-second worldwide search only when the pack's country has no usable song or call) and a download per clip tried.
+a rebuild asks for nothing it already has. Each species costs one search (the first page of up to 500 recordings; a
+second in the pack's next country, or worldwide, only when the pack's country has no usable song or call) and a
+download per clip tried.
 
 The API key comes from the `XENO_CANTO_API_KEY` environment variable (`api_key_from_environment`, read by the CLI and
 passed in) and is never written to the cache or the log.
@@ -260,17 +261,21 @@ def _seconds(length: str | None) -> float | None:
 class XenoCantoSoundSource:
     name = "xeno-canto"
 
-    def __init__(self, client: XenoCantoClient, country: str | None = "United States", names: dict[str, str] | None = None):
+    def __init__(self, client: XenoCantoClient, country: str | None = "United States", names: dict[str, str] | None = None, countries: tuple[str, ...] | None = None):
+        """`countries` are searched in order, each only when those before it gave no usable song or call (the North
+        America pack's United States, then Canada: #215); `country` is the one country of every other pack."""
         self.client = client
-        self.country = country
+        self.countries = tuple(countries) if countries is not None else ((country,) if country else ())
         self.names = names or {}
 
     def candidates_for(self, entry: SpeciesEntry) -> list[SoundCandidate]:
         name = self.names.get(entry.scientific_name, entry.scientific_name)
-        candidates = self._usable(self.client.search(f'sp:"{name}" cnt:"{self.country}"')) if self.country else []
-        if not any(c.kind for c in candidates):
-            candidates += self._usable(self.client.search(f'sp:"{name}"'))
-        return candidates
+        candidates: list[SoundCandidate] = []
+        for country in self.countries:
+            candidates += self._usable(self.client.search(f'sp:"{name}" cnt:"{country}"'))
+            if any(c.kind for c in candidates):
+                return candidates
+        return candidates + self._usable(self.client.search(f'sp:"{name}"'))
 
     @staticmethod
     def _usable(recordings: list[dict]) -> list[SoundCandidate]:

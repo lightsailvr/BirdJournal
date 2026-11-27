@@ -312,12 +312,20 @@ def test_a_pack_built_without_the_step_has_an_empty_table(tmp_path):
     assert "silhouettes" not in json.loads((tmp_path / "out" / "report.json").read_text()).get("unreviewed", {})
 
 
+BEING_BUILT = {"north-america"}
+"""Packs whose locks hold only some of their birds yet: North America's hold the tracer's ten (#215) until the full run
+(#216) builds the rest, when it leaves this set and its lock must cover the pack like every other."""
+
+
 @pytest.mark.parametrize("pack_dir", [p for p in sorted(PACKS.iterdir()) if (p / "silhouette.lock.json").exists()], ids=lambda p: p.name)
 def test_the_committed_lock_covers_its_pack_and_follows_its_pins(pack_dir):
     species = PackDefinition.load(pack_dir / "pack.json").species
     lock = SilhouetteLock.load(pack_dir / "silhouette.lock.json").species
     overrides = json.loads((pack_dir / "overrides.json").read_text())
-    assert {entry.id for entry in species} == set(lock)
+    if pack_dir.name in BEING_BUILT:
+        assert set(lock) < {entry.id for entry in species}, "it holds the birds built so far, and nothing the pack doesn't list"
+    else:
+        assert {entry.id for entry in species} == set(lock)
     for entry in species:
         pin = overrides.get(entry.scientific_name, {}).get("art", {}).get("silhouette", {}).get("reference")
         if pin is not None:

@@ -691,6 +691,8 @@ def _report(
         "pack": definition.id,
         "version": definition.version,
         "built_at": built_at,
+        # A build of some of the pack's birds (`packbuilder build --only`, #215) is not the pack: never pinned or published.
+        **({"partial": {"species": len(results), "listed": definition.listed}} if definition.partial else {}),
         "species": {
             r.entry.id: {
                 "common_name": r.entry.common_name,
