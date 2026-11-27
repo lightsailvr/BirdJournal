@@ -63,10 +63,7 @@ final class SettingsUITests: XCTestCase {
         app.launch()
         app.buttons["Settings"].tap()
 
-        // The row reads "App icon, <current icon>".
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
+        app.appIconRow().tap()
 
         for title in ["Great Egret", "Red-tailed Hawk"] {
             let choice = app.buttons[title]
@@ -95,9 +92,7 @@ final class AppIconHomeScreenUITests: XCTestCase {
         app.launchArguments = ["-inMemoryAlbum", "YES"]
         app.launch()
         app.buttons["Settings"].tap()
-        let row = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
-        XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(app.debugDescription.prefix(3000))")
-        row.tap()
+        app.appIconRow().tap()
     }
 
     private func choose(_ title: String, in app: XCUIApplication) {
@@ -181,6 +176,19 @@ final class AccountSwitchUITests: XCTestCase {
         #else
         XCTAssertFalse(app.tabBars.buttons["Guilds"].exists, "a Guilds tab in a Release build")
         #endif
+    }
+}
+
+private extension XCUIApplication {
+    /// Settings' "App icon" row, which reads "App icon, <current icon>", scrolled into reach. Since the glasses' photo
+    /// size joined the Glasses section, a build with accounts opens Settings with the row past the foot of the screen,
+    /// and the list only builds its rows as they come into view.
+    func appIconRow(file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
+        XCTAssertTrue(navigationBars["Settings"].waitForExistence(timeout: 10), "Settings didn't open; screen: \(debugDescription.prefix(3000))", file: file, line: line)
+        let row = buttons.matching(NSPredicate(format: "label BEGINSWITH 'App icon'")).firstMatch
+        for _ in 0..<4 where !row.isHittable { swipeUp(velocity: .slow) }
+        XCTAssertTrue(row.waitForExistence(timeout: 10), "no App icon row; screen: \(debugDescription.suffix(3000))", file: file, line: line)
+        return row
     }
 }
 
