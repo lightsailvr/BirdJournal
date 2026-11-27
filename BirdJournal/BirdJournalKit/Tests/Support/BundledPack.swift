@@ -56,8 +56,6 @@ public nonisolated enum BundledPack {
     //   the phoebe too (`packbuilder/tests/make_fixture_pack.py` writes both).
     public static let finch = Bird("Haemorhous mexicanus", "House Finch", number: 130)
     public static let phoebe = Bird("Sayornis nigricans", "Black Phoebe", number: 85)
-    /// A second bird of the phoebe's genus, so a search for the genus finds two.
-    public static let otherPhoebe = Bird("Sayornis saya", "Say's Phoebe", number: 86)
     public static let hummingbird = Bird("Calypte anna", "Anna's Hummingbird", number: 21)
     /// The hummingbird's name as the glasses' speech recognition might hear it, for the lens's dictation.
     public static let hummingbirdAsHeard = "annas humming bird"
@@ -76,20 +74,18 @@ public nonisolated enum BundledPack {
     public static let hawk = Bird("Buteo jamaicensis", "Red-tailed Hawk", number: 69)
     public static let woodpecker = Bird("Melanerpes formicivorus", "Acorn Woodpecker", number: 74)
     public static let jay = Bird("Aphelocoma californica", "California Scrub Jay", number: 98)
-    public static let raven = Bird("Corvus corax", "Northern Raven", number: 100)
-    public static let wren = Bird("Troglodytes aedon", "Northern House Wren", number: 115)
-    /// The fake Guild's rare find (the app's `SampleBirds.rarity`).
+    /// The fake Guild's rare find (the app's `SampleBirds.rarity`). It is far down the pack's own order, so the thirty
+    /// birds `-seedBoard` adds never include it: the bird for a link to a patch the birder hasn't got.
     public static let gnatcatcher = Bird("Polioptila californica", "California Gnatcatcher", number: 117)
     public static let bluebird = Bird("Sialia mexicana", "Western Bluebird", number: 122)
-    public static let robin = Bird("Turdus migratorius", "American Robin", number: 125)
     public static let goldfinch = Bird("Spinus psaltria", "Lesser Goldfinch", number: 132)
     public static let junco = Bird("Junco hyemalis", "Dark-eyed Junco", number: 135)
     public static let towhee = Bird("Melozone crissalis", "California Towhee", number: 141)
 
     /// Every bird above, for the test that checks this list against the pack.
     public static let all = [
-        finch, phoebe, otherPhoebe, hummingbird, otherHummingbird, dove, goose, otherGoose, duck, mallard, egret, hawk, woodpecker, jay,
-        raven, wren, gnatcatcher, bluebird, robin, goldfinch, junco, towhee,
+        finch, phoebe, hummingbird, otherHummingbird, dove, goose, otherGoose, duck, mallard, egret, hawk, woodpecker, jay, gnatcatcher,
+        bluebird, goldfinch, junco, towhee,
     ]
 }
 

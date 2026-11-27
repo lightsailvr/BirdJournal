@@ -208,7 +208,7 @@ final class AfterTheRunUITests: XCTestCase {
     func testALinkToAPatchThatsGoneOpensTheCollection() {
         let app = launchBoard()
         XCTAssertTrue(app.tabBars.buttons["Listen"].waitForExistence(timeout: 30))
-        openWhileRunning(URL(string: "birdjournal://patch?species=\(BundledPack.raven.label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&set=\(BundledPack.id)")!)
+        openWhileRunning(URL(string: "birdjournal://patch?species=\(BundledPack.gnatcatcher.label.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")&set=\(BundledPack.id)")!)
         XCTAssertTrue(app.tabBars.buttons["Collection"].waitForExistence(timeout: 10))
         let selected = expectation(for: NSPredicate(format: "isSelected == true"), evaluatedWith: app.tabBars.buttons["Collection"])
         wait(for: [selected], timeout: 15)

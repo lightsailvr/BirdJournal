@@ -37,7 +37,7 @@ struct BundledPackFixtureTests {
         #expect(BundledPack.otherGoose.number == BundledPack.goose.number + 1)
         #expect(pack.species.first?.scientificName == BundledPack.hawk.scientificName, "the first in the pack's own order")
         #expect(BundledPack.otherHummingbird.number == BundledPack.hummingbird.number + 1 && BundledPack.otherHummingbird.genus != BundledPack.hummingbird.genus)
-        #expect(BundledPack.otherPhoebe.genus == BundledPack.phoebe.genus)
+        #expect(!pack.species.prefix(30).contains { $0.scientificName == BundledPack.gnatcatcher.scientificName }, "not among the thirty `-seedBoard` adds")
         #expect([BundledPack.dove, BundledPack.phoebe, BundledPack.finch].map(\.number) == [BundledPack.dove, BundledPack.phoebe, BundledPack.finch].map(\.number).sorted(), "the seeded birds' collector order")
     }
 }
