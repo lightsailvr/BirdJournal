@@ -34,8 +34,10 @@ extension RunSnapshot {
 
 extension ListeningCoordinator {
     /// The run as the Live Activity shows it.
-    func snapshot(in collection: CardCollection) -> RunSnapshot {
-        RunSnapshot(state: state, clockStart: clockStart, pausedAt: clock.pausedSince, hunt: hunt(in: collection), at: coordinate, sets: collection.sets)
+    /// - Parameter sets: every set the phone knows, for the tint of the place the run is in; by default the sets the
+    ///   collection placed its sightings among.
+    func snapshot(in collection: CardCollection, among sets: [CardSet]? = nil) -> RunSnapshot {
+        RunSnapshot(state: state, clockStart: clockStart, pausedAt: clock.pausedSince, hunt: hunt(in: collection), at: coordinate, sets: sets ?? collection.sets)
     }
 }
 

@@ -40,36 +40,43 @@ struct PackLookupTests {
         #expect(pack.species(scientificName: "Genus species301") == nil && pack.photo(id: "xc-20300") == nil && pack.sound(id: "inat-100300") == nil)
     }
 
-    @Test("across the packs on the phone, a lookup answers from the first pack a scan of them in order finds it in")
+    @Test("across the packs on the phone, a lookup answers from the first pack a scan of them in the library's reading order finds it in")
     func theLibraryAnswersAsAScanOfItsPacksDoes() throws {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let large = try Self.largePack(root: root)
-        let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: root.appending(path: "index.json"))
-        let packs = library.packs
-        #expect(packs.map(\.info.id) == [PackIndex.bundledPackID, "test-pack"])
-        #expect(packs.last?.species == large.species)
+        let bundled = try SpeciesPack.bundled()
+        let library = PackLibrary(bundled: bundled, storage: PackStorage(directory: root.appending(path: "Packs")), indexURL: root.appending(path: "index.json"))
+        #expect(library.packs.map(\.info.id) == [PackIndex.bundledPackID, "test-pack"])
+        let download = try #require(library.downloads.first?.pack)
+        #expect(library.downloads.count == 1 && download.species == large.species)
+        // The library reads a download before the bundled pack, and the pack of a sighting's own set before both (issue #207).
+        let order = [download, bundled], bundledFirst = [bundled, download]
 
         // Black Phoebe and Anna's Hummingbird are in both packs; the 300 written here only in the download.
-        let names = packs.flatMap { $0.species.map(\.scientificName) } + ["Nope nope", ""]
+        let names = order.flatMap { $0.species.map(\.scientificName) } + ["Nope nope", ""]
         #expect(names.count > 450)
         for name in names {
-            let scanned = packs.lazy.compactMap { pack in Self.scan(pack, species: name).map { (pack, $0) } }.first
+            let scanned = order.lazy.compactMap { pack in Self.scan(pack, species: name).map { (pack, $0) } }.first
             let found = library.species(scientificName: name)
             #expect(found?.pack.info.id == scanned?.0.info.id && found?.species == scanned?.1, "\(name)")
+            let scannedInSet = bundledFirst.lazy.compactMap { pack in Self.scan(pack, species: name).map { (pack, $0) } }.first
+            let foundInSet = library.species(scientificName: name, setID: bundled.info.id)
+            #expect(foundInSet?.pack.info.id == scannedInSet?.0.info.id && foundInSet?.species == scannedInSet?.1, "\(name), in the bundled pack's set")
         }
-        for id in packs.flatMap({ $0.photos.map(\.id) }) + ["inat-0", "xc-1"] {
-            let scanned = packs.lazy.compactMap { pack in Self.scan(pack, photo: id).map { (pack, $0) } }.first
+        for id in order.flatMap({ $0.photos.map(\.id) }) + ["inat-0", "xc-1"] {
+            let scanned = order.lazy.compactMap { pack in Self.scan(pack, photo: id).map { (pack, $0) } }.first
             let found = library.photo(id: id)
             #expect(found?.pack.info.id == scanned?.0.info.id && found?.photo == scanned?.1, "\(id)")
         }
-        for id in packs.flatMap({ $0.sounds.map(\.id) }) + ["xc-0", "inat-1"] {
-            let scanned = packs.lazy.compactMap { pack in Self.scan(pack, sound: id).map { (pack, $0) } }.first
+        for id in order.flatMap({ $0.sounds.map(\.id) }) + ["xc-0", "inat-1"] {
+            let scanned = order.lazy.compactMap { pack in Self.scan(pack, sound: id).map { (pack, $0) } }.first
             let found = library.sound(id: id)
             #expect(found?.pack.info.id == scanned?.0.info.id && found?.sound == scanned?.1, "\(id)")
         }
-        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == PackIndex.bundledPackID)
-        #expect(library.species(scientificName: "Genus species7")?.pack.info.id == "test-pack")
+        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == "test-pack")
+        #expect(library.species(scientificName: "Sayornis nigricans", setID: bundled.info.id)?.pack.info.id == bundled.info.id)
+        #expect(library.species(scientificName: "Genus species7", setID: bundled.info.id)?.pack.info.id == "test-pack")
         #expect(library.photo(id: "inat-200007")?.pack.info.id == "test-pack" && library.sound(id: "xc-10007")?.pack.info.id == "test-pack")
     }
 

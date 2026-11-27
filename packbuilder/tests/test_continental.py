@@ -351,3 +351,22 @@ def test_the_report_gives_the_geomodels_name_for_a_bird_the_label_file_calls_som
     text = report(result, CITIES, Entries(species=[], new=[], unresolved=[]), Taxonomy("15.1", {"Setophaga coronata": 0}))
 
     assert "| 001 | Myrtle Warbler (the geomodel's Yellow-rumped Warbler) | *Setophaga coronata* |" in text
+
+
+@pytest.mark.skipif(not BIRDNET_LABELS.exists(), reason="models not downloaded (scripts/download-models.sh)")
+def test_the_committed_north_america_list_is_what_its_recorded_command_drafts():
+    """Issue #212: the approved list is the draft with the junglefowl excluded and the barn owl added, and the
+    draft's last bird (the Vermilion Flycatcher, the label file's Scarlet Flycatcher) added so the exclusion does not
+    cost it its place, in the order taken. A change to the sample cities or to the method that would give another
+    list fails here, since the list is fixed at version 1 of the pack."""
+    occurrence, geomodel = read_geomodel(MODELS)
+    sample = load_sample(NORTH_AMERICA)
+    committed = json.loads((REPO / "packbuilder" / "packs" / "north-america" / "pack.json").read_text())["species"]
+
+    result = draft(
+        occurrence, geomodel, birdnet_labels(BIRDNET_LABELS), sample.cities, count=300,
+        add=["Tyto furcata", "Pyrocephalus rubinus"], exclude={"Gallus gallus"}, geomodel_names=sample.geomodel_names,
+    )
+
+    assert [pick.scientific_name for pick in result.picks] == [entry["scientific_name"] for entry in committed]
+    assert [pick.common_name for pick in result.picks] == [entry["common_name"] for entry in committed]

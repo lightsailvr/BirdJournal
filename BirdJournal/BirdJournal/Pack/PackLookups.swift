@@ -70,8 +70,14 @@ extension PackLibrary {
         species(scientificName: sighting.scientificName)?.species.commonName ?? sighting.commonName
     }
 
-    /// Every set the phone knows (issue #54), as the collection places cards among them.
+    /// The sets that take sightings (issue #207), as the collection places sightings among them: those of the packs on the
+    /// phone (`setsTakingSightings`).
     var cardSets: [CardSet] {
+        setsTakingSightings.map(CardSet.init)
+    }
+
+    /// Every set the phone knows (`sets`), on the phone or not, as a place is found in one of them.
+    var knownCardSets: [CardSet] {
         sets.map(CardSet.init)
     }
 
@@ -84,6 +90,14 @@ extension PackLibrary {
     func image(for image: LensImage) -> UIImage? {
         guard let found = photo(id: image.id) else { return nil }
         return UIImage(contentsOfFile: found.pack.lensImageURL(for: found.photo).path(percentEncoded: false))
+    }
+}
+
+extension CardCollection {
+    /// A known set's progress, for the Atlas and the place. A set whose pack isn't on the phone takes no sightings (issue
+    /// #207), so the collection wasn't given it: none of its birds are sewn, of as many as it lists.
+    func progress(of set: PackSet) -> SetProgress {
+        sets.contains { $0.id == set.id } ? progress(of: set.id) : SetProgress(setID: set.id, name: set.name, collected: 0, total: set.species.count)
     }
 }
 
