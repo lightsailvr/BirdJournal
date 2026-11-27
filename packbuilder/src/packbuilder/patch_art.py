@@ -38,7 +38,7 @@ from scipy.spatial import ConvexHull
 
 from packbuilder.art import ART_DIR, Workflow, reference_crop
 from packbuilder.comfy import ComfyClient, PaintingFailed
-from packbuilder.contact_sheets import grid
+from packbuilder.contact_sheets import grid, write_listing
 from packbuilder.crops import upright
 from packbuilder.fidelity import lab, measure as measure_bird
 from packbuilder.geometry import Box
@@ -371,15 +371,18 @@ class PatchArtist:
     def _file(self, digest: str) -> Path:
         return self.cache_dir / "patches" / f"{digest}.png"
 
-    def sheets(self, species_ids: list[str], patches: dict[str, Patch], out_dir: Path, per_sheet: int = 12) -> list[Path]:
+    def sheets(self, species_ids: list[str], patches: dict[str, Patch], out_dir: Path, per_sheet: int = 12, numbers: dict[str, int] | None = None) -> list[Path]:
         """Contact sheets for the review: each species' reference bird beside its patch, with its state and measure,
-        numbered in the set's order, plus one overview of every patch."""
+        numbered in the set's order, plus one overview of every patch, and `sheets.json` listing what each number is.
+        `numbers` are the species' numbers in the whole pack, for sheets of some of its birds (#215); without them a
+        species' number is its place among `species_ids`."""
         out_dir = Path(out_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         for old in [*out_dir.glob("sheet-*.jpg"), out_dir / "overview.jpg"]:
             old.unlink(missing_ok=True)
-        cells = []
+        cells, listing = [], []
         for number, species_id in enumerate(species_ids, start=1):
+            number = (numbers or {}).get(species_id, number)
             patch = patches.get(species_id)
             entry = self.lock.species.get(species_id, {})
             common = entry.get("common_name") or self.art_lock.species.get(species_id, {}).get("common_name", species_id)
@@ -390,15 +393,12 @@ class PatchArtist:
                 bird = None
             measured = entry.get("measure")
             line = f"dE {measured['dE_mean']:.1f} iou {measured['iou']:.2f}" if measured else "not measured"
-            if entry.get("card_at_edge", 0) > PEEL_LIMIT:
-                line += " · CARD AT EDGE"
-            if entry.get("shape_fit", 1) < self.spec.least_fit:
-                line += " · WRONG SHAPE"
-            if "aspect" in entry and self.spec.aspect_miss(entry["aspect"]) > 0:
-                line += " · WRONG ASPECT"
+            flags = self.flags(entry)
+            line += "".join(f" · {flag}" for flag in flags)
             state = (patch.review if patch else UNPAINTED).upper()
             picture = _on_card(patch.file) if patch and patch.file and patch.file.exists() else None
             cells.append(((bird, f"{number:03d} {common}\nreference"), (picture, f"{state}{' · dark clause' if entry.get('dark') else ''}\n{line}")))
+            listing.append({"number": number, "species": species_id, "common_name": common, "review": patch.review if patch else UNPAINTED, "flags": flags})
         made = []
         for start in range(0, len(cells), per_sheet):
             chunk = cells[start:start + per_sheet]
@@ -411,7 +411,16 @@ class PatchArtist:
             target = out_dir / "overview.jpg"
             grid(overview, f"{self.pack_id} patches, all {len(cells)}", [], cell=(144, 192)).save(target, quality=85)
             made.append(target)
+        write_listing(out_dir, listing, per_sheet)
         return made
+
+    def flags(self, entry: dict) -> list[str]:
+        """What the sheet marks a patch with: card left in its cut, or not its edition's outline or proportions."""
+        return [flag for flag, raised in (
+            ("CARD AT EDGE", entry.get("card_at_edge", 0) > PEEL_LIMIT),
+            ("WRONG SHAPE", entry.get("shape_fit", 1) < self.spec.least_fit),
+            ("WRONG ASPECT", "aspect" in entry and self.spec.aspect_miss(entry["aspect"]) > 0),
+        ) if raised]
 
 
 def cached_isolations(cache_dir: Path, photo_id: int) -> dict[int, Path]:

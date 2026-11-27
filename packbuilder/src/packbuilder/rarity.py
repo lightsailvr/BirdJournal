@@ -1,8 +1,8 @@
 """The rarity calibration (ADR-0006, issue #52): where the geomodel's occurrence probability splits into Common,
 Uncommon, Rare and Exceptional.
 
-The geomodel is read for every species of every pack definition, at a grid of points over the pack's bounding box and
-all 48 of BirdNET's weeks. Identification never admits a species below the 0.03 floor when it knows the place, so
+The geomodel is read for every species of every pack definition that the calibration pools (`pooled`: all but the
+North America pack), at a grid of points over the pack's bounding box and all 48 of BirdNET's weeks. Identification never admits a species below the 0.03 floor when it knows the place, so
 only readings at or above it count. The thresholds are percentiles of those readings: the rarest 5 % are Exceptional,
 the next 15 % Rare, the next 30 % Uncommon and the upper half Common (below the floor is Exceptional too). The result
 is committed as `RarityCalibration.json` in the Identification module; a new calibration takes the next version, and
@@ -16,7 +16,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from packbuilder.definition import BoundingBox
+from packbuilder.definition import BoundingBox, PackDefinition
 
 FLOOR = 0.03
 """The identification floor (`IdentificationConfiguration.occurrenceThreshold`)."""
@@ -36,6 +36,13 @@ class Region:
 
     bounding_box: BoundingBox
     species: Sequence[str]
+
+
+def pooled(definitions: Sequence[PackDefinition]) -> list[PackDefinition]:
+    """The packs whose readings a calibration pools: every definition but those that opt out (`calibrates_rarity`),
+    which is the North America pack (#206, #215). Its box is the continent, where the regional packs' are a county or a
+    few, so it would outweigh them all and labels would stop meaning what they meant."""
+    return [definition for definition in definitions if definition.calibrates_rarity]
 
 
 def grid(box: BoundingBox, size: int) -> list[tuple[float, float]]:

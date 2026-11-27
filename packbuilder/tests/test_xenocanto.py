@@ -237,6 +237,39 @@ def test_source_queries_the_pack_country_first_then_worldwide_only_when_empty(tm
     assert [call[1]["query"] for call in session.calls] == ['sp:"Sayornis nigricans" cnt:"United States"', 'sp:"Sayornis nigricans"']
 
 
+def queries(session):
+    return [call[1]["query"] for call in session.calls]
+
+
+def test_a_pack_of_two_countries_asks_the_second_only_when_the_first_has_no_song_or_call(tmp_path):
+    """The North America pack (#215): United States recordings first, Canada's when there are none."""
+    xc, session, _ = client(tmp_path, [page([recording(id="1")])])
+
+    candidates = XenoCantoSoundSource(xc, countries=("United States", "Canada")).candidates_for(ENTRY)
+
+    assert queries(session) == ['sp:"Sayornis nigricans" cnt:"United States"'], "Canada is never asked"
+    assert [c.id for c in candidates] == ["xc-1"]
+
+
+def test_a_pack_of_two_countries_takes_the_seconds_recordings_when_the_first_has_none(tmp_path):
+    untyped = recording(id="1", type="Diving, wing flaps")
+    xc, session, _ = client(tmp_path, [page([untyped]), page([recording(id="2", cnt="Canada", type="song")])])
+
+    candidates = XenoCantoSoundSource(xc, countries=("United States", "Canada")).candidates_for(ENTRY)
+
+    assert queries(session) == ['sp:"Sayornis nigricans" cnt:"United States"', 'sp:"Sayornis nigricans" cnt:"Canada"'], "and nowhere else"
+    assert [(c.id, c.country, c.kind) for c in candidates if c.kind] == [("xc-2", "Canada", "song")]
+
+
+def test_a_pack_of_two_countries_asks_worldwide_only_when_neither_has_a_song_or_call(tmp_path):
+    xc, session, _ = client(tmp_path, [page([]), page([]), page([recording(id="3", cnt="Mexico")])])
+
+    candidates = XenoCantoSoundSource(xc, countries=("United States", "Canada")).candidates_for(ENTRY)
+
+    assert queries(session) == ['sp:"Sayornis nigricans" cnt:"United States"', 'sp:"Sayornis nigricans" cnt:"Canada"', 'sp:"Sayornis nigricans"']
+    assert [c.id for c in candidates] == ["xc-3"]
+
+
 def test_source_uses_the_override_name_when_xeno_canto_names_the_species_differently(tmp_path):
     xc, session, _ = client(tmp_path, [page([recording()])])
     XenoCantoSoundSource(xc, country="United States", names={"Sayornis nigricans": "Sayornis nigricanus"}).candidates_for(ENTRY)

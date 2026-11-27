@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable, Protocol
@@ -13,7 +13,7 @@ from PIL import Image
 
 from packbuilder.candidates import PhotoCandidate, filter_candidates
 from packbuilder.crops import LENS_HEIGHT, LENS_PADDING, LENS_WIDTH, upright
-from packbuilder.definition import PackDefinition, SpeciesEntry, load_overrides
+from packbuilder.definition import DEFAULT_PHOTOS_PER_SPECIES, PackDefinition, SpeciesEntry, load_overrides
 from packbuilder.descriptions import Description
 from packbuilder.detector import Detection
 from packbuilder.download import fetch_photo
@@ -78,7 +78,8 @@ class BuildOptions:
     """How many license-cleared candidates per species are downloaded and run through the detector."""
     min_photos: int = 3
     """Fewer chosen photos than this is a logged gap."""
-    max_photos: int = 5
+    max_photos: int | None = None
+    """Photos kept per species; None keeps as many as the definition says (`photos_per_species`: five, or three)."""
     archive_path: Path | None = None
     built_at: str | None = None
     fetch: PhotoFetcher = field(default=fetch_photo)
@@ -108,6 +109,8 @@ def build_pack(
     which the patches and the silhouettes are made from; it paints no pack art. With `export_references` it isolates nothing:
     it saves the crops of the birds still to isolate and lists them in that file, for `packbuilder isolate` on the box."""
     raw_overrides = load_overrides(overrides_path)
+    if options.max_photos is None:
+        options = replace(options, max_photos=definition.photos_per_species)
     shared = shared_photo_ids(definition.species, metadata)
     if shared:
         log.info("%d photos belong to observations of two or more species of the pack; none is chosen", len(shared))
@@ -116,7 +119,7 @@ def build_pack(
         for entry in definition.species
     ]
     if sounds is not None:
-        sounds.lock.write()
+        sounds.lock.write(keep_others=definition.partial)
     art = None
     if artist is not None:
         art = artist.paint(results)
@@ -130,19 +133,21 @@ def build_pack(
         export_references.write_text(json.dumps(reference_picker.export_references(results), indent=1) + "\n")
     elif reference_picker is not None:
         reference_picker.isolate_references(results)
+    # The sheets' numbers are places in the whole pack's list, which a build of some of its birds keeps (#215).
+    numbers = {entry.id: definition.number(entry.id) for entry in definition.species}
     patches = None
     if patch_artist is not None:
         ids = [r.entry.id for r in results]
         patches = patch_artist.paint(ids)
         if art_sheets is not None:
-            sheets = patch_artist.sheets(ids, patches, art_sheets / "patches")
+            sheets = patch_artist.sheets(ids, patches, art_sheets / "patches", numbers=numbers)
             log.info("patch contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
     silhouettes = None
     if silhouette_maker is not None:
         ids = [r.entry.id for r in results]
         silhouettes = silhouette_maker.make(ids)
         if art_sheets is not None:
-            sheets = silhouette_maker.sheets(ids, silhouettes, art_sheets / "silhouettes")
+            sheets = silhouette_maker.sheets(ids, silhouettes, art_sheets / "silhouettes", numbers=numbers)
             log.info("silhouette contact sheets: %s", ", ".join(str(sheet) for sheet in sheets))
     cover = None
     if cover_painter is not None:
@@ -270,7 +275,7 @@ def build_species(entry: SpeciesEntry, overrides: Overrides, metadata: MetadataS
             scored.append(ScoredPhoto(candidate=candidate, box=box, score=score))
     log.info("  %d originals under the card size, %d with a bird, %d too blurred, %d scored", small, detected, blurred, len(scored))
 
-    selection = select_photos(scored, overrides, minimum=options.min_photos, maximum=options.max_photos)
+    selection = select_photos(scored, overrides, minimum=options.min_photos, maximum=options.max_photos or DEFAULT_PHOTOS_PER_SPECIES)
     photos: list[ChosenPhoto] = []
     for photo in selection.chosen:
         original = options.fetch(photo.candidate, options.cache_dir, "original")
