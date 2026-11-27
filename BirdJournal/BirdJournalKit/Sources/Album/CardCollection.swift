@@ -5,8 +5,9 @@ import Foundation
 /// and every later sighting there adds to its count. A pure reading of value snapshots of the sightings, so it is
 /// computed again whenever the album changes and nothing about a patch is stored: deleting a sighting lowers its
 /// patch's count and moves its sewn date to the next-earliest, and deleting the last one unpicks the patch. Each
-/// sighting belongs to a set of the ones the phone knows (`CardSet.placement`, #54), with its collector number and
-/// edition, and each set has its progress, the patches sewn in it; a newly known set therefore pulls older sightings in.
+/// sighting belongs to a set of the ones given (`CardSet.placement`, #54), with its collector number and edition, and
+/// each set has its progress, the patches sewn in it. The app gives the sets whose pack is on the phone (#207), so a set
+/// newly given pulls older sightings in, and one left out hands them to another set that takes them, or to Uncharted.
 public struct CardCollection: Sendable, Equatable {
     /// One sighting as the collection reads it.
     public struct Entry: Sendable, Hashable, Identifiable {

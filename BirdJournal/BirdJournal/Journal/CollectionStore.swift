@@ -20,7 +20,8 @@ final class CollectionStore {
     @ObservationIgnored private var revision = 0
     private let log = Logger(subsystem: "com.matthewcelia.mybirdjournal", category: "album")
 
-    /// - Parameter sets: every set the phone knows, read under observation, so a pack download or a new index reaches it.
+    /// - Parameter sets: the sets that take sightings (`PackLibrary.cardSets`), read under observation, so a pack downloaded or
+    ///   deleted moves the sightings it takes at once.
     init(container: ModelContainer, deferred: Bool = false, sets: @escaping () -> [CardSet]) {
         loaded = !deferred
         self.container = container

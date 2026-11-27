@@ -21,7 +21,7 @@ struct PaperCardView: View {
     private static let latestShown = 3
 
     var body: some View {
-        let species = library.species(scientificName: patch.scientificName)?.species
+        let species = library.species(scientificName: patch.scientificName, setID: patch.placement.setID)?.species
         VStack(spacing: 0) {
             if isReadingView {
                 content(species)

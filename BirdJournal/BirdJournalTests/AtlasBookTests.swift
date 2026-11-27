@@ -184,10 +184,10 @@ struct AtlasBookTests {
 
     @Test("with nothing to offer yet, a set's page says the field guide comes with the list, not that a Download is there")
     func notOnPhoneWords() {
-        #expect(SetView.notOnPhoneText(canDownload: true).contains("downloading it adds"))
+        #expect(SetView.notOnPhoneText(canDownload: true).contains("Download it"))
         let waiting = SetView.notOnPhoneText(canDownload: false)
         #expect(waiting.contains("once the list of sets comes through"))
-        #expect(!waiting.contains("downloading it adds"))
+        #expect(!waiting.contains("Download it"))
     }
 
     // MARK: - Pixels

@@ -1,6 +1,6 @@
 {
  "version": 1,
- "comment": "CANDIDATES, not an edition (issue #213, of #206): looks for the Continental edition's patch, painted on two birds for the maintainer's pick. Nothing here ships, and no pack or app code reads it; `scripts/continental-samples.py` does. Each candidate has what an entry of `editions` in patch-prompts.json has (`shape`, `cord`, `twill`, `motif`, and the `outline` and `shape_limit` the cut is measured against), so the pick is copied there under `north-america` as it stands (#214). Beside those: its letter on the contact sheet, a working `name`, `aspect` (the shape's width over its height, which `shape_fit` cannot see, since it measures in the patch's own bounding box), an optional `canvas` (where the shape wants one other than the card's 864 x 1152: A's wide rectangle came out 1.26 to 1.41 wide on the card's canvas and 1.43 to 1.59 on 1152 x 864; the patch step has no canvas of its own per edition yet, so the script passes it) and `cord_hex` and `twill_hex`, the colours proposed for the app's `PatchEdition`: design values read off the painted samples in the eight editions' own convention, lighter than a measurement of the thread (New York's cord is #9B2F27 in the app and measures about #701A12 in its paintings). The template, the settings and the dark clause are patch-prompts.json's own, unchanged. No prompt names a species: `birds` are the reference birds, by the photo each was isolated from in another pack's approved patch (the isolated bird is in the builder's art cache), with that patch's setting and markings.",
+ "comment": "CANDIDATES, not an edition (issue #213, of #206): looks for the Continental edition's patch, painted on two birds for the maintainer's pick. Nothing here ships, and no pack or app code reads it; `scripts/continental-samples.py` does. Each candidate has what an entry of `editions` in patch-prompts.json has (`shape`, `cord`, `twill`, `motif`, and the `outline` and `shape_limit` the cut is measured against), so the pick is copied there under `north-america` as it stands (#214). Beside those: its letter on the contact sheet, a working `name`, `aspect` (the shape's width over its height, which `shape_fit` cannot see, since it measures in the patch's own bounding box), an optional `canvas` (where the shape wants one other than the card's 864 x 1152: A's wide rectangle came out 1.26 to 1.41 wide on the card's canvas and 1.43 to 1.59 on 1152 x 864; the patch step has no canvas of its own per edition yet, so the script passes it) and `cord_hex` and `twill_hex`, the colours proposed for the app's `PatchEdition`: design values read off the painted samples in the eight editions' own convention, lighter than a measurement of the thread (New York's cord is #9B2F27 in the app and measures about #701A12 in its paintings). The template, the settings and the dark clause are patch-prompts.json's own, unchanged. E is the maintainer's mix after the first sheet (2026-11-26): A's shape and canvas with C's cord, twill and motif, wording unchanged. A candidate's own `markings`, by species id, are added to that bird's for this candidate alone, as `art.patch.markings` in a pack's overrides.json would be: beside E's gold cord and sun the first bird's breast was stitched in gold four paintings running. No prompt names a species: `birds` are the reference birds, by the photo each was isolated from in another pack's approved patch (the isolated bird is in the builder's art cache), with that patch's setting and markings.",
  "birds": {
   "turdus-migratorius": {
    "common_name": "American Robin",
@@ -66,6 +66,21 @@
    "twill": "pale parchment-yellow cotton twill",
    "twill_hex": "#EBDCB2",
    "motif": "a large, pale eight-pointed compass star, with a few fine curved lines of latitude and longitude like an old map"
+  },
+  "E": {
+   "name": "Daybreak, wide",
+   "shape": "a wide rectangle lying on its long side, half again as wide as it is tall, with softly rounded corners",
+   "outline": [[0, 0], [1, 0], [1, 1], [0, 1]],
+   "aspect": 1.5,
+   "canvas": [1152, 864],
+   "cord": "rich golden-yellow",
+   "cord_hex": "#C98F2A",
+   "twill": "pale lavender-grey cotton twill",
+   "twill_hex": "#BFB3C4",
+   "motif": "a big rising sun low on a far, flat horizon, its long straight rays fanning out across the whole sky",
+   "markings": {
+    "turdus-migratorius": "The breast and belly are stitched in rusty red-orange thread, the warm orange-red of the bird in <ref_image_0>, clearly redder than the golden border and the sun; there is no gold or yellow thread on the bird except its bill."
+   }
   }
  }
 }

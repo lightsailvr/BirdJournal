@@ -2,7 +2,7 @@ import XCTest
 
 /// Issues #134 and #179 (guide page 7): a species' patches across editions, with fifteen seeded finch sightings at two places
 /// (`-seedGallery`). Real taps open a patch from the species view and the sightings behind them. The second place is San
-/// Diego when the pack index has reached the phone, Uncharted when it hasn't, so the counts are what's checked.
+/// Diego, whose field guide isn't on the phone, so its six sightings are the bird's Uncharted patch (issue #207).
 final class GalleryUITests: XCTestCase {
     @MainActor
     private func launch(_ extra: [String] = []) -> XCUIApplication {
@@ -36,6 +36,9 @@ final class GalleryUITests: XCTestCase {
         XCTAssertTrue(app.descendants(matching: .any)["patch-count"].label.hasPrefix("Seen 9 times in \(BundledPack.setName)"))
         app.navigationBars.buttons.element(boundBy: 0).tap()
         XCTAssertTrue(summary.waitForExistence(timeout: 5))
+        // San Diego: a set this phone knows, without its field guide, takes no sighting.
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), Uncharted patch, seen 6 times'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label CONTAINS 'Coastal edition patch'")).firstMatch.exists, "screen: \(app.debugDescription.prefix(4000))")
 
         // All sightings are on this page, below the single primary action.
         XCTAssertFalse(app.buttons["species-all-sightings"].exists)
