@@ -206,6 +206,7 @@ struct PlaceTests {
         #expect(PatchEdition.tint(setID: "us-pnw") == Color("EditionEvergreen"))
         #expect(PatchEdition.tint(setID: "us-ny-nyc") == Color("EditionBorough"))
         #expect(PatchEdition.tint(setID: "us-la-south") == Color("EditionBayou"))
+        #expect(PatchEdition.tint(setID: "north-america") == Color("EditionContinental"))
         #expect(PatchEdition.tint(setID: nil) == Color("EditionUncharted"))
         #expect(PatchEdition.tint(setID: "us-tx-houston") == .moss)
     }
