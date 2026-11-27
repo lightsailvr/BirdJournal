@@ -4,12 +4,12 @@
 # `gh release create` (see packs/README.md). An existing entry keeps its `bundled` flag; a new pack is a download
 # unless --bundled says otherwise (only one pack is bundled: PackIndex.bundledPackID in the Swift Pack module).
 #
-#   scripts/pin-pack.sh us-ca-la            # tag pack-us-ca-la-v<version>, asset us-ca-la.zip
-#   scripts/pin-pack.sh us-ca-sd            # a downloadable pack
+#   scripts/pin-pack.sh us-ca-sd            # tag pack-us-ca-sd-v<version>, asset us-ca-sd.zip
+#   scripts/pin-pack.sh <pack id> --bundled # a new pack that the app bundles
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-pack_id="${1:-us-ca-la}"
+pack_id="${1:?usage: scripts/pin-pack.sh <pack id> [--bundled]}"
 bundled_flag="${2:-}"
 zip="$repo_root/build/packs/$pack_id.zip"
 manifest="$repo_root/packs/manifest.json"

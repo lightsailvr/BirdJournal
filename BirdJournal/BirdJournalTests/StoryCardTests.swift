@@ -48,7 +48,7 @@ struct LoreExcerptTests {
         #expect(LoreExcerpt.front("   ") == nil)
     }
 
-    @Test("every bundled Los Angeles species: the excerpt opens the lore, ends a sentence and runs 25 to 50 words")
+    @Test("every bundled species: the excerpt opens the lore, ends a sentence and runs 25 to 50 words")
     func bundledPack() throws {
         let pack = try SpeciesPack.bundled()
         let species = pack.species.filter { $0.lore != nil }
@@ -166,7 +166,7 @@ struct PaperCardAccessibilityTests {
     static func page(showsBack: Bool) throws -> some View {
         let album = try AlbumSchema.makeContainer(inMemory: true)
         let griffithPark = Coordinate(latitude: 34.13, longitude: -118.29, accuracy: 10)
-        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, location: griffithPark, soundConfidence: 0.8, source: .phone)
+        let sighting = Sighting(speciesID: BundledPack.phoebe.label, confirmedAt: .now, location: griffithPark, soundConfidence: 0.8, source: .phone)
         album.mainContext.insert(sighting)
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PaperCardTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
         let collection = CardCollection(sightings: [sighting], sets: library.cardSets)
@@ -174,10 +174,10 @@ struct PaperCardAccessibilityTests {
         return NavigationStack {
             ScrollView {
                 CollectibleCard(showsBack: showsBack, rotates: true) {
-                    Button("Black Phoebe, Citrus edition patch") {}
+                    Button("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch") {}
                         .frame(height: 470)
                 } back: {
-                    PaperCardView(patch: patch, sightings: [sighting], name: "Black Phoebe", isReadingView: false)
+                    PaperCardView(patch: patch, sightings: [sighting], name: BundledPack.phoebe.name, isReadingView: false)
                 }
             }
         }
@@ -207,25 +207,25 @@ struct PaperCardAccessibilityTests {
 
     @Test("patch up: the patch, nothing of the card")
     func patchUp() async throws {
-        let labels = try await Self.labels(showsBack: false) { $0.contains { $0.hasPrefix("Black Phoebe, Citrus") } }
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
+        let labels = try await Self.labels(showsBack: false) { $0.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName)") } }
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName)") }, "\(labels)")
         #expect(!labels.contains { $0.hasPrefix("All 1") }, "\(labels)")
         #expect(!labels.contains("Sources"), "\(labels)")
     }
 
-    @Test("card up: the edition, the names, the story, the biology, the history and the footer, nothing of the patch")
+    @Test("card up: the edition, the names, the story, the biology, the history and the footer, nothing of the patch", .tags(.losAngelesContent))
     func cardUp() async throws {
         let labels = try await Self.labels(showsBack: true) { $0.contains("Sources") && $0.contains { $0.hasPrefix("1 sighting here") } }
-        #expect(labels.contains { $0.hasPrefix("Citrus edition, number ") }, "the edition line: \(labels)")
-        #expect(labels.contains("Black Phoebe"), "\(labels)")
-        #expect(labels.contains("Sayornis nigricans"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.editionName), number ") }, "the edition line: \(labels)")
+        #expect(labels.contains(BundledPack.phoebe.name), "\(labels)")
+        #expect(labels.contains(BundledPack.phoebe.scientificName), "\(labels)")
         #expect(labels.contains { $0.hasPrefix("Wherever the black phoebe keeps house") || $0.hasPrefix("Where water runs") }, "the excerpt: \(labels)")
         #expect(labels.contains { $0.hasPrefix("Wingspan") }, "the biology: \(labels)")
         #expect(labels.contains { $0.hasPrefix("1 sighting here, sewn ") }, "the history: \(labels)")
         #expect(labels.contains { $0.hasPrefix("1 sighting") }, "the footer: \(labels)")
         #expect(labels.contains("AI illustration"), "the footer: \(labels)")
         #expect(labels.contains("Sources"), "the footer: \(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, Citrus") }, "\(labels)")
+        #expect(!labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName)") }, "\(labels)")
     }
 
     @Test("what's left of the lore follows the excerpt without repeating it")
@@ -239,7 +239,7 @@ struct PaperCardAccessibilityTests {
 
     @Test("biology lists wingspan, weight, diet, nest, clutch and size, in that order, for the bundled finch")
     func biology() throws {
-        let finch = try #require(try SpeciesPack.bundled().species(scientificName: "Haemorhous mexicanus"))
+        let finch = try #require(try SpeciesPack.bundled().species(scientificName: BundledPack.finch.scientificName))
         #expect(PatchText.biology(finch).map(\.label) == ["Wingspan", "Weight", "Diet", "Nest", "Clutch", "Size"])
         #expect(PatchText.biology(nil).isEmpty, "a bird no pack describes")
     }
@@ -249,7 +249,7 @@ struct PaperCardAccessibilityTests {
 @Suite("Patch words and layout")
 @MainActor
 struct PatchWordsTests {
-    static let set = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition", species: ["Sayornis nigricans", "Haemorhous mexicanus"], regions: [
+    static let set = CardSet(id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition", species: ["Sayornis nigricans", "Haemorhous mexicanus"], regions: [
         CardSet.Region(name: "LA", polygons: [[[
             CardSet.Point(longitude: -119, latitude: 33), CardSet.Point(longitude: -117, latitude: 33), CardSet.Point(longitude: -117, latitude: 35), CardSet.Point(longitude: -119, latitude: 35), CardSet.Point(longitude: -119, latitude: 33),
         ]]]),
@@ -304,7 +304,7 @@ struct PatchWordsTests {
         #expect(Set(ids.map { "\(PatchEdition.of(setID: $0).shape)" }).count == ids.count)
         #expect(PatchEdition.of(setID: nil).shape == .circle)
         #expect(PatchEdition.of(setID: nil) == PatchEdition.of(setID: "somewhere-new"))
-        #expect(PatchEdition.of(setID: "us-ca-la").shape == .circle)
+        #expect(PatchEdition.of(setID: LosAngelesSet.id).shape == .circle)
         #expect(PatchEdition.of(setID: "us-fl-orlando").shape == .shield)
         #expect(PatchEdition.of(setID: "us-pnw").shape == .pentagon)
         #expect(PatchEdition.of(setID: "us-ny-nyc").shape == .roundedSquare)
@@ -331,17 +331,18 @@ struct PatchWordsTests {
     @Test("a painting is only ever its own edition's")
     func artIsTheEditions() throws {
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PatchWordsTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let art = try #require(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-la"))
-        #expect(art.colour.lastPathComponent == "haemorhous-mexicanus.avif")
-        #expect(art.layers.lastPathComponent == "haemorhous-mexicanus-layers.avif")
-        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == nil)
-        #expect(library.patchArt(scientificName: "Haemorhous mexicanus", setID: nil) == nil)
+        let art = try #require(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: BundledPack.id))
+        let stem = BundledPack.finch.scientificName.lowercased().replacing(" ", with: "-")
+        #expect(art.colour.lastPathComponent == "\(stem).avif")
+        #expect(art.layers.lastPathComponent == "\(stem)-layers.avif")
+        #expect(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") == nil)
+        #expect(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: nil) == nil)
     }
 
     @Test("the bundled pack's patch decodes at both sizes, with its alpha, for the shader")
     func decodes() async throws {
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "PatchWordsTests-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let art = try #require(library.patchArt(scientificName: "Haemorhous mexicanus", setID: "us-ca-la"))
+        let art = try #require(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: BundledPack.id))
         let full = await PatchTextures.load(art, size: .full)
         let small = await PatchTextures.load(art, size: .thumbnail)
         #expect(full != nil)

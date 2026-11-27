@@ -32,7 +32,7 @@ struct RunSnapshotTests {
     private static let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
     private static let finch = "Haemorhous mexicanus_House Finch"
     private static let jay = "Aphelocoma californica_California Scrub-Jay"
-    private static let la = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition", species: ["Haemorhous mexicanus", "Aphelocoma californica"], regions: [southernCalifornia])
+    private static let la = CardSet(id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition", species: ["Haemorhous mexicanus", "Aphelocoma californica"], regions: [southernCalifornia])
 
     @Test("each state of a run reads as a phase, and only a run under way has an activity")
     func phases() {
@@ -58,7 +58,7 @@ struct RunSnapshotTests {
         #expect(snapshot.startedAt == start)
         #expect(snapshot.birdsHeard == 2)
         #expect(snapshot.newPatchesWaiting == 2)
-        #expect(snapshot.setID == "us-ca-la")
+        #expect(snapshot.setID == LosAngelesSet.id)
         #expect(snapshot.birdsHeardText == "2 birds heard")
         #expect(snapshot.newPatchesText == RunHunt(newPatches: 2, alreadyHave: 0).waiting)
 
@@ -217,9 +217,9 @@ struct WidgetSnapshotTests {
     private static let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
     private static let finch = "Haemorhous mexicanus_House Finch"
     private static let jay = "Aphelocoma californica_California Scrub-Jay"
-    private static let la = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition", species: ["Haemorhous mexicanus", "Aphelocoma californica", "Sayornis nigricans"], regions: [southernCalifornia])
+    private static let la = CardSet(id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition", species: ["Haemorhous mexicanus", "Aphelocoma californica", "Sayornis nigricans"], regions: [southernCalifornia])
 
-    private func snapshot(_ entries: [CardCollection.Entry], local: String? = "us-ca-la", painted: Bool = true) -> WidgetSnapshot {
+    private func snapshot(_ entries: [CardCollection.Entry], local: String? = LosAngelesSet.id, painted: Bool = true) -> WidgetSnapshot {
         WidgetSnapshot(collection: CardCollection(entries, sets: [Self.la]), localSetID: local, name: { String($0.speciesID.drop { $0 != "_" }.dropFirst()) }, hasPainting: { _ in painted })
     }
 
@@ -240,7 +240,7 @@ struct WidgetSnapshotTests {
         let value = snapshot([entry(Self.finch, at: 100), entry(Self.jay, at: 200), entry(Self.finch, at: 300)])
         #expect(value.latest?.name == "California Scrub-Jay")
         #expect(value.latest?.setName == "Los Angeles")
-        #expect(value.latest?.link == PatchLink(speciesID: Self.jay, setID: "us-ca-la"))
+        #expect(value.latest?.link == PatchLink(speciesID: Self.jay, setID: LosAngelesSet.id))
         #expect(value.progress?.sewnText == "2 of 3 sewn")
         #expect(value.spokenText == "Latest patch, California Scrub-Jay, Los Angeles. 2 of 3 sewn")
     }
@@ -250,7 +250,7 @@ struct WidgetSnapshotTests {
         let value = snapshot([entry(Self.finch, at: 100, location: nil)])
         #expect(value.latest?.setName == "Uncharted")
         #expect(value.latest?.link == PatchLink(speciesID: Self.finch, setID: nil))
-        #expect(value.progress?.setID == "us-ca-la")
+        #expect(value.progress?.setID == LosAngelesSet.id)
     }
 
     @Test("it's rewritten when the newest patch or the set's progress changes, and only the words when the picture still stands")
@@ -277,7 +277,7 @@ struct WidgetSnapshotTests {
 
     @Test("a patch's link survives its URL, and nothing else the app is handed reads as one")
     func links() throws {
-        let link = PatchLink(speciesID: "Haemorhous mexicanus_House Finch", setID: "us-ca-la")
+        let link = PatchLink(speciesID: "Haemorhous mexicanus_House Finch", setID: LosAngelesSet.id)
         #expect(link.url.scheme == "birdjournal")
         #expect(PatchLink(url: link.url) == link)
         let uncharted = PatchLink(speciesID: "Corvus corax_Common Raven", setID: nil)
@@ -314,10 +314,10 @@ struct WidgetSnapshotTests {
         var inFront = false
         let publisher = LatestPatchPublisher(store: store, collection: collection, packs: library, isInFront: { inFront })
 
-        album.mainContext.insert(Sighting(speciesID: Self.finch, confirmedAt: .now, location: Self.griffith, soundConfidence: 0.9, source: .phone))
+        album.mainContext.insert(Sighting(speciesID: BundledPack.finch.label, confirmedAt: .now, location: Self.griffith, soundConfidence: 0.9, source: .phone))
         try album.mainContext.save()
         await publisher.write()
-        #expect(store.snapshot()?.latest?.name == "House Finch", "the widget has the bird with the app in the background")
+        #expect(store.snapshot()?.latest?.name == BundledPack.finch.name, "the widget has the bird with the app in the background")
         #expect(store.snapshot()?.latest?.hasPainting == false, "marked to be lit later")
         let plain = try #require(store.patchImage())
         let (bytes, width, height) = try ShareCardTests.rgba(try #require(UIImage(data: plain)))
@@ -371,19 +371,19 @@ struct WidgetSnapshotTests {
             try album.mainContext.save()
         }
 
-        try add(Self.finch, at: 100)
+        try add(BundledPack.finch.label, at: 100)
         await publisher.write()
-        #expect(store.snapshot()?.latest?.name == "House Finch")
+        #expect(store.snapshot()?.latest?.name == BundledPack.finch.name)
 
         drawing = nil
-        try add(Self.jay, at: 200)
+        try add(BundledPack.jay.label, at: 200)
         await publisher.write()
-        #expect(store.snapshot()?.latest?.name == "House Finch", "the finch's picture is still there, so its name stays")
+        #expect(store.snapshot()?.latest?.name == BundledPack.finch.name, "the finch's picture is still there, so its name stays")
         #expect(store.patchImage() == Data([1]))
 
         drawing = .init(png: Data([2]), isLit: false)
         await publisher.write()
-        #expect(store.snapshot()?.latest?.link.speciesID == Self.jay)
+        #expect(store.snapshot()?.latest?.link.speciesID == BundledPack.jay.label)
         #expect(store.snapshot()?.latest?.hasPainting == false)
         let before = drew
         drawing = .init(png: Data([3]), isLit: true)
@@ -404,7 +404,7 @@ struct WidgetSnapshotTests {
 
         await publisher.write()
         #expect(store.snapshot()?.latest == nil)
-        #expect(store.snapshot()?.progress?.setID == "us-ca-la")
+        #expect(store.snapshot()?.progress?.setID == BundledPack.id)
         #expect(!store.hasPatchImage)
 
         func add(_ species: String, at seconds: Double) throws {
@@ -412,10 +412,10 @@ struct WidgetSnapshotTests {
             try album.mainContext.save()
         }
 
-        try add(Self.finch, at: 100)
+        try add(BundledPack.finch.label, at: 100)
         await publisher.write()
         let written = try #require(store.snapshot())
-        #expect(written.latest?.name == "House Finch")
+        #expect(written.latest?.name == BundledPack.finch.name)
         #expect(written.latest?.hasPainting == true)
         #expect(written.progress?.sewn == 1)
 
@@ -429,7 +429,7 @@ struct WidgetSnapshotTests {
         #expect(bytes[middle + 3] == 255, "and the patch itself is solid")
 
         let attributes = try FileManager.default.attributesOfItem(atPath: store.directory.appending(path: "latest-patch.png").path(percentEncoded: false))
-        try add(Self.finch, at: 200)
+        try add(BundledPack.finch.label, at: 200)
         await publisher.write()
         let after = try FileManager.default.attributesOfItem(atPath: store.directory.appending(path: "latest-patch.png").path(percentEncoded: false))
         #expect(attributes[.modificationDate] as? Date == after[.modificationDate] as? Date, "a repeat doesn't draw it again")
@@ -479,7 +479,7 @@ struct RunEndTests {
         let griffith = Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15)
         let started = Date.now.addingTimeInterval(-3 * 86_400)
         let ended = started.addingTimeInterval(1_800)
-        let finch = Candidate(species: Species(index: 0, scientificName: "Haemorhous mexicanus", commonName: "House Finch", taxonomicClass: "Aves"), score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 60, lastHeardAt: 120, admittedAt: 60)
+        let finch = Candidate(species: Species(index: 0, scientificName: BundledPack.finch.scientificName, commonName: BundledPack.finch.name, taxonomicClass: "Aves"), score: 0.9, windowsAboveThreshold: 2, firstHeardAt: 60, lastHeardAt: 120, admittedAt: 60)
         let waiting = EndedRun(source: "phone", startedAt: started, endedAt: ended, listened: 1_800, coordinate: griffith, birds: [.init(finch)], added: [])
         harness.defaults.set(try JSONEncoder().encode(waiting), forKey: ListeningCoordinator.endedRunKey)
 

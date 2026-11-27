@@ -114,17 +114,17 @@ struct StitchInTests {
 // A visual effect needs a test on pixels (issue #134's lesson): `sewnTo` going in is not the patch coming out. In the light's
 // own serialized suite: every patch reads the one shared light, so two suites rendering side by side move each other's.
 extension PatchLightPixelTests {
-    /// The House Finch, decoded, with its threads.
+    /// The finch, decoded, with its threads.
     static func finch() async throws -> (art: PatchArt, loaded: PatchTextures.Loaded, threads: [StitchThread], bounds: [Int]) {
         let pack = try SpeciesPack.bundled()
-        let patch = try #require(pack.species(scientificName: "Haemorhous mexicanus")?.patch)
+        let patch = try #require(pack.species(scientificName: BundledPack.finch.scientificName)?.patch)
         let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground, stitchBounds: patch.stitchBounds)
         let loaded = try #require(await PatchTextures.load(art, size: .full))
         let threads = await PatchTextures.threads(of: loaded, art: art)
         return (art, loaded, threads, patch.stitchBounds)
     }
 
-    @Test("the real pack's threads: every band that shows, the cord last in the edition's olive, each a real colour of its own")
+    @Test("the real pack's threads: every band that shows, the cord last in the edition's olive, each a real colour of its own", .tags(.losAngelesContent))
     func realThreads() async throws {
         let (_, _, threads, bounds) = try await Self.finch()
         #expect(threads.count >= bounds.count - 2, "\(threads.count) threads of \(bounds.count - 1) bands")
@@ -157,7 +157,7 @@ extension PatchLightPixelTests {
     func theOrderOnScreen() async throws {
         let (art, loaded, _, bounds) = try await Self.finch()
         PatchLight.shared.restart()
-        let edition = PatchEdition.of(setID: "us-ca-la")
+        let edition = PatchEdition.of(setID: BundledPack.id)
         func patch(_ face: PatchView.Face) -> some View { PatchView(art: art, edition: edition, face: face, size: .full) }
 
         let bare = try await Self.rendered(patch(.stitching(sewnTo: -0.02)))
@@ -182,7 +182,7 @@ extension PatchLightPixelTests {
     func cordLast() async throws {
         let (art, _, threads, _) = try await Self.finch()
         PatchLight.shared.restart()
-        let edition = PatchEdition.of(setID: "us-ca-la")
+        let edition = PatchEdition.of(setID: BundledPack.id)
         func patch(_ face: PatchView.Face) -> some View { PatchView(art: art, edition: edition, face: face, size: .full) }
         let cord = try #require(threads.last)
         let before = try await Self.rendered(patch(.stitching(sewnTo: Float(cord.start) - 0.01)))
@@ -263,14 +263,14 @@ extension PatchLightPixelTests {
 @Suite("Sewing ceremony accessibility", .serialized)
 @MainActor
 struct SewingCeremonyAccessibilityTests {
-    /// The run, showing a page for the seeded Black Phoebe in Los Angeles.
+    /// The run, showing a page for the seeded phoebe in the bundled pack's set.
     static func harness() throws -> ScreenAccessibilityTests.Harness {
         let harness = try ScreenAccessibilityTests.Harness()
         let context = harness.album.mainContext
         let all = try context.fetch(Sighting.newestFirst())
-        let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
+        let phoebe = try #require(all.first { $0.scientificName == BundledPack.phoebe.scientificName })
         let placement = try #require(CardCollection(sightings: all, sets: harness.library.cardSets).placement(of: phoebe.identifier))
-        #expect(placement.setID != nil, "in the Los Angeles set")
+        #expect(placement.setID != nil, "in the bundled pack's set")
         harness.run.showRevealForScreenshot(of: phoebe, placement: placement)
         return harness
     }
@@ -291,9 +291,9 @@ struct SewingCeremonyAccessibilityTests {
         }
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch")
         #expect(!labels.contains { $0.hasPrefix("Sewing") }, "no stitching: \(labels)")
-        #expect(labels.contains("New patch, Citrus edition"), "\(labels)")
-        #expect(labels.contains("Your first Black Phoebe in Los Angeles"), "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn ") }, "the patch in words: \(labels)")
+        #expect(labels.contains("New patch, \(BundledPack.editionName)"), "\(labels)")
+        #expect(labels.contains("Your first \(BundledPack.phoebe.name) in \(BundledPack.setName)"), "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch, seen once, sewn ") }, "the patch in words: \(labels)")
         #expect(labels.contains("Done"), "no run: back to where the add was: \(labels)")
         #expect(labels.contains("Share this patch"), "\(labels)")
         #expect(!labels.contains("See it in my collection"), "the patch does that: \(labels)")
@@ -305,8 +305,8 @@ struct SewingCeremonyAccessibilityTests {
     func voiceOverQueue(typeSize: DynamicTypeSize) async throws {
         let harness = try ScreenAccessibilityTests.Harness()
         let all = try harness.album.mainContext.fetch(Sighting.newestFirst())
-        let phoebe = try #require(all.first { $0.scientificName == "Sayornis nigricans" })
-        let dove = try #require(all.first { $0.scientificName == "Zenaida macroura" })
+        let phoebe = try #require(all.first { $0.scientificName == BundledPack.phoebe.scientificName })
+        let dove = try #require(all.first { $0.scientificName == BundledPack.dove.scientificName })
         harness.run.glasses.onPatchSewn?(phoebe.identifier)
         harness.run.glasses.onPatchSewn?(dove.identifier)
         harness.run.showNextCeremony()
@@ -316,11 +316,11 @@ struct SewingCeremonyAccessibilityTests {
             }
         }
         ScreenAccessibilityTests.expectClean(labels, screen: "New patch, more waiting")
-        #expect(labels.contains { $0.hasPrefix("Your first Black Phoebe") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("Your first \(BundledPack.phoebe.name)") }, "\(labels)")
         #expect(labels.contains("Next patch"), "\(labels)")
         #expect(labels.contains("Skip the rest, 1 more"), "\(labels)")
         #expect(!labels.contains("See it in my collection"), "\(labels)")
-        #expect(!labels.contains("Undo adding Black Phoebe"), "\(labels)")
+        #expect(!labels.contains("Undo adding \(BundledPack.phoebe.name)"), "\(labels)")
     }
 
     @Test("the patch reads as the button it is, with where it goes")
@@ -339,7 +339,7 @@ struct SewingCeremonyAccessibilityTests {
             var label: String?
             for _ in 0..<60 {
                 try await Task.sleep(for: .milliseconds(250))
-                label = ScreenAccessibilityTests.spoken(host.view).first { $0.hasPrefix("Black Phoebe, Citrus edition patch") }
+                label = ScreenAccessibilityTests.spoken(host.view).first { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch") }
                 if label != nil { break }
             }
             let patch = try Self.element(in: host.view, labelled: #require(label))
@@ -365,11 +365,11 @@ struct SewingCeremonyAccessibilityTests {
             for _ in 0..<60 {
                 try await Task.sleep(for: .milliseconds(250))
                 labels = ScreenAccessibilityTests.spoken(host.view)
-                if labels.contains("Sewing your Black Phoebe patch") { break }
+                if labels.contains("Sewing your \(BundledPack.phoebe.name) patch") { break }
             }
-            #expect(labels == ["Sewing your Black Phoebe patch"], "one element, nothing else to read over it: \(labels)")
+            #expect(labels == ["Sewing your \(BundledPack.phoebe.name) patch"], "one element, nothing else to read over it: \(labels)")
 
-            let element = try #require(Self.element(in: host.view, labelled: "Sewing your Black Phoebe patch"))
+            let element = try #require(Self.element(in: host.view, labelled: "Sewing your \(BundledPack.phoebe.name) patch"))
             #expect(element.accessibilityTraits.contains(.button))
             #expect(element.accessibilityValue?.isEmpty == false, "the thread it's on: \(String(describing: element.accessibilityValue))")
             #expect(element.accessibilityActivate())
@@ -377,9 +377,9 @@ struct SewingCeremonyAccessibilityTests {
             for _ in 0..<60 {
                 try await Task.sleep(for: .milliseconds(250))
                 labels = ScreenAccessibilityTests.spoken(host.view)
-                if labels.contains("Your first Black Phoebe in Los Angeles") { break }
+                if labels.contains("Your first \(BundledPack.phoebe.name) in \(BundledPack.setName)") { break }
             }
-            #expect(labels.contains("Your first Black Phoebe in Los Angeles"), "\(labels)")
+            #expect(labels.contains("Your first \(BundledPack.phoebe.name) in \(BundledPack.setName)"), "\(labels)")
             #expect(!labels.contains { $0.hasPrefix("Sewing") }, "\(labels)")
         }
     }
@@ -400,7 +400,7 @@ struct SewingCeremonyAccessibilityTests {
 
 @Suite("Reveal words")
 struct RevealWordsTests {
-    static let placement = CardPlacement.numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 19, total: 160)
+    static let placement = CardPlacement.numbered(setID: LosAngelesSet.id, setName: "Los Angeles", edition: "Citrus edition", number: 19, total: 160)
 
     @Test("the number line under the name, in a set; none outside every set")
     func numberLine() {

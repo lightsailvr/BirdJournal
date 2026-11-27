@@ -45,7 +45,7 @@ private func goal(
     )
 }
 
-private func counted(_ names: [String], edition: String? = "us-ca-la") -> [CircleGoal.Species] {
+private func counted(_ names: [String], edition: String? = LosAngelesSet.id) -> [CircleGoal.Species] {
     names.map { CircleGoal.Species(speciesID: "\($0)_x", scientificName: $0, commonName: "Words from a phone", edition: edition) }
 }
 
@@ -121,12 +121,12 @@ struct GoalClientTests {
     @Test("a goal's species are read, and may be absent")
     func species() async throws {
         let recorder = Recorder()
-        let withSpecies = monthlyJSON.dropLast(1) + #","species":[{"species_id":"s_x","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","edition":"us-ca-la"},{"species_id":"t_x","scientific_name":"Turdus merula","common_name":"Common Blackbird","edition":null}]}"#
+        let withSpecies = monthlyJSON.dropLast(1) + #","species":[{"species_id":"s_x","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","edition":"\#(LosAngelesSet.id)"},{"species_id":"t_x","scientific_name":"Turdus merula","common_name":"Common Blackbird","edition":null}]}"#
         recorder.responses = [http(200, "{\"goals\":[\(withSpecies),\(customJSON)]}")]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
         let goals = try await client.goals(circleID: "c", accessToken: "t")
         #expect(goals[0].species?.map(\.scientificName) == ["Sayornis nigricans", "Turdus merula"])
-        #expect(goals[0].species?.map(\.edition) == ["us-ca-la", nil])
+        #expect(goals[0].species?.map(\.edition) == [LosAngelesSet.id, nil])
         #expect(goals[1].species == nil, "an older server")
     }
 

@@ -14,7 +14,7 @@ final class LensCaptureUITests: XCTestCase {
         return clip
     }
 
-    /// Issue #194: after the photo the lens asks for the bird's name, and the mock's glasses hear "annas humming bird"
+    /// Issue #194: after the photo the lens asks for the bird's name, and the mock's glasses hear the hummingbird's name
     /// (`-autoLensSay`), as a recogniser would write it. The first bird offered is tapped.
     @MainActor
     func testABirdNamedByVoiceOnTheLensIsSeenThisRunAndItsPatchIsSewnOnceTheRunEnds() throws {
@@ -22,15 +22,15 @@ final class LensCaptureUITests: XCTestCase {
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))",
             "-autoGlassesListening", try Self.clip(), "-autoGlassesCamera", "YES", "-autoLocation", "griffith", "-autoScreen", "glasses-run",
-            "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", "annas humming bird", "-stitchInSeconds", "60",
+            "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", BundledPack.hummingbirdAsHeard, "-stitchInSeconds", "60",
         ]
         app.launch()
 
         // While the run is on: the photo is the hummingbird's sighting under "Seen this run", and nothing else happens on
         // the phone, as for an add on the lens.
-        let row = app.buttons["seen-row-Calypte anna"]
+        let row = app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(row.waitForExistence(timeout: 150), "the lens named no photo; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(row.label, "Anna's Hummingbird, Seen, your photo, New patch")
+        XCTAssertEqual(row.label, "\(BundledPack.hummingbird.name), Seen, your photo, New patch")
         XCTAssertFalse(app.buttons["unnamed-row"].exists, "the photo has its name")
         XCTAssertFalse(app.buttons["dictation-allow"].exists)
         let stitching = app.buttons["stitch-in"]
@@ -40,7 +40,7 @@ final class LensCaptureUITests: XCTestCase {
         // The run ends: the patch's stitch-in, held for now, plays.
         app.buttons["Stop listening"].tap()
         XCTAssertTrue(stitching.waitForExistence(timeout: 15), "no stitch-in when the run ended; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(stitching.label, "Sewing your Anna's Hummingbird patch")
+        XCTAssertEqual(stitching.label, "Sewing your \(BundledPack.hummingbird.name) patch")
     }
 
     /// Issue #194: without the glasses' microphone permission the lens cannot ask for a name. The photo waits unnamed, and
@@ -51,12 +51,12 @@ final class LensCaptureUITests: XCTestCase {
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-mockPreviewPort", "\(Int.random(in: 20_000...60_000))",
             "-autoGlassesListening", try Self.clip(), "-autoGlassesCamera", "YES", "-autoLocation", "griffith", "-autoScreen", "glasses-run",
-            "-autoGlassesMicrophone", "denied", "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", "annas humming bird", "-reduceMotion", "YES",
+            "-autoGlassesMicrophone", "denied", "-autoLensCapture", "1", "-lensAsksName", "YES", "-autoLensSay", BundledPack.hummingbirdAsHeard, "-reduceMotion", "YES",
         ]
         app.launch()
 
         XCTAssertTrue(app.buttons["unnamed-row"].waitForExistence(timeout: 150), "no photo from the lens; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons["seen-row-Calypte anna"].exists, "nothing was heard: the lens never listened")
+        XCTAssertFalse(app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"].exists, "nothing was heard: the lens never listened")
         XCTAssertTrue(app.staticTexts["Say the bird's name on your glasses"].waitForExistence(timeout: 10), "no offer; screen: \(app.debugDescription.prefix(4000))")
         let allow = app.buttons["dictation-allow"]
         XCTAssertTrue(allow.exists, "screen: \(app.debugDescription.prefix(4000))")
@@ -85,7 +85,7 @@ final class LensCaptureUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Keep listening"].exists, "a photo is no add: no patch, no page")
 
         // A bird heard, so the run has a review; then Stop. The review lists the photo too, and says it is kept.
-        let heard = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS 'House Finch'")).firstMatch
+        let heard = app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS '\(BundledPack.finch.name)'")).firstMatch
         XCTAssertTrue(heard.waitForExistence(timeout: 120), "no bird heard; screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Stop listening"].tap()
         XCTAssertTrue(app.navigationBars["Your run"].waitForExistence(timeout: 30), "no review; screen: \(app.debugDescription.prefix(4000))")

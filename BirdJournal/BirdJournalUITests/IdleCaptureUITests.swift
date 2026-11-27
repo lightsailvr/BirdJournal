@@ -47,15 +47,15 @@ final class IdleCaptureUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Name this bird"].waitForExistence(timeout: 15), "no naming; screen: \(app.debugDescription.prefix(3000))")
     }
 
-    /// Searches for Anna's Hummingbird, chooses it and adds: the sheet closes on the new patch's page.
+    /// Searches for the hummingbird, chooses it and adds: the sheet closes on the new patch's page.
     @MainActor
     private func nameAsAnnas(_ app: XCUIApplication, expecting label: String) {
         let field = app.textFields["name-bird-search"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "no search field; screen: \(app.debugDescription.prefix(3000))")
         field.tap()
         // Return puts the keyboard away, so the results and the pinned add are all in reach.
-        field.typeText("calypte\n")
-        let anna = app.buttons["name-bird-Calypte anna"]
+        field.typeText("\(BundledPack.hummingbird.genus.lowercased())\n")
+        let anna = app.buttons["name-bird-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(anna.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(anna.label, label)
         anna.tap()
@@ -90,14 +90,14 @@ final class IdleCaptureUITests: XCTestCase {
         XCTAssertTrue(photo.label.contains("Near "), "the phone's place: \(photo.label)")
         XCTAssertTrue(app.staticTexts["Likely here now"].waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertFalse(app.staticTexts["Heard this run"].exists, "there is no run")
-        nameAsAnnas(app, expecting: "Anna's Hummingbird, Los Angeles, New to you here")
+        nameAsAnnas(app, expecting: "\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here")
 
         // The add: its new patch's page at once, then the idle tab with the acknowledgment and its Undo.
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].exists, "screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Done"].firstMatch.tap()
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForNonExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForNonExistence(timeout: 10))
         XCTAssertTrue(start.waitForExistence(timeout: 10), "not back on the idle tab; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Your first Anna's Hummingbird in Los Angeles"].waitForExistence(timeout: 10), "no acknowledgment on the idle tab; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(BundledPack.hummingbird.name) in \(BundledPack.setName)"].waitForExistence(timeout: 10), "no acknowledgment on the idle tab; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(app.buttons["Undo"].exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts["Seen this run"].exists, "there is no run to have seen it on")
         XCTAssertTrue(button.exists && start.isEnabled)
@@ -106,13 +106,13 @@ final class IdleCaptureUITests: XCTestCase {
         start.tap()
         XCTAssertTrue(app.buttons["Stop listening"].waitForExistence(timeout: 60), "the run didn't start; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts["Seen this run"].exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons["seen-row-Calypte anna"].exists)
+        XCTAssertFalse(app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"].exists)
         XCTAssertFalse(app.buttons["Undo"].exists, "the earlier add's acknowledgment went with Start")
         XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 10), "the run has its own")
 
         // And it is in the Collection.
         app.tabBars.buttons["Collection"].tap()
-        let patch = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Anna's Hummingbird")).firstMatch
+        let patch = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", BundledPack.hummingbird.name)).firstMatch
         XCTAssertTrue(patch.waitForExistence(timeout: 20), "the sighting isn't in the Collection; screen: \(app.debugDescription.prefix(4000))")
     }
 
@@ -165,10 +165,10 @@ final class IdleCaptureUITests: XCTestCase {
         XCTAssertTrue(photo.label.hasSuffix(", Place not recorded"), photo.label)
         XCTAssertFalse(app.staticTexts["Heard this run"].exists)
         // A sighting without a place lands in Uncharted, as it does today.
-        nameAsAnnas(app, expecting: "Anna's Hummingbird, Uncharted, New to you here")
+        nameAsAnnas(app, expecting: "\(BundledPack.hummingbird.name), Uncharted, New to you here")
         app.buttons["Done"].firstMatch.tap()
 
-        let said = app.staticTexts["Your first Anna's Hummingbird"]
+        let said = app.staticTexts["Your first \(BundledPack.hummingbird.name)"]
         XCTAssertTrue(said.waitForExistence(timeout: 10), "no acknowledgment on the idle tab; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(app.buttons["Start listening"].exists)
         let undo = app.buttons["Undo"]

@@ -1,6 +1,6 @@
 import XCTest
 
-/// Issues #55 and #134: the seeded House Finch's paper card carries its biology (in US units on the simulator's en_US
+/// Issues #55 and #134: the seeded finch's paper card carries its biology (in US units on the simulator's en_US
 /// locale, the wingspan predicted), and the Credits name the three datasets. Screenshots of both faces are kept with the
 /// result. The type line and the fuller natural history are on the bird's profile in the Atlas.
 final class CardStatsUITests: XCTestCase {

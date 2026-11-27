@@ -15,8 +15,8 @@ import UIKit
 @Suite("The Atlas as a book")
 @MainActor
 struct AtlasBookTests {
-    private static let goose = "Branta canadensis"
-    private static let setID = "us-ca-la"
+    private static let goose = BundledPack.goose.scientificName
+    private static let setID = BundledPack.id
 
     private func collection(with sightings: [Sighting], sets: [CardSet]) -> CardCollection {
         CardCollection(sightings: sightings, sets: sets)
@@ -51,7 +51,7 @@ struct AtlasBookTests {
         #expect(sqlite3_exec(connection, "DROP TABLE silhouette", nil, nil, nil) == SQLITE_OK)
         sqlite3_close(connection)
         let older = try SpeciesPack.open(directory: folder)
-        #expect(older.species.count == 160)
+        #expect(older.species.count == BundledPack.speciesCount)
         #expect(RowPictureSource.ofSetRow(scientificName: Self.goose, isFound: false, reference: nil, pack: older) == .silhouette(nil), "a pack built before silhouettes")
     }
 
@@ -148,11 +148,11 @@ struct AtlasBookTests {
 
     @Test("a record says how you met the bird, and changes with Heard and Seen")
     func how() {
-        let sighting = Sighting(speciesID: "\(Self.goose)_Canada Goose", confirmedAt: .now, soundConfidence: 0.8, source: .phone)
+        let sighting = Sighting(speciesID: BundledPack.goose.label, confirmedAt: .now, soundConfidence: 0.8, source: .phone)
         #expect(CardText.how(sighting) == "Heard with iPhone microphone")
         sighting.method = .seen
         #expect(CardText.how(sighting) == "Seen, and heard with iPhone microphone")
-        let glasses = Sighting(speciesID: "\(Self.goose)_Canada Goose", confirmedAt: .now, soundConfidence: 0.8, source: .glasses)
+        let glasses = Sighting(speciesID: BundledPack.goose.label, confirmedAt: .now, soundConfidence: 0.8, source: .glasses)
         #expect(CardText.how(glasses) == "Heard with Ray-Ban Display")
     }
 
@@ -166,7 +166,7 @@ struct AtlasBookTests {
         #expect(PhotoSlot.aspect(width: 0, height: 0) == PhotoSlot.standard)
     }
 
-    @Test("Los Angeles's first photos all fit their slot uncropped")
+    @Test("the bundled pack's first photos all fit their slot uncropped")
     func everyFirstPhotoFits() throws {
         let pack = try SpeciesPack.bundled()
         for species in pack.species {
