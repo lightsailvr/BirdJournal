@@ -33,7 +33,7 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertLessThan(lead.frame.minY, 200, "screen: \(app.debugDescription.prefix(3000))")
 
         // Three in a row, each opening its own bird.
-        for (scientific, title) in [("Melanerpes formicivorus", "Acorn Woodpecker"), ("Ardea alba", "Great Egret"), ("Sialia mexicana", "Western Bluebird")] {
+        for (scientific, title) in [(BundledPack.woodpecker.scientificName, BundledPack.woodpecker.name), (BundledPack.egret.scientificName, BundledPack.egret.name), (BundledPack.bluebird.scientificName, BundledPack.bluebird.name)] {
             let tile = app.buttons["compare-\(scientific)"]
             XCTAssertTrue(tile.waitForExistence(timeout: 5) && tile.isHittable, "\(scientific); screen: \(app.debugDescription.prefix(3000))")
             XCTAssertTrue(tile.label.contains("You: Not yet."), tile.label)
@@ -44,19 +44,19 @@ final class GuildDataUITests: XCTestCase {
         }
 
         // Near the edge of a column, a touch is still that tile's, on either side: a clipped picture next door doesn't take it.
-        for (offset, title) in [(CGVector(dx: 0.04, dy: 0.3), "Western Bluebird"), (CGVector(dx: 0.96, dy: 0.3), "Western Bluebird")] {
-            app.buttons["compare-Sialia mexicana"].coordinate(withNormalizedOffset: offset).tap()
+        for (offset, title) in [(CGVector(dx: 0.04, dy: 0.3), BundledPack.bluebird.name), (CGVector(dx: 0.96, dy: 0.3), BundledPack.bluebird.name)] {
+            app.buttons["compare-\(BundledPack.bluebird.scientificName)"].coordinate(withNormalizedOffset: offset).tap()
             XCTAssertTrue(app.staticTexts[title].waitForExistence(timeout: 8) && !app.staticTexts["Maya has these. Go find them."].exists, "screen: \(app.debugDescription.prefix(3000))")
             tapBack(app)
             XCTAssertTrue(app.navigationBars["You and Maya"].waitForExistence(timeout: 5))
         }
 
         // Heard or Seen stays, on the patch's caption and to VoiceOver.
-        XCTAssertTrue(app.buttons["compare-Melanerpes formicivorus"].label.contains("Maya: Heard."))
+        XCTAssertTrue(app.buttons["compare-\(BundledPack.woodpecker.scientificName)"].label.contains("Maya: Heard."))
         XCTAssertTrue(app.staticTexts["Heard by Maya"].exists)
 
         // Only yours opens your own patch.
-        let only = app.buttons["compare-Zenaida macroura"]
+        let only = app.buttons["compare-\(BundledPack.dove.scientificName)"]
         XCTAssertTrue(app.scrolledTo(only), "screen: \(app.debugDescription.prefix(3000))")
         let tally = element(app, "compareTally")
         XCTAssertTrue(app.scrolledTo(tally), "screen: \(app.debugDescription.prefix(3000))")
@@ -70,10 +70,10 @@ final class GuildDataUITests: XCTestCase {
     @MainActor
     func testAPatchWithoutItsPaintingIsStillATileThatOpens() {
         let app = launch(["-autoScreen", "compare", "-fakePatchArt", "missing"])
-        let tile = app.buttons["compare-Ardea alba"]
+        let tile = app.buttons["compare-\(BundledPack.egret.scientificName)"]
         XCTAssertTrue(tile.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         tile.tap()
-        XCTAssertTrue(app.staticTexts["Great Egret"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.egret.name].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
@@ -88,17 +88,17 @@ final class GuildDataUITests: XCTestCase {
         // The newest of the month, as the fixture has it.
         let patches = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'goal-patch-'"))
         XCTAssertGreaterThanOrEqual(patches.count, 6)
-        let phoebe = app.buttons["goal-patch-Sayornis nigricans"]
+        let phoebe = app.buttons["goal-patch-\(BundledPack.phoebe.scientificName)"]
         XCTAssertTrue(phoebe.isHittable, "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(phoebe.label, "Black Phoebe, Citrus edition patch")
+        XCTAssertEqual(phoebe.label, "\(BundledPack.phoebe.name), \(BundledPack.editionName) patch")
         phoebe.tap()
-        XCTAssertTrue(app.staticTexts["Black Phoebe"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.phoebe.name].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
         tapBack(app)
         // The next along opens its own bird, not its neighbour's.
-        let hummingbird = app.buttons["goal-patch-Calypte anna"]
+        let hummingbird = app.buttons["goal-patch-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(hummingbird.waitForExistence(timeout: 5) && hummingbird.isHittable, "screen: \(app.debugDescription.prefix(3000))")
         hummingbird.tap()
-        XCTAssertTrue(app.staticTexts["Anna's Hummingbird"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.hummingbird.name].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
         tapBack(app)
 
         let more = app.buttons["goal-patches-more"]
@@ -108,8 +108,8 @@ final class GuildDataUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["\(monthName()) goal"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
         let onTheBoard = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH 'goal-patch-'"))
         XCTAssertEqual(onTheBoard.count, 12, "every one of them")
-        app.buttons["goal-patch-Sayornis nigricans"].tap()
-        XCTAssertTrue(app.staticTexts["Black Phoebe"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        app.buttons["goal-patch-\(BundledPack.phoebe.scientificName)"].tap()
+        XCTAssertTrue(app.staticTexts[BundledPack.phoebe.name].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     private func monthName() -> String {
@@ -147,22 +147,22 @@ final class GuildDataUITests: XCTestCase {
         let app = launch(["-autoScreen", "set", "-autoScrollTo", "set-rows"])
         let duck = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Jo Park and Sam Okafor have this bird'")).firstMatch
         XCTAssertTrue(duck.waitForExistence(timeout: 20), "faces land as the friends are read; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(duck.label.contains("Muscovy Duck"), duck.label)
+        XCTAssertTrue(duck.label.contains(BundledPack.duck.name), duck.label)
 
-        // Jo has the Canada Goose, and so do you: no face.
-        let goose = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Canada Goose'")).firstMatch
+        // Jo has the goose, and so do you: no face.
+        let goose = app.buttons.matching(NSPredicate(format: "label CONTAINS '\(BundledPack.goose.name)'")).firstMatch
         XCTAssertTrue(goose.exists)
         XCTAssertFalse(goose.label.contains("Jo Park"), goose.label)
 
         // The row still opens the bird, faces and all.
         XCTAssertTrue(app.scrolledTo(duck))
         duck.tap()
-        XCTAssertTrue(app.staticTexts["Muscovy Duck"].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.duck.name].waitForExistence(timeout: 8), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     @MainActor
     func testAPaperCardNamesTheFriendsWhoHaveTheBird() {
-        let app = launch(["-autoScreen", "card-back", "-autoCardSpecies", "Sayornis nigricans"])
+        let app = launch(["-autoScreen", "card-back", "-autoCardSpecies", BundledPack.phoebe.scientificName])
         let friends = element(app, "card-friends")
         XCTAssertTrue(friends.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(friends.label.contains("Maya Ortiz"), friends.label)
@@ -193,13 +193,13 @@ final class GuildDataUITests: XCTestCase {
 
         app.tabBars.buttons["Atlas"].tap()
         // From a set's plate.
-        let plate = app.buttons["guide-set-us-ca-la"]
+        let plate = app.buttons["guide-set-\(BundledPack.id)"]
         XCTAssertTrue(plate.waitForExistence(timeout: 8) || app.scrolledTo(plate), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.scrolledTo(plate), "screen: \(app.debugDescription.prefix(3000))")
         plate.tap()
         let duck = app.buttons.matching(NSPredicate(format: "label CONTAINS 'Sam Okafor has this bird'")).firstMatch
         XCTAssertTrue(duck.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(duck.label.contains("Muscovy Duck"), duck.label)
+        XCTAssertTrue(duck.label.contains(BundledPack.duck.name), duck.label)
         XCTAssertFalse(duck.label.contains("Jo Park"), duck.label)
     }
 }

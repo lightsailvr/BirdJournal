@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Pack
 
 @Suite("PackIndex")
@@ -10,10 +11,10 @@ struct PackIndexTests {
         {
           "packs": [
             {
-              "id": "us-ca-la",
+              "id": "\(LosAngelesSet.id)",
               "name": "Los Angeles",
               "version": 3,
-              "url": "https://github.com/lightsailvr/BirdJournal/releases/download/pack-us-ca-la-3/us-ca-la.zip",
+              "url": "https://github.com/lightsailvr/BirdJournal/releases/download/pack-\(LosAngelesSet.id)-3/\(LosAngelesSet.id).zip",
               "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
               "byteCount": 12345678
             }
@@ -25,7 +26,7 @@ struct PackIndexTests {
 
         #expect(index.packs.count == 1)
         let pack = try #require(index.packs.first)
-        #expect(pack.id == "us-ca-la")
+        #expect(pack.id == LosAngelesSet.id)
         #expect(pack.name == "Los Angeles")
         #expect(pack.version == 3)
         #expect(pack.url.host() == "github.com")

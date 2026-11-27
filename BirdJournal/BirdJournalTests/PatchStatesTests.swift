@@ -13,8 +13,8 @@ struct PatchStatesTests {
 
     @Test("a painting on the phone is the patch, whatever its pack is doing")
     func painted() {
-        #expect(PatchArtState.of(art: Self.art, setID: "us-ca-la", transfer: nil) == .painted(Self.art))
-        #expect(PatchArtState.of(art: Self.art, setID: "us-ca-la", transfer: .downloading(received: 10)) == .painted(Self.art))
+        #expect(PatchArtState.of(art: Self.art, setID: LosAngelesSet.id, transfer: nil) == .painted(Self.art))
+        #expect(PatchArtState.of(art: Self.art, setID: LosAngelesSet.id, transfer: .downloading(received: 10)) == .painted(Self.art))
     }
 
     @Test("no painting while its edition's pack is on its way: being sewn", arguments: [PackLibrary.Status.downloading(received: 0), .installing])
@@ -41,7 +41,7 @@ struct PatchStatesTests {
         #expect(uncharted.isCanvas)
         #expect(uncharted.shape == .circle)
         #expect(uncharted.cord == Color(hex: 0x6E4B2E))
-        #expect(!PatchEdition.of(setID: "us-ca-la").isCanvas)
+        #expect(!PatchEdition.of(setID: BundledPack.id).isCanvas)
     }
 
     // MARK: - Words
@@ -64,7 +64,7 @@ struct PatchStatesTests {
     @Test("the paper card names Uncharted as the guide writes it; a set's edition stays its own")
     func cardEdition() {
         #expect(PatchText.cardEdition(.uncharted) == "Uncharted · outside every set")
-        #expect(PatchText.cardEdition(.numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 3, total: 160)) == "Citrus edition")
+        #expect(PatchText.cardEdition(.numbered(setID: LosAngelesSet.id, setName: "Los Angeles", edition: "Citrus edition", number: 3, total: 160)) == "Citrus edition")
     }
 
     @Test("a bird not yet found is numbered in every set that lists it, and in none that doesn't")

@@ -94,7 +94,8 @@ struct CardStatsTests {
 
     @Test(
         "the bundled pack's House Wren card back doesn't say brood parasite, and its cowbird's does",
-        .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= 9, "the bundled pack predates the nest fix")
+        .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= 9, "the bundled pack predates the nest fix"),
+        .tags(.losAngelesContent)
     )
     func bundledHouseWren() throws {
         let pack = try SpeciesPack.bundled()

@@ -15,23 +15,23 @@ import UniformTypeIdentifiers
 @MainActor
 struct ShareCardTests {
     static let sighting = SharePolicyTests.sighting
-    static let la = PatchEdition.of(setID: "us-ca-la")
+    static let la = PatchEdition.of(setID: BundledPack.id)
 
     static func facts(place: String? = "Los Angeles", hasPainting: Bool = true, credits: [String] = ["© A. Birder, some rights reserved (CC BY)"], lore: PackLore? = nil) -> PatchShareImage.Facts {
         PatchShareImage.Facts(
-            sighting: sighting, name: "Black Phoebe", placement: .numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 3, total: 160),
+            sighting: sighting, name: "Black Phoebe", placement: .numbered(setID: LosAngelesSet.id, setName: "Los Angeles", edition: "Citrus edition", number: 3, total: 160),
             place: place, lore: lore, hasPainting: hasPainting, photoCredits: credits
         )
     }
 
     static func bundledPatch() async throws -> (facts: PatchShareImage.Facts, loaded: PatchTextures.Loaded) {
         let pack = try SpeciesPack.bundled()
-        let species = try #require(pack.species(scientificName: "Haemorhous mexicanus"))
+        let species = try #require(pack.species(scientificName: BundledPack.finch.scientificName))
         let patch = try #require(species.patch)
         let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
         let loaded = try #require(await PatchTextures.load(art, size: .full))
         let facts = PatchShareImage.Facts(
-            sighting: sighting, name: species.commonName, placement: .numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 3, total: 160),
+            sighting: sighting, name: species.commonName, placement: .numbered(setID: BundledPack.id, setName: BundledPack.setName, edition: BundledPack.editionName, number: 3, total: BundledPack.speciesCount),
             place: "Pasadena", lore: species.lore, hasPainting: true, photoCredits: PatchShareImage.Facts.credits(of: patch, in: species)
         )
         return (facts, loaded)

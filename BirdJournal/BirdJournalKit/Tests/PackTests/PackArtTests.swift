@@ -4,7 +4,7 @@ import Testing
 @testable import Pack
 
 /// Pack art (issue #57): a schema-4 pack carries one reviewed painting per species (3:4 AVIF) with the photo it was
-/// painted from, and the bundled Los Angeles pack has one for every species but its listed gaps, inside the app's
+/// painted from, and the bundled pack has one for every species but its listed gaps, inside the app's
 /// 200 MB budget for the pack.
 @Suite("PackArt")
 @MainActor
@@ -50,7 +50,7 @@ struct PackArtTests {
         #expect(pack.species.allSatisfy { $0.packArt == nil })
     }
 
-    @Test("every Los Angeles species has its patch and layers on disk, painted from one of its own photos, or is a listed gap; no pack art ships beside them")
+    @Test("every species in the bundled pack has its patch and layers on disk, painted from one of its own photos, or is a listed gap; no pack art ships beside them")
     func bundledPatches() throws {
         let pack = try SpeciesPack.bundled()
         let gaps = try Self.patchGaps(in: pack)
@@ -75,7 +75,7 @@ struct PackArtTests {
         #expect(pack.species.filter { $0.patch != nil }.count + gaps.count == pack.species.count)
     }
 
-    @Test("the bundled pack, patches and all, stays inside the 200 MB budget")
+    @Test("the bundled pack, patches and all, stays inside the 200 MB budget", .tags(.losAngelesContent))
     func bundledSize() throws {
         let pack = try SpeciesPack.bundled()
         let bytes = try Self.bytes(in: pack.directory)

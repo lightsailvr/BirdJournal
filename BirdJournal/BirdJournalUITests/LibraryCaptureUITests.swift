@@ -14,12 +14,12 @@ final class LibraryCaptureUITests: XCTestCase {
         return clip
     }
 
-    /// A phone run in Griffith Park that has heard a House Finch, with nothing in the album, and the camera open over it.
+    /// A phone run in Griffith Park that has heard the finch, with nothing in the album, and the camera open over it.
     @MainActor
     private func launchCamera(_ extra: [String] = []) throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", "Haemorhous mexicanus_House Finch",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", BundledPack.finch.label,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
             "-fakeCamera", "ready", "-reduceMotion", "YES", "-acknowledgmentSeconds", "90",
         ] + extra
@@ -59,18 +59,18 @@ final class LibraryCaptureUITests: XCTestCase {
         XCTAssertTrue(photo.waitForExistence(timeout: 5))
         XCTAssertTrue(photo.label.hasPrefix("Your photo, Apr 18, 2026"), "the photo's date: \(photo.label)")
         XCTAssertTrue(photo.label.contains(", Near "), "the photo's place: \(photo.label)")
-        XCTAssertFalse(photo.label.contains("Griffith") || photo.label.contains("Los Angeles") || photo.label.contains("34.13"), "not the run's place: \(photo.label)")
+        XCTAssertFalse(photo.label.contains("Griffith") || photo.label.contains(BundledPack.setName) || photo.label.contains("34.13"), "not the run's place: \(photo.label)")
         XCTAssertTrue(app.staticTexts["The sighting takes this photo's own date and place."].exists, "screen: \(app.debugDescription.prefix(3000))")
 
-        // Its patch goes where the photo was taken: not in the run's Los Angeles.
+        // Its patch goes where the photo was taken: not in the run's set.
         let field = app.textFields["name-bird-search"]
         XCTAssertTrue(field.waitForExistence(timeout: 10))
         field.tap()
-        field.typeText("calypte\n")
-        let anna = app.buttons["name-bird-Calypte anna"]
+        field.typeText("\(BundledPack.hummingbird.genus.lowercased())\n")
+        let anna = app.buttons["name-bird-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(anna.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(anna.label.hasPrefix("Anna's Hummingbird, "), anna.label)
-        XCTAssertFalse(anna.label.contains("Los Angeles"), "placed in the run's set: \(anna.label)")
+        XCTAssertTrue(anna.label.hasPrefix("\(BundledPack.hummingbird.name), "), anna.label)
+        XCTAssertFalse(anna.label.contains(BundledPack.setName), "placed in the run's set: \(anna.label)")
         anna.tap()
         let add = app.buttons["name-bird-add"]
         XCTAssertEqual(add.label, "Add and sew patch")
@@ -79,14 +79,14 @@ final class LibraryCaptureUITests: XCTestCase {
         // An add like any other: the new patch's page, then the run, which lists nothing of it: the bird was seen in April.
         let keep = app.buttons["Keep listening"]
         XCTAssertTrue(keep.waitForExistence(timeout: 15), "no new patch; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].exists, "Los Angeles's edition, for a photo from San Diego")
+        XCTAssertFalse(app.staticTexts["New patch, \(BundledPack.editionName)"].exists, "\(BundledPack.setName)'s edition, for a photo from San Diego")
         keep.tap()
         XCTAssertTrue(app.buttons["capture-sighting"].waitForExistence(timeout: 10), "not back on the run; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons["seen-row-Calypte anna"].exists, "a photo from last spring listed as seen this run")
+        XCTAssertFalse(app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"].exists, "a photo from last spring listed as seen this run")
         XCTAssertFalse(app.staticTexts["Seen this run"].exists, "screen: \(app.debugDescription.prefix(4000))")
         // The sighting is in the Collection all the same.
         app.tabBars.buttons["Collection"].tap()
-        let sighting = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", "Anna's Hummingbird")).firstMatch
+        let sighting = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", BundledPack.hummingbird.name)).firstMatch
         XCTAssertTrue(sighting.waitForExistence(timeout: 30), "the sighting isn't in the Collection; screen: \(app.debugDescription.prefix(4000))")
     }
 

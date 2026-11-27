@@ -2,6 +2,7 @@ import Foundation
 import ImageIO
 import SQLite3
 import Testing
+import PackFixture
 @testable import Pack
 
 /// Set covers (issue #114): a pack carries its set's approved cover (16:9 AVIF) with its credit, the pack index carries
@@ -118,7 +119,7 @@ struct PackCoverTests {
 
     @Test("the eight approved covers ship with the app at full size, each with its credit")
     func shippedCovers() throws {
-        for id in ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"] {
+        for id in [LosAngelesSet.id, "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"] {
             guard case let .bundled(cover, url) = BundledCovers.shipped.cover(setID: id) else {
                 Issue.record("\(id) has no bundled cover")
                 continue

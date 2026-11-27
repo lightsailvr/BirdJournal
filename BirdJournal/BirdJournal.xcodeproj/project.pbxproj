@@ -109,6 +109,12 @@
 			path = Glance;
 			sourceTree = "<group>";
 		};
+		000000000000000000000015 /* Support */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			name = Support;
+			path = BirdJournalKit/Tests/Support;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -161,6 +167,7 @@
 				000000000000000000000012 /* BirdJournalUITests */,
 				000000000000000000000013 /* BirdJournalWidgets */,
 				000000000000000000000014 /* Glance */,
+				000000000000000000000015 /* Support */,
 				61CF3A9130698B9800A0B268 /* MyBirdJournal-Default.icon */,
 				61CF3AA63069D4D100A0B268 /* MyBirdJournal-HouseFinch.icon */,
 				61CF3AA73069D4D100A0B268 /* MyBirdJournal-ProthonotaryWarbler.icon */,
@@ -238,6 +245,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000011 /* BirdJournalTests */,
+				000000000000000000000015 /* Support */,
 			);
 			name = BirdJournalTests;
 			packageProductDependencies = (
@@ -267,6 +275,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				000000000000000000000012 /* BirdJournalUITests */,
+				000000000000000000000015 /* Support */,
 			);
 			name = BirdJournalUITests;
 			productName = BirdJournalUITests;

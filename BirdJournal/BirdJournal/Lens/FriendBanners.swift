@@ -36,14 +36,14 @@ extension FriendFind {
 
 #if DEBUG
 extension FriendBanners {
-    /// A notable push as the server sends it, Maya's Black Phoebe in Pasadena, for the Developer screen, the mock lens
+    /// A notable push as the server sends it, Maya's phoebe in Pasadena (`SampleBirds`), for the Developer screen, the mock lens
     /// (`-autoMockLensFriend YES`) and the hardware checks (DAT-SETUP-CHECKLIST.md). Each call is a new find, so a
     /// second one replaces the first rather than being taken for the same find delivered twice.
     static func samplePush() -> [AnyHashable: Any] {
         ["kind": "notable", "find": [
-            "owner": "developer", "owner_name": "Maya Ortiz", "sighting_id": UUID().uuidString, "species_id": "sayornis_nigricans",
-            "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe", "method": "heard", "place": "Pasadena",
-            "found_at": ISO8601DateFormatter().string(from: .now), "new_patch": true, "edition": "us-ca-la", "rarity": NSNull(), "circle_first": false,
+            "owner": "developer", "owner_name": "Maya Ortiz", "sighting_id": UUID().uuidString, "species_id": SampleBirds.phoebe.slug.replacing("-", with: "_"),
+            "scientific_name": SampleBirds.phoebe.scientificName, "common_name": SampleBirds.phoebe.commonName, "method": "heard", "place": "Pasadena",
+            "found_at": ISO8601DateFormatter().string(from: .now), "new_patch": true, "edition": SampleBirds.setID, "rarity": NSNull(), "circle_first": false,
             "circle_ids": [String](),
         ] as [String: Any]]
     }
@@ -56,7 +56,7 @@ extension FriendBanners {
             return "Notifications are off for Featherguild."
         }
         let content = UNMutableNotificationContent()
-        content.title = "Maya Ortiz found a Black Phoebe"
+        content.title = "Maya Ortiz found a \(SampleBirds.phoebe.commonName)"
         content.body = "A local test notification · Pasadena"
         content.sound = .default
         let request = UNNotificationRequest(

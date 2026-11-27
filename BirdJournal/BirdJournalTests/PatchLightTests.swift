@@ -208,14 +208,14 @@ struct PatchLightPixelTests {
     @Test("a blank being sewn fills in with the painting when it arrives")
     func beingSewnFillsIn() async throws {
         let pack = try SpeciesPack.bundled()
-        let patch = try #require(pack.species(scientificName: "Haemorhous mexicanus")?.patch)
+        let patch = try #require(pack.species(scientificName: BundledPack.finch.scientificName)?.patch)
         let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
         let arriving = Arriving()
 
         struct Slot: View {
             let arriving: Arriving
             var body: some View {
-                PatchView(state: arriving.art.map(PatchArtState.painted) ?? .beingSewn, edition: PatchEdition.of(setID: "us-ca-la"), size: .full, tag: "House Finch")
+                PatchView(state: arriving.art.map(PatchArtState.painted) ?? .beingSewn, edition: PatchEdition.of(setID: BundledPack.id), size: .full, tag: BundledPack.finch.name)
                     .frame(width: 300, height: 300)
                     .background(Color.black)
             }
@@ -242,7 +242,7 @@ struct PatchLightPixelTests {
     @Test("a painting that won't decode shows the same blank and paper tag as one that isn't there")
     func unreadablePaintingIsTagged() async throws {
         func render(_ art: PatchArt?) async throws -> [UInt8] {
-            let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: "us-ca-la"), size: .full, tag: "House Finch").frame(width: 300, height: 300).background(Color.black))
+            let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: BundledPack.id), size: .full, tag: BundledPack.finch.name).frame(width: 300, height: 300).background(Color.black))
             let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
             let window = try UIWindow(windowScene: #require(scene))
             window.frame = CGRect(x: 0, y: 0, width: 400, height: 400)
@@ -279,11 +279,11 @@ struct PatchLightPixelTests {
     @Test("a ten-degree tilt visibly changes the lit patch, whichever way, and a still phone changes nothing")
     func tenDegrees() async throws {
         let pack = try SpeciesPack.bundled()
-        let patch = try #require(pack.species(scientificName: "Haemorhous mexicanus")?.patch)
+        let patch = try #require(pack.species(scientificName: BundledPack.finch.scientificName)?.patch)
         let art = PatchArt(colour: pack.patchURL(for: patch), layers: pack.patchLayersURL(for: patch), ground: patch.ground)
         _ = await PatchTextures.load(art, size: .full)
 
-        let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: "us-ca-la"), size: .full).frame(width: 300, height: 300).background(Color.black))
+        let host = UIHostingController(rootView: PatchView(art: art, edition: PatchEdition.of(setID: BundledPack.id), size: .full).frame(width: 300, height: 300).background(Color.black))
         let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
         let window = try UIWindow(windowScene: #require(scene))
         window.frame = CGRect(x: 0, y: 0, width: 400, height: 400)

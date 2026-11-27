@@ -15,7 +15,8 @@ final class FieldGuideOfferUITests: XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "BirdJournalKit/Tests/PackTests/Fixtures/test-pack.zip")
         let sha256 = SHA256.hash(data: try Data(contentsOf: zip)).map { String(format: "%02x", $0) }.joined()
-        // The set as the fixture pack carries it (`packbuilder/tests/make_fixture_pack.py`): a square degree of sea off West Africa.
+        // The set as the fixture pack carries it (`packbuilder/tests/make_fixture_pack.py`): a square degree of sea off West Africa
+        // and the fixture's own two birds, which nothing here looks up.
         let set: [String: Any] = [
             "id": "test-pack", "name": "Test Pack", "edition": ["name": "Test edition", "theme": "a test card's light"], "taxonomy": "IOC World Bird List 15.1",
             "regions": [["name": "Testland", "source": "hand-drawn polygon", "polygons": [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]]]]]],

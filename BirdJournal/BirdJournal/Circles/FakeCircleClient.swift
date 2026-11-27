@@ -457,27 +457,15 @@ final class FakeCircleClient: CircleClient {
             if found[item.scientificName] == nil { found[item.scientificName] = item }
             if editions[item.scientificName] == nil { editions[item.scientificName] = item.edition }
         }
-        let early = Self.goalBirds
-            .filter { found[Sighting.scientificName(ofLabel: $0)] == nil }
+        let early = SampleBirds.goalBirds
+            .filter { found[$0.scientificName] == nil }
             .prefix(max(0, headStart))
-            .map { CircleGoal.Species(speciesID: $0, scientificName: Sighting.scientificName(ofLabel: $0), commonName: BirdComparison.commonName(ofLabel: $0), edition: "us-ca-la") }
+            .map { CircleGoal.Species(speciesID: $0.label, scientificName: $0.scientificName, commonName: $0.commonName, edition: SampleBirds.setID) }
         let feed = found.values.sorted { $0.foundAt < $1.foundAt }.map {
             CircleGoal.Species(speciesID: $0.speciesID, scientificName: $0.scientificName, commonName: $0.commonName, edition: editions[$0.scientificName])
         }
         return early + feed
     }
-
-    /// Los Angeles birds for a seeded goal's head start, the last of them newest as the reference's row runs.
-    private static let goalBirds = [
-        "Buteo jamaicensis_Red-tailed Hawk", "Anas platyrhynchos_Mallard", "Melozone crissalis_California Towhee", "Spinus psaltria_Lesser Goldfinch",
-        "Mimus polyglottos_Northern Mockingbird", "Branta canadensis_Canada Goose", "Ardea alba_Great Egret", "Callipepla californica_California Quail",
-        "Sialia mexicana_Western Bluebird", "Zenaida macroura_Mourning Dove", "Melospiza melodia_Song Sparrow", "Corvus brachyrhynchos_American Crow",
-        "Pipilo maculatus_Spotted Towhee", "Ardea herodias_Great Blue Heron", "Bubo virginianus_Great Horned Owl", "Cathartes aura_Turkey Vulture",
-        "Junco hyemalis_Dark-eyed Junco", "Passer domesticus_House Sparrow", "Larus occidentalis_Western Gull", "Columba livia_Rock Dove",
-        "Fulica americana_American Coot", "Corvus corax_Northern Raven", "Egretta thula_Snowy Egret", "Buteo lineatus_Red-shouldered Hawk",
-        "Astur cooperii_Cooper's Hawk", "Selasphorus sasin_Allen's Hummingbird", "Psaltriparus minimus_American Bushtit", "Tyrannus vociferans_Cassin's Kingbird",
-        "Icterus cucullatus_Hooded Oriole", "Dryobates nuttallii_Nuttall's Woodpecker",
-    ]
 
     private static func calendar(_ zone: TimeZone) -> Calendar {
         var calendar = Calendar(identifier: .gregorian)
@@ -566,30 +554,29 @@ final class FakeCircleClient: CircleClient {
     }
 
     /// Friends' finds in a seeded circle: a circle first, new patches, a repeat, a rare bird and one at a secret spot, and two
-    /// older ones of Maya's for Compare birds. Jo and Sam already find Maya's Black Phoebe lovely, and Maya is
+    /// older ones of Maya's for Compare birds. Jo and Sam already find Maya's phoebe lovely, and Maya is
     /// jealous of Sam's Gnatcatcher.
     private func seedFeed(circleID: String) {
-        let finds: [(String, String, String, SightingMethod, String?, RarityLabel?, Bool, String, Double)] = [
-            ("maya", "Maya Ortiz", "Sayornis nigricans_Black Phoebe", .seen, "Pasadena", .common, true, "sayornis-nigricans", 3),
-            ("jo", "Jo Park", "Calypte anna_Anna's Hummingbird", .heard, nil, .common, false, "calypte-anna", 2),
-            ("jo", "Jo Park", "Sayornis nigricans_Black Phoebe", .heard, "Pasadena", .common, false, "sayornis-nigricans", 1.5),
-            ("sam", "Sam Okafor", "Polioptila californica_California Gnatcatcher", .heard, FindPolicy.secretSpot, .rare, false, "polioptila-californica", 1),
-            ("maya", "Maya Ortiz", "Melanerpes formicivorus_Acorn Woodpecker", .heard, "Altadena", .common, true, "melanerpes-formicivorus", 5),
-            ("maya", "Maya Ortiz", "Haemorhous mexicanus_House Finch", .seen, "Pasadena", .common, true, "haemorhous-mexicanus", 6),
+        let finds: [(String, String, SampleBirds.Bird, SightingMethod, String?, RarityLabel?, Bool, Double)] = [
+            ("maya", "Maya Ortiz", SampleBirds.phoebe, .seen, "Pasadena", .common, true, 3),
+            ("jo", "Jo Park", SampleBirds.hummingbird, .heard, nil, .common, false, 2),
+            ("jo", "Jo Park", SampleBirds.phoebe, .heard, "Pasadena", .common, false, 1.5),
+            ("sam", "Sam Okafor", SampleBirds.rarity, .heard, FindPolicy.secretSpot, .rare, false, 1),
+            ("maya", "Maya Ortiz", SampleBirds.woodpecker, .heard, "Altadena", .common, true, 5),
+            ("maya", "Maya Ortiz", SampleBirds.finch, .seen, "Pasadena", .common, true, 6),
         ]
         reactions["maya/00000000-0000-4000-8000-000000000000"] = [.lovely: ["jo", "sam"], .together: ["jo"]]
         reactions["sam/00000000-0000-4000-8000-000000000003"] = [.jealous: ["maya"]]
-        for (index, (owner, name, label, method, place, rarity, newPatch, art, daysAgo)) in finds.enumerated() {
-            let common = String(label.split(separator: "_", maxSplits: 1).last ?? "")
+        for (index, (owner, name, bird, method, place, rarity, newPatch, daysAgo)) in finds.enumerated() {
             feedItems[circleID, default: []].append(FeedItem(
-                sightingID: "00000000-0000-4000-8000-00000000000\(index)", speciesID: label,
-                scientificName: Sighting.scientificName(ofLabel: label), commonName: common, method: method, place: place,
+                sightingID: "00000000-0000-4000-8000-00000000000\(index)", speciesID: bird.label,
+                scientificName: bird.scientificName, commonName: bird.commonName, method: method, place: place,
                 foundAt: now().addingTimeInterval(-daysAgo * 86_400), newPatch: newPatch, rarity: rarity,
-                art: FeedItem.Art(kind: "pack", key: "packs/us-ca-la/\(art).jpg", url: nil),
+                art: FeedItem.Art(kind: "pack", key: "packs/\(SampleBirds.setID)/\(bird.slug).jpg", url: nil),
                 owner: FeedItem.Owner(id: owner, displayName: name), circleFirst: false, isMine: false,
                 // Jo shared the hummingbird by hand (issue #66), with the caption and a note, and left the city out.
                 card: index == 1 ? FeedItem.SharedCard(note: "Buzzing the sage by the gate, twice.", caption: "A green spark hums where the sage is in flower.", photo: nil) : nil,
-                edition: "us-ca-la"
+                edition: SampleBirds.setID
             ))
         }
     }
@@ -607,8 +594,8 @@ final class FakeCircleClient: CircleClient {
         guard let circle = order.first(where: { circlesByID[$0]?.members.contains { $0.id == Self.me } == true }) else { return }
         for index in 0..<count {
             add(seededFind(
-                sighting: "late-\(index)", owner: ("maya", "Maya Ortiz"), label: "Sayornis nigricans_Black Phoebe", method: .seen, place: "Pasadena",
-                rarity: .common, newPatch: true, edition: "us-ca-la", daysAgo: Double(index) / 86_400
+                sighting: "late-\(index)", owner: ("maya", "Maya Ortiz"), label: SampleBirds.phoebe.label, method: .seen, place: "Pasadena",
+                rarity: .common, newPatch: true, edition: SampleBirds.setID, daysAgo: Double(index) / 86_400
             ), to: circle)
         }
     }
@@ -649,13 +636,13 @@ final class FakeCircleClient: CircleClient {
             feedItems[family, default: []].append(hummingbird)
         }
         let finds: [(String, String, String, SightingMethod, Bool, String, Double)] = [
-            ("10", "Haemorhous mexicanus_House Finch", "Altadena", .heard, false, "us-ca-la", 0.1),
-            ("11", "Zenaida macroura_Mourning Dove", "Altadena", .seen, false, "us-ca-la", 0.2),
-            ("12", "Haemorhous mexicanus_House Finch", "Altadena", .seen, false, "us-ca-la", 0.3),
-            ("13", "Sayornis nigricans_Black Phoebe", "Ocean Beach", .seen, true, "us-ca-sd", 2.5),
+            ("10", SampleBirds.finch.label, "Altadena", .heard, false, SampleBirds.setID, 0.1),
+            ("11", SampleBirds.dove.label, "Altadena", .seen, false, SampleBirds.setID, 0.2),
+            ("12", SampleBirds.finch.label, "Altadena", .seen, false, SampleBirds.setID, 0.3),
+            ("13", SampleBirds.phoebe.label, "Ocean Beach", .seen, true, "us-ca-sd", 2.5),
             ("14", "Puffinus opisthomelas_Black-vented Shearwater", "Ocean Beach", .seen, true, "us-ca-sd", 2.6),
-            ("15", "Haemorhous mexicanus_House Finch", "Altadena", .seen, true, "us-ca-la", 9),
-            ("16", "Zenaida macroura_Mourning Dove", "Altadena", .seen, true, "us-ca-la", 10),
+            ("15", SampleBirds.finch.label, "Altadena", .seen, true, SampleBirds.setID, 9),
+            ("16", SampleBirds.dove.label, "Altadena", .seen, true, SampleBirds.setID, 10),
         ]
         for (suffix, label, place, method, newPatch, edition, daysAgo) in finds {
             feedItems[family, default: []].append(seededFind(
@@ -672,29 +659,29 @@ final class FakeCircleClient: CircleClient {
         let maya = "00000000-0000-4000-8000-000000000020"
         let jo = "00000000-0000-4000-8000-000000000021"
         feedItems[sunday] = [
-            seededFind(sighting: maya, owner: ("maya", "Maya Ortiz"), label: "Sayornis nigricans_Black Phoebe", method: .seen, place: "Pasadena", rarity: .common, newPatch: true, edition: "us-ca-la", daysAgo: 3),
-            seededFind(sighting: jo, owner: ("jo", "Jo Park"), label: "Calypte anna_Anna's Hummingbird", method: .heard, place: "Altadena", rarity: .common, newPatch: true, edition: "us-ca-la", daysAgo: 4),
+            seededFind(sighting: maya, owner: ("maya", "Maya Ortiz"), label: SampleBirds.phoebe.label, method: .seen, place: "Pasadena", rarity: .common, newPatch: true, edition: SampleBirds.setID, daysAgo: 3),
+            seededFind(sighting: jo, owner: ("jo", "Jo Park"), label: SampleBirds.hummingbird.label, method: .heard, place: "Altadena", rarity: .common, newPatch: true, edition: SampleBirds.setID, daysAgo: 4),
             // Older, so Jo's hummingbird isn't the Guild's first.
-            seededFind(sighting: "00000000-0000-4000-8000-000000000022", owner: ("sam", "Sam Okafor"), label: "Calypte anna_Anna's Hummingbird", method: .seen, place: "Pasadena", rarity: .common, newPatch: true, edition: "us-ca-la", daysAgo: 9),
+            seededFind(sighting: "00000000-0000-4000-8000-000000000022", owner: ("sam", "Sam Okafor"), label: SampleBirds.hummingbird.label, method: .seen, place: "Pasadena", rarity: .common, newPatch: true, edition: SampleBirds.setID, daysAgo: 9),
         ]
         reactions = ["maya/\(maya)": [.lovely: ["jo", Self.me]], "jo/\(jo)": [.jealous: ["maya"]]]
         if var goals = storedGoals[sunday], !goals.isEmpty {
             goals[0].headStart = 12 - species(in: sunday, from: goals[0].goal.startsAt, to: goals[0].goal.endsAt)
             storedGoals[sunday] = goals
         }
-        // Compare as the reference draws it, and friends' faces near the top of Los Angeles.
+        // Compare as the reference draws it, and friends' faces near the top of the bundled pack's set.
         moreCompared = [
             "maya": [
-                compared("Melanerpes formicivorus_Acorn Woodpecker", .heard), compared("Sialia mexicana_Western Bluebird", .seen),
-                compared("Ardea alba_Great Egret", .seen), compared("Haemorhous mexicanus_House Finch", .seen),
+                compared(SampleBirds.woodpecker, .heard), compared(SampleBirds.bluebird, .seen),
+                compared(SampleBirds.egret, .seen), compared(SampleBirds.finch, .seen),
             ],
-            "jo": [compared("Branta canadensis_Canada Goose", .seen), compared("Alopochen aegyptiaca_Egyptian Goose", .seen), compared("Cairina moschata_Muscovy Duck", .heard)],
-            "sam": [compared("Cairina moschata_Muscovy Duck", .seen)],
+            "jo": [compared(SampleBirds.goose, .seen), compared(SampleBirds.friendsOnly[0], .seen), compared(SampleBirds.friendsOnly[1], .heard)],
+            "sam": [compared(SampleBirds.friendsOnly[1], .seen)],
         ]
     }
 
-    private func compared(_ label: String, _ method: SightingMethod) -> FriendBirds.Species {
-        .init(speciesID: label, scientificName: Sighting.scientificName(ofLabel: label), commonName: BirdComparison.commonName(ofLabel: label), method: method, editions: ["us-ca-la"])
+    private func compared(_ bird: SampleBirds.Bird, _ method: SightingMethod) -> FriendBirds.Species {
+        .init(speciesID: bird.label, scientificName: bird.scientificName, commonName: bird.commonName, method: method, editions: [SampleBirds.setID])
     }
 
     /// Jo's hummingbird (issue #66), the one shared by hand.

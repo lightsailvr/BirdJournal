@@ -34,10 +34,10 @@ final class FeelCaptureUITests: XCTestCase {
         XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Uncharted'")).firstMatch.waitForExistence(timeout: 5))
         Thread.sleep(forTimeInterval: 1)
         try shot("menu", app)
-        app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Los Angeles'")).firstMatch.tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.setName)'")).firstMatch.tap()
         Thread.sleep(forTimeInterval: 1)
 
-        let finch = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH 'House Finch'")).firstMatch
+        let finch = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH '\(BundledPack.finch.name)'")).firstMatch
         XCTAssertTrue(finch.waitForExistence(timeout: 5))
         finch.press(forDuration: 1.2)
         XCTAssertTrue(app.buttons["Turn over"].waitForExistence(timeout: 5))
@@ -94,7 +94,7 @@ final class FeelCaptureUITests: XCTestCase {
     /// For a recording: the tile on the map sheet's own stack.
     @MainActor
     func testRecordInASheet() throws {
-        let app = launch(["-seedJournal", "YES", "-autoScreen", "map", "-autoCardSpecies", "Sayornis nigricans", "-autoMapSpeciesPatches", "YES"])
+        let app = launch(["-seedJournal", "YES", "-autoScreen", "map", "-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoMapSpeciesPatches", "YES"])
         let tile = app.buttons["board-patch"].firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 20))
         Thread.sleep(forTimeInterval: 3)
@@ -109,7 +109,7 @@ final class FeelCaptureUITests: XCTestCase {
     @MainActor
     func testTheLift() throws {
         let app = launch(["-seedJournal", "YES", "-autoScreen", "cards"])
-        let phoebe = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH 'Black Phoebe'")).firstMatch
+        let phoebe = app.buttons.matching(NSPredicate(format: "identifier == 'board-patch' AND label BEGINSWITH '\(BundledPack.phoebe.name)'")).firstMatch
         XCTAssertTrue(phoebe.waitForExistence(timeout: 20))
         Thread.sleep(forTimeInterval: 3)
         phoebe.tap()
@@ -138,19 +138,19 @@ final class FeelCaptureUITests: XCTestCase {
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appending(path: "fixtures/clips/birdnet-example-soundscape.wav").path(percentEncoded: false)
         let app = launch(["-reduceMotion", "YES", "-autoPhoneListening", clip, "-autoLocation", "griffith", "-autoScreen", "listening"])
-        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch, '")).firstMatch
+        let review = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name), '")).firstMatch
         let add = app.buttons["Add and sew patch"]
         for _ in 0..<5 {
             XCTAssertTrue(review.waitForExistence(timeout: 90))
             review.tap()
             XCTAssertTrue(app.buttons["Close"].waitForExistence(timeout: 10))
-            if app.staticTexts["House Finch"].exists, add.waitForExistence(timeout: 10) {
+            if app.staticTexts[BundledPack.finch.name].exists, add.waitForExistence(timeout: 10) {
                 add.tap()
                 break
             }
             app.buttons["Close"].tap()
         }
-        XCTAssertTrue(app.buttons["Undo adding House Finch"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.buttons["Undo adding \(BundledPack.finch.name)"].waitForExistence(timeout: 15))
         Thread.sleep(forTimeInterval: 1)
         try shot("reveal-undo", app)
     }
