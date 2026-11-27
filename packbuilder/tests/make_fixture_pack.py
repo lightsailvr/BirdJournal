@@ -22,9 +22,10 @@ landscape of bands); the Los Angeles form, like every pack built before covers, 
 
 The third form (issue #215) is a stand-in for the North America pack, for the tests that need it on a phone as a
 download beside the bundled pack before the real one exists: the committed set (`packs/north-america/set.json`: its
-300 birds in order, its boundary, the Continental edition) with two of its birds, the American Robin and the American
-Crow, each with drawn photos and an approved patch that is a drawing too (`stand_in_patch`: the edition's wide rectangle
-in its cord and twill), never one of the pack's paintings, which only the maintainer's review lets into a pack.
+300 birds in order, its boundary, the Continental edition) with two of its birds, the Red-tailed Hawk and the Mallard
+(both also in the Los Angeles set, so a test can find one bird in either set's place: the Swift tests' `BundledPack.hawk`
+and `.mallard`), each with drawn photos and an approved patch that is a drawing too (`stand_in_patch`: the edition's wide
+rectangle in its cord and twill), never one of the pack's paintings, which only the maintainer's review lets into a pack.
 """
 
 from __future__ import annotations
@@ -60,7 +61,7 @@ CONTINENTAL_CORD, CONTINENTAL_TWILL = (201, 143, 42), (191, 179, 196)
 def stand_in_definition(version: int) -> PackDefinition:
     """The North America definition's own fields with two of its birds."""
     whole = PackDefinition.load(REPO_PACKS / NORTH_AMERICA / "pack.json")
-    return whole.only(["turdus-migratorius", "corvus-brachyrhynchos"])
+    return whole.only(["buteo-jamaicensis", "anas-platyrhynchos"])
 
 
 def stand_in_patch(colours: tuple[tuple[int, int, int], tuple[int, int, int]]) -> Image.Image:
@@ -94,12 +95,12 @@ def stand_in_main(target: Path, version: int) -> None:
     card_set = json.loads((REPO_PACKS / NORTH_AMERICA / "set.json").read_text())
     work = Path(tempfile.mkdtemp(prefix="fixture-pack-"))
     try:
-        robin, crow = pack.species
-        described = Description(summary="A stand-in for the North America pack's robin.", field_marks="Brick-red breast, grey back.", size="25 cm", habitat="lawns, woods",
-                                source="https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1")
-        results = [result_for(robin, [215001, 215002, 215003], work, description=described), result_for(crow, [215011, 215012, 215013], work)]
+        hawk, mallard = pack.species
+        described = Description(summary="A stand-in for the North America pack's hawk.", field_marks="Brown above, pale below, a brick-red tail.", size="50 cm", habitat="open country, woods",
+                                source="https://en.wikipedia.org/w/index.php?title=Red-tailed_hawk&oldid=1")
+        results = [result_for(hawk, [215001, 215002, 215003], work, description=described), result_for(mallard, [215011, 215012, 215013], work)]
         patches = {}
-        for result, colours in ((results[0], ((70, 70, 72), (186, 84, 40))), (results[1], ((16, 16, 18), (24, 24, 28)))):
+        for result, colours in ((results[0], ((120, 84, 56), (176, 84, 44))), (results[1], ((30, 104, 62), (150, 150, 150)))):
             result.sounds = SoundResult()
             file = work / f"{result.entry.id}.png"
             stand_in_patch(colours).save(file)

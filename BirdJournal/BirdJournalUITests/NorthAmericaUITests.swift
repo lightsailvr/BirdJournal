@@ -1,15 +1,17 @@
 import CryptoKit
 import XCTest
 
-/// Issue #215 (of #206): real taps with the North America pack on the phone as a download beside the bundled Los Angeles
-/// pack. A bird found in Chicago sews a Continental patch, with its stitch-in, its collector number and "in North America";
-/// the same bird found in Griffith Park, which both sets list, still sews its Citrus patch.
+/// Issue #215 (of #206): real taps with the North America pack on the phone as a download beside the bundled pack, a
+/// regional one. A bird found in Chicago sews a Continental patch, with its stitch-in, its collector number and "in North
+/// America"; the same bird found in the bundled set's own place, which both sets list, still sews that set's patch.
 ///
 /// The pack is a stand-in (`north-america-stand-in.zip` among the Pack tests' fixtures: the committed set with two of its
 /// birds and drawn patches), listed in an index this test writes and downloaded through the app's own download path into a
 /// fresh pack storage, so nothing is left on the simulator. The pack's own paintings wait for the maintainer's review.
 final class NorthAmericaUITests: XCTestCase {
-    private static let robin = "American Robin"
+    /// A bird both sets list, which the stand-in pack carries, and its collector number among North America's 300.
+    private static let hawk = BundledPack.hawk
+    private static let hawkInNorthAmerica = "138"
 
     /// An index that lists the stand-in pack by its zip on this Mac's disk, in the runner's temporary folder.
     private static func index() throws -> URL {
@@ -42,7 +44,7 @@ final class NorthAmericaUITests: XCTestCase {
         let downloaded = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'North America' AND label CONTAINS '2 birds'")).firstMatch
         XCTAssertTrue(downloaded.waitForExistence(timeout: 90), "the stand-in pack never arrived; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(downloaded.label.contains("Continental edition"), downloaded.label)
-        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Los Angeles' AND label CONTAINS 'included with the app'")).firstMatch.exists, "beside the bundled pack; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'included with the app'", BundledPack.setName)).firstMatch.exists, "beside the bundled pack; screen: \(app.debugDescription.prefix(4000))")
         app.tabBars.buttons["Listen"].tap()
         return app
     }
@@ -52,10 +54,9 @@ final class NorthAmericaUITests: XCTestCase {
         app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", label)).firstMatch
     }
 
-    /// "Capture a sighting" on the idle tab, the stand-in camera's photo, then the robin by name: its row is returned,
-    /// chosen, with the add in reach.
+    /// "Capture a sighting" on the idle tab, the stand-in camera's photo, then the hawk by name: its row is returned.
     @MainActor
-    private func captureAndFindTheRobin(_ app: XCUIApplication) -> XCUIElement {
+    private func captureAndFindTheHawk(_ app: XCUIApplication) -> XCUIElement {
         let capture = app.buttons["capture-sighting"]
         XCTAssertTrue(capture.waitForExistence(timeout: 60), "no Capture a sighting; screen: \(app.debugDescription.prefix(3000))")
         capture.tap()
@@ -67,8 +68,8 @@ final class NorthAmericaUITests: XCTestCase {
         let field = app.textFields["name-bird-search"]
         XCTAssertTrue(field.waitForExistence(timeout: 10), "no search field; screen: \(app.debugDescription.prefix(3000))")
         field.tap()
-        field.typeText("turdus migratorius\n")
-        let row = app.buttons["name-bird-Turdus migratorius"]
+        field.typeText("\(Self.hawk.scientificName.lowercased())\n")
+        let row = app.buttons["name-bird-\(Self.hawk.scientificName)"]
         XCTAssertTrue(row.waitForExistence(timeout: 30), "screen: \(app.debugDescription.prefix(3000))")
         return row
     }
@@ -82,7 +83,7 @@ final class NorthAmericaUITests: XCTestCase {
         add.tap()
         let stitching = app.buttons["stitch-in"]
         XCTAssertTrue(stitching.waitForExistence(timeout: 15), "no stitch-in; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(stitching.label, "Sewing your \(Self.robin) patch")
+        XCTAssertEqual(stitching.label, "Sewing your \(Self.hawk.name) patch")
         stitching.tap()
         XCTAssertTrue(app.buttons["Share this patch"].waitForExistence(timeout: 15), "no new patch's page; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists, "the stitch-in is over")
@@ -91,45 +92,45 @@ final class NorthAmericaUITests: XCTestCase {
     @MainActor
     func testABirdFoundInChicagoSewsAContinentalPatchWithItsCeremonyNumberAndWords() throws {
         let app = try launchWithNorthAmericaDownloaded(location: "chicago")
-        let row = captureAndFindTheRobin(app)
-        XCTAssertEqual(row.label, "\(Self.robin), North America, New to you here")
+        let row = captureAndFindTheHawk(app)
+        XCTAssertEqual(row.label, "\(Self.hawk.name), North America, New to you here")
         addAndSew(app, row)
 
         // The new patch's page: the edition and the set it is the first of.
         XCTAssertTrue(app.staticTexts["New patch, Continental edition"].exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Your first \(Self.robin) in North America"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.hawk.name) in North America"].exists, "screen: \(app.debugDescription.prefix(4000))")
         app.buttons["Done"].firstMatch.tap()
         XCTAssertTrue(app.staticTexts["New patch, Continental edition"].waitForNonExistence(timeout: 10))
-        XCTAssertTrue(app.staticTexts["Your first \(Self.robin) in North America"].waitForExistence(timeout: 10), "no acknowledgment on the idle tab; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.hawk.name) in North America"].waitForExistence(timeout: 10), "no acknowledgment on the idle tab; screen: \(app.debugDescription.prefix(4000))")
 
         // On its board it is a Continental patch, and its page and paper card carry its number among the set's 300.
         app.tabBars.buttons["Collection"].tap()
-        let patch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.robin), Continental edition patch, seen once")).firstMatch
+        let patch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.hawk.name), Continental edition patch, seen once")).firstMatch
         XCTAssertTrue(patch.waitForExistence(timeout: 20), "no Continental patch on the board; screen: \(app.debugDescription.prefix(4000))")
         patch.tap()
         let flip = app.buttons["card-flip"]
         XCTAssertTrue(flip.waitForExistence(timeout: 10), "the patch didn't open; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(element(app, labelled: "Continental edition, No. 226").waitForExistence(timeout: 10), "no collector number under the patch; screen: \(app.debugDescription.prefix(5000))")
+        XCTAssertTrue(element(app, labelled: "Continental edition, No. \(Self.hawkInNorthAmerica)").waitForExistence(timeout: 10), "no collector number under the patch; screen: \(app.debugDescription.prefix(5000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "reopening a patch never stitches it again")
         flip.tap()
-        XCTAssertTrue(element(app, labelled: "Continental edition, number 226 of 300 in North America").waitForExistence(timeout: 10), "the paper card's heading; screen: \(app.debugDescription.prefix(5000))")
+        XCTAssertTrue(element(app, labelled: "Continental edition, number \(Self.hawkInNorthAmerica) of 300 in North America").waitForExistence(timeout: 10), "the paper card's heading; screen: \(app.debugDescription.prefix(5000))")
     }
 
     @MainActor
-    func testABirdBothSetsListFoundInLosAngelesStillSewsItsCitrusPatch() throws {
+    func testABirdBothSetsListFoundInTheBundledSetsPlaceStillSewsThatSetsPatch() throws {
         let app = try launchWithNorthAmericaDownloaded(location: "griffith")
-        let row = captureAndFindTheRobin(app)
-        XCTAssertEqual(row.label, "\(Self.robin), Los Angeles, New to you here", "the smaller set that lists it takes it")
+        let row = captureAndFindTheHawk(app)
+        XCTAssertEqual(row.label, "\(Self.hawk.name), \(BundledPack.setName), New to you here", "the smaller set that lists it takes it")
         addAndSew(app, row)
 
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].exists, "screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.staticTexts["Your first \(Self.robin) in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.hawk.name) in \(BundledPack.setName)"].exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts["New patch, Continental edition"].exists)
         app.buttons["Done"].firstMatch.tap()
 
         app.tabBars.buttons["Collection"].tap()
-        let patch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.robin), Citrus edition patch, seen once")).firstMatch
-        XCTAssertTrue(patch.waitForExistence(timeout: 20), "no Citrus patch on the board; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.robin), Continental edition patch")).firstMatch.exists, "one sighting, one patch")
+        let patch = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.hawk.name), \(BundledPack.editionName) patch, seen once")).firstMatch
+        XCTAssertTrue(patch.waitForExistence(timeout: 20), "no patch of the bundled set's edition on the board; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(Self.hawk.name), Continental edition patch")).firstMatch.exists, "one sighting, one patch")
     }
 }
