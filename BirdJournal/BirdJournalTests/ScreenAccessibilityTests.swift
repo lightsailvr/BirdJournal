@@ -605,7 +605,8 @@ struct ScreenAccessibilityTests {
     }
 
     // A set the phone knows from the index and whose pack it doesn't have: Coastal (a stand-in for San Diego, around the
-    // seeded gallery's Balboa Park), with its download held open.
+    // seeded gallery's Balboa Park), with its download held open. It takes no sighting until its pack is on the phone
+    // (issue #207), so the gallery's six sightings there are the bird's Uncharted patch.
 
     private static let sanDiego = try! PackSet.decode(from: Data("""
     {"id": "us-ca-sd", "name": "San Diego", "edition": {"name": "Coastal edition", "theme": "Sea cliffs"}, "taxonomy": "IOC",
@@ -633,46 +634,51 @@ struct ScreenAccessibilityTests {
         return harness
     }
 
-    @Test("A patch whose pack isn't on the phone is a tagged blank; while the pack downloads it's being sewn, in words, and afterwards a blank again")
-    func beingSewnOnTheRealPath() async throws {
+    @Test("A bird found in a set whose pack isn't on the phone is its Uncharted patch, the generic one, with nothing on its way while that pack downloads")
+    func aSetNotOnThePhoneTakesNoSighting() async throws {
         let harness = try Self.sanDiegoHarness()
         let state = CollectionState()
-        state.board = .set(id: "us-ca-sd")
-        let finch = "House Finch, Coastal edition patch, seen 6 times, sewn "
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged)
+        state.board = .uncharted
+        // The six seeded in San Diego: only a set whose pack is on the phone takes a sighting (issue #207).
+        let finch = "House Finch, Uncharted patch, seen 6 times, sewn "
+        #expect(harness.library.set(id: "us-ca-sd") != nil && harness.library.pack(id: "us-ca-sd") == nil)
+        #expect(harness.collectionStore.collection.patch(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == nil)
         let waiting = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) } }
         Self.expectClean(waiting, screen: "Board, pack not on the phone")
         #expect(waiting.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(waiting)")
+        #expect(!waiting.contains { $0.contains("Coastal edition patch") }, "\(waiting)")
 
         harness.library.startDownload(Self.sanDiegoPack)
         for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .beingSewn {
             try await Task.sleep(for: .milliseconds(50))
         }
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .beingSewn)
-        let sewing = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") } }
-        Self.expectClean(sewing, screen: "Board, pack on its way")
-        #expect(sewing.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(sewing)")
-        let key = CardCollection.Patch.Key(speciesID: "Haemorhous mexicanus_House Finch", setID: "us-ca-sd")
+        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .beingSewn, "the download is in flight")
+        // Nothing is on its way for an Uncharted patch: the sightings move to the set when its pack is on the phone.
+        let downloading = try await Self.walk(JournalView(state: state), harness: harness) { $0.contains { $0.hasPrefix(finch) } }
+        Self.expectClean(downloading, screen: "Board, pack on its way")
+        #expect(downloading.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(downloading)")
+        let key = CardCollection.Patch.Key(speciesID: "Haemorhous mexicanus_House Finch", setID: nil)
         let page = try await Self.walk(PatchDetailView(key: key), harness: harness) { $0.contains("Turn over") }
         Self.expectClean(page, screen: "Page, pack on its way")
-        #expect(page.contains { $0.hasPrefix(finch) && $0.hasSuffix(", art on its way") }, "\(page)")
+        #expect(page.contains { $0.hasPrefix(finch) && !$0.hasSuffix(", art on its way") }, "\(page)")
 
         harness.library.cancelDownload(id: "us-ca-sd")
         for _ in 0..<40 where harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") != .tagged {
             try await Task.sleep(for: .milliseconds(50))
         }
-        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged, "a cancelled download leaves the tagged blank")
+        #expect(harness.library.patchArtState(scientificName: "Haemorhous mexicanus", setID: "us-ca-sd") == .tagged, "a cancelled download leaves nothing on its way")
     }
 
-    @Test("A bird's patches across places: each reads the bird's name, the blank of a set whose pack isn't on the phone too", arguments: sizes)
+    @Test("A bird's patches across places: each reads the bird's name, the Uncharted one of a set whose pack isn't on the phone too", arguments: sizes)
     func speciesPatches(typeSize: DynamicTypeSize) async throws {
         let harness = try Self.sanDiegoHarness()
         let labels = try await Self.walk(SpeciesPatchesView(scientificName: "Haemorhous mexicanus", commonName: "House Finch"), harness: harness, typeSize: typeSize) { labels in
-            labels.contains { $0.hasPrefix("House Finch, Coastal edition patch") } && labels.contains("Open in Atlas")
+            labels.contains { $0.hasPrefix("House Finch, Uncharted patch") } && labels.contains("Open in Atlas")
         }
         Self.expectClean(labels, screen: "Species patches")
         #expect(labels.contains { $0.hasPrefix("House Finch, Citrus edition patch, seen 9 times, sewn ") }, "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("House Finch, Coastal edition patch, seen 6 times, sewn ") }, "the blank: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("House Finch, Uncharted patch, seen 6 times, sewn ") }, "the Uncharted patch: \(labels)")
+        #expect(!labels.contains { $0.contains("Coastal edition patch") }, "\(labels)")
         #expect(labels.contains("Open in Atlas"), "\(labels)")
     }
 

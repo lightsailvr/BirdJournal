@@ -152,7 +152,7 @@ How unusual a species is at a sighting's place and week, saved at the add as a l
 _Avoid_: score, frequency, abundance
 
 **Set**:
-A place's collection of birds: the species of one pack, in taxonomic order, which a birder collects toward. Its progress counts the patches sewn in it. Sightings outside every set belong to the Uncharted set.
+A place's collection of birds: the species of one pack, in taxonomic order, which a birder collects toward. Its progress counts the patches sewn in it. A set takes sightings only while its pack is on the phone, bundled or downloaded (#207): a sighting goes to the set on the phone whose containing part is smallest among those listing the bird, and a sighting no set on the phone takes belongs to the Uncharted set. Downloading a field guide moves the sightings it now takes into its set; deleting it moves them to another set on the phone that takes them, or to Uncharted. The phone knows more sets than it has packs for (from the pack index and the definitions shipped with the app): the Atlas lists them all, and a place is in its set, whether or not the pack is on the phone.
 _Avoid_: region, board (in copy), collection (for a set), checklist
 
 **Collector number**:

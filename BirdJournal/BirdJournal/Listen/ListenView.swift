@@ -166,7 +166,7 @@ private struct ReadyToListenView: View {
         .sheet(isPresented: $choosingSource) {
             AudioSourceSheet()
         }
-        .task(id: PlaceRead(sets: collection.sets.map(\.id), newest: LocalSet.newestSetID(in: collection), inFront: scenePhase != .background)) {
+        .task(id: PlaceRead(sets: library.sets.map(\.id), newest: LocalSet.newestSetID(in: collection), inFront: scenePhase != .background)) {
             if scenePhase != .background { await place.refresh() }
         }
         // After the first frame, like the engine.
