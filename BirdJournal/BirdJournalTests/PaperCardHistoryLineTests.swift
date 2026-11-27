@@ -11,7 +11,8 @@ import UIKit
 // a set whose name is that long, and a card with a story and biology is full by then, so its second line lay under the
 // card's pinned footer until the card was scrolled: the card read "…sewn Nov 26, 2026 in". The real page is hosted with a
 // stand-in set of each name (as `ContinentalEditionTests` stands the North America set in), the card up, and the frames
-// VoiceOver is given are read where the card rests.
+// VoiceOver is given are read where the card rests. That the friends who have the bird stay in view too is
+// `GuildDataUITests.testAPaperCardNamesTheFriendsWhoHaveTheBird`.
 @Suite("The paper card's history line", .serialized)
 @MainActor
 struct PaperCardHistoryLineTests {
@@ -26,15 +27,19 @@ struct PaperCardHistoryLineTests {
     /// Where the page's parts are on screen, by accessibility identifier, once the card's foot has been laid out.
     static func frames(setName: String, typeSize: DynamicTypeSize) async throws -> [String: CGRect] {
         let harness = try Screens.Harness(seeded: false)
-        // A bird the bundled pack tells a story about and has the biology of: a full card.
-        let robin = ContinentalEditionTests.robin
-        harness.album.mainContext.insert(Sighting(speciesID: robin, confirmedAt: .now, location: ContinentalEditionTests.kansas, soundConfidence: 0.9, source: .phone))
+        // The bundled bird with the longest story, and so the fullest card: before the fix its history was at or under the fold.
+        func excerpt(_ bird: BundledPack.Bird) -> Int {
+            (harness.library.species(scientificName: bird.scientificName)?.species.lore).flatMap { LoreExcerpt.front($0.text) }?.count ?? 0
+        }
+        let bird = try #require(BundledPack.all.max { excerpt($0) < excerpt($1) })
+        #expect(excerpt(bird) > 0, "the card needs a story to be full")
+        harness.album.mainContext.insert(Sighting(speciesID: bird.label, confirmedAt: .now, location: ContinentalEditionTests.kansas, soundConfidence: 0.9, source: .phone))
         try harness.album.mainContext.save()
+        // A stand-in set of that name around the sighting, with the bird in it.
         let northAmerica = ContinentalEditionTests.northAmerica
-        let set = CardSet(id: northAmerica.id, name: setName, edition: northAmerica.edition, species: northAmerica.species, regions: northAmerica.regions)
+        let set = CardSet(id: northAmerica.id, name: setName, edition: northAmerica.edition, species: [bird.scientificName], regions: northAmerica.regions)
         let store = CollectionStore(container: harness.album, sets: { [set] })
         let patch = try #require(store.collection.patches(in: set.id).first)
-        #expect(harness.library.species(scientificName: patch.scientificName)?.species.lore != nil, "the card needs a story to be full")
 
         await harness.place.prepareForLaunch()
         CardFlipAccessibilityTests.enableAccessibility()
@@ -89,6 +94,9 @@ struct PaperCardHistoryLineTests {
             // wholly under the footer, from 805 pt, at xxxLarge.
             #expect(line.maxY <= scroll.maxY + 0.5 || line.minY >= scroll.maxY - 0.5, "\(setName) at \(typeSize): the line \(line) is cut at the foot of the scrolling text \(scroll)")
             #expect(line.minY >= scroll.minY - 0.5, "\(setName) at \(typeSize): the line \(line) is above the card \(scroll)")
+            // The card is full, or this would say nothing: its latest sighting is cut off or out of view, as the line used to be.
+            let sighting = try #require(frames["card-history-sighting"], "\(frames.keys.sorted())")
+            #expect(sighting.maxY > scroll.maxY, "\(setName) at \(typeSize): the card isn't full, the sighting \(sighting) is in view in \(scroll)")
         } else {
             #expect(typeSize.isAccessibilitySize, "only the reading view has no scrolling text inside the card")
         }

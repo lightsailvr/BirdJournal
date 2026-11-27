@@ -7,9 +7,10 @@ import SwiftUI
 /// name in serif with the scientific name in italic, the story title, the lore excerpt, the biology, your history with the
 /// bird here (the count, when it was sewn, the latest sightings, each opening its sighting), then the rest of the lore.
 /// "All 8 sightings", "AI illustration" and Sources stay in the footer. It scrolls inside the patch's footprint, and there
-/// the history's own line, "8 sightings here, sewn … in Los Angeles", stays in view over the footer (issue #214): a full card
-/// used to cut it at the fold, and a long set name wrapped it, so half a sentence showed. At accessibility text sizes the
-/// card grows into a reading view and the page scrolls instead, with the line where the history begins.
+/// the friends who have the bird and the history's own line, "8 sightings here, sewn … in Los Angeles", stay in view over the
+/// footer (issue #214): a full card used to cut the line at the fold, and a long set name wrapped it, so half a sentence
+/// showed. At accessibility text sizes the card grows into a reading view and the page scrolls instead, with both where the
+/// history begins.
 struct PaperCardView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(PlaceNames.self) private var places
@@ -34,8 +35,10 @@ struct PaperCardView: View {
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.visible)
                 .accessibilityIdentifier("card-back-scroll")
-                // Under the scrolling text, whole at any length: it takes the lines it needs and the text above gives them up.
+                // Under the scrolling text, whole at any length: they take the lines they need and the text above gives them up.
+                // The friends were in view without scrolling by coming before the history (issue #150); now by staying here.
                 VStack(alignment: .leading, spacing: 6) {
+                    FriendsOnCard(scientificName: patch.scientificName)
                     PaperRule()
                     historyLineRow
                 }
@@ -50,7 +53,7 @@ struct PaperCardView: View {
         .modifier(CardStockSurface())
     }
 
-    /// - Parameter showsHistoryLine: false where the line stays in view under the scrolling text instead.
+    /// - Parameter showsHistoryLine: false where the friends and the history's line stay in view under the scrolling text instead.
     private func content(_ species: PackSpecies?, showsHistoryLine: Bool) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             editionLine
@@ -73,9 +76,10 @@ struct PaperCardView: View {
                 PaperRule()
                 BiologyGrid(stats: biology)
             }
-            // Above the history, so it's in view without scrolling: a card that's full cuts the latest sightings off, which says
-            // there's more.
-            FriendsOnCard(scientificName: patch.scientificName)
+            // A card that's full cuts the latest sightings off, which says there's more.
+            if showsHistoryLine {
+                FriendsOnCard(scientificName: patch.scientificName)
+            }
             PaperRule()
             history(showsLine: showsHistoryLine)
             if let lore = species?.lore {
