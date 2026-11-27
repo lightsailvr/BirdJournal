@@ -23,14 +23,14 @@ final class FindsUITests: XCTestCase {
         let labels = app.feedLabels()
         XCTAssertGreaterThanOrEqual(labels.count, 4, "\(labels)")
         let newest = labels[0]
-        XCTAssertTrue(newest.contains("California Gnatcatcher"), newest)
+        XCTAssertTrue(newest.contains(BundledPack.gnatcatcher.name), newest)
         XCTAssertTrue(newest.contains("At a secret spot"), newest)
         XCTAssertTrue(newest.contains("First for the Guild"), newest)
         XCTAssertTrue(newest.contains("Rare"), newest)
         let oldest = labels[3]
         XCTAssertTrue(oldest.contains("Seen by Maya Ortiz") && oldest.contains("New patch") && oldest.contains("First for the Guild"), oldest)
         let later = labels[1]
-        XCTAssertTrue(later.contains("Black Phoebe") && !later.contains("First for the Guild"), later)
+        XCTAssertTrue(later.contains(BundledPack.phoebe.name) && !later.contains("First for the Guild"), later)
         // A repeat sighting is a quieter line (issue #136).
         XCTAssertTrue(later.contains("Heard again by Jo Park") && !later.contains("New patch"), later)
     }
@@ -44,12 +44,12 @@ final class FindsUITests: XCTestCase {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let row = app.buttons["find-\(Self.mayasPhoebe)"]
         XCTAssertTrue(app.scrolledTo(row, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(row.label.contains("Black Phoebe"), row.label)
+        XCTAssertTrue(row.label.contains(BundledPack.phoebe.name), row.label)
         // On the patch itself, at the row's left: a clipped picture must not swallow it.
         row.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5)).tap()
 
         XCTAssertTrue(app.navigationBars["Maya's find"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(app.staticTexts["find-page-name"].label, "Black Phoebe")
+        XCTAssertEqual(app.staticTexts["find-page-name"].label, BundledPack.phoebe.name)
         XCTAssertTrue(app.staticTexts["Maya Ortiz sewed a new patch"].exists, "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(app.staticTexts["find-page-where"].label.hasPrefix("Seen in Pasadena, "), app.staticTexts["find-page-where"].label)
         XCTAssertTrue(app.descendants(matching: .any)["find-page-marks"].label.contains("First for the Guild"))
@@ -62,7 +62,7 @@ final class FindsUITests: XCTestCase {
         XCTAssertTrue(flip.exists, "the LA pack describes this bird")
         flip.tap()
         XCTAssertEqual(flip.value as? String, "Paper card")
-        XCTAssertEqual(app.staticTexts["card-name"].label, "Black Phoebe")
+        XCTAssertEqual(app.staticTexts["card-name"].label, BundledPack.phoebe.name)
         XCTAssertTrue(app.staticTexts["card-story-title"].exists, "its story, from the viewer's pack")
         // No history: these aren't this birder's sightings.
         XCTAssertFalse(app.descendants(matching: .any)["card-history"].exists)
@@ -93,7 +93,7 @@ final class FindsUITests: XCTestCase {
         app.navigationBars.buttons.firstMatch.tap()
         XCTAssertTrue(app.scrolledTo(atlas, limit: 4))
         atlas.tap()
-        XCTAssertTrue(app.staticTexts["Sayornis nigricans"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
+        XCTAssertTrue(app.staticTexts[BundledPack.phoebe.scientificName].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
     }
 
     /// Without a patch of your own, there's no link to one: no patch until you've found the bird.
@@ -136,7 +136,7 @@ final class FindsUITests: XCTestCase {
         let line = app.buttons["repeats-\(first)"]
         XCTAssertTrue(line.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(line.label.contains("3 more sightings from Lee Birder"), line.label)
-        XCTAssertTrue(line.label.contains("House Finch and Mourning Dove"), line.label)
+        XCTAssertTrue(line.label.contains("\(BundledPack.finch.name) and \(BundledPack.dove.name)"), line.label)
         XCTAssertEqual(line.value as? String, "Closed")
         XCTAssertFalse(app.buttons["find-\(first)"].exists, "gathered")
         // Sam's Rare gnatcatcher is a repeat too, and stands on its own.
@@ -154,7 +154,7 @@ final class FindsUITests: XCTestCase {
         let quiet = app.buttons["find-\(first)"]
         quiet.tap()
         XCTAssertTrue(app.navigationBars["Lee's find"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(app.staticTexts["find-page-name"].label, "House Finch")
+        XCTAssertEqual(app.staticTexts["find-page-name"].label, BundledPack.finch.name)
     }
 
     /// Report and Block sit in a find's page's menu, and a block takes the find off the page and the feed.

@@ -148,7 +148,7 @@ struct NameSuggestionsTests {
         #expect(unread == .none, "a geomodel that can't be read leaves the names and the search")
     }
 
-    @Test("the bundled geomodel at Griffith Park in November: the hummingbird that lives there is likely, and leads its search")
+    @Test("the bundled geomodel at Griffith Park in November: the hummingbird that lives there is likely, and leads its search", .tags(.losAngelesContent))
     func bundledGeomodel() throws {
         let (taken, calendar) = try Self.november()
         let pack = try SpeciesPack.bundled()
@@ -196,15 +196,15 @@ extension CaptureAccessibilityTests {
     }
 
     static let griffithPark = LocationFix.fix(latitude: 34.1365, longitude: -118.2942, accuracy: 10, at: .now)
-    static let geomodel = FixedOccurrence(expected: ["Haemorhous mexicanus": 0.99, "Sayornis nigricans": 0.95, "Calypte anna": 0.9, "Selasphorus sasin": 0.5, "Archilochus colubris": 0.001])
+    static let geomodel = FixedOccurrence(expected: [BundledPack.finch.scientificName: 0.99, BundledPack.phoebe.scientificName: 0.95, BundledPack.hummingbird.scientificName: 0.9, BundledPack.otherHummingbird.scientificName: 0.5, "Archilochus colubris": 0.001])
 
-    /// A run in Griffith Park that heard a House Finch, quiet now, and then a Black Phoebe, still calling.
+    /// A run in Griffith Park that heard the finch, quiet now, and then the phoebe, still calling.
     static func runThatHeardTwo() async throws -> Screens.Harness {
         let harness = try Screens.Harness(location: [griffithPark])
         func heard(_ index: Int, _ scientific: String, _ common: String, last: Double) -> Candidate {
             Candidate(species: Species(index: index, scientificName: scientific, commonName: common, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: last, admittedAt: Double(index))
         }
-        harness.run.fakeStack = CandidateStack(candidates: [heard(0, "Haemorhous mexicanus", "House Finch", last: -120), heard(1, "Sayornis nigricans", "Black Phoebe", last: 1_000_000)])
+        harness.run.fakeStack = CandidateStack(candidates: [heard(0, BundledPack.finch.scientificName, BundledPack.finch.name, last: -120), heard(1, BundledPack.phoebe.scientificName, BundledPack.phoebe.name, last: 1_000_000)])
         await harness.run.start()
         #expect(harness.run.coordinate != nil)
         return harness
@@ -215,7 +215,7 @@ extension CaptureAccessibilityTests {
         let harness = try await Self.runThatHeardTwo()
         let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
-            labels.contains("Likely here now") && labels.contains { $0.hasPrefix(typeSize == .large ? "Allen's Hummingbird, " : "Anna's Hummingbird, ") }
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix(typeSize == .large ? "\(BundledPack.otherHummingbird.name), " : "\(BundledPack.hummingbird.name), ") }
         }
         await harness.run.stop()
 
@@ -224,18 +224,18 @@ extension CaptureAccessibilityTests {
         Self.expectNoScore(labels, screen: "Name this bird, suggestions")
         let search = try #require(labels.firstIndex(of: "Search birds by name"), "\(labels)")
         let heard = try #require(labels.firstIndex(of: "Heard this run"), "\(labels)")
-        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("Black Phoebe, Los Angeles") }, "\(labels)")
-        let finch = try #require(labels.firstIndex { $0.hasPrefix("House Finch, Los Angeles") }, "\(labels)")
+        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.setName)") }, "\(labels)")
+        let finch = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.finch.name), \(BundledPack.setName)") }, "\(labels)")
         let likely = try #require(labels.firstIndex(of: "Likely here now"), "\(labels)")
-        let annas = try #require(labels.firstIndex { $0.hasPrefix("Anna's Hummingbird, Los Angeles") }, "\(labels)")
+        let annas = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.hummingbird.name), \(BundledPack.setName)") }, "\(labels)")
         #expect(search < heard && heard < phoebe && phoebe < finch, "the bird calling now before the one heard earlier: \(labels)")
         #expect(finch < likely && likely < annas, "then the likely birds: \(labels)")
         // At the largest size the rows are a screen tall, and the lazy list has not laid the fourth out in the test's window.
         if typeSize == .large {
-            let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, Los Angeles") }, "\(labels)")
+            let allens = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.otherHummingbird.name), \(BundledPack.setName)") }, "\(labels)")
             #expect(annas < allens, "the likeliest first, not the first by name: \(labels)")
         }
-        #expect(labels.count { $0.hasPrefix("House Finch, ") } == 1 && labels.count { $0.hasPrefix("Black Phoebe, ") } == 1, "a bird heard isn't listed again as likely: \(labels)")
+        #expect(labels.count { $0.hasPrefix("\(BundledPack.finch.name), ") } == 1 && labels.count { $0.hasPrefix("\(BundledPack.phoebe.name), ") } == 1, "a bird heard isn't listed again as likely: \(labels)")
         #expect(!labels.contains("In your field guides") && !labels.contains("All birds"), "\(labels)")
         #expect(labels.contains(NameBirdText.searchHint), "\(labels)")
         #expect(labels.contains("Choose the bird in your photo."), "\(labels)")
@@ -244,21 +244,21 @@ extension CaptureAccessibilityTests {
     @Test("Name this bird on a run with no place: Heard this run, then the field guides' birds by name, and nothing called likely", arguments: Screens.sizes)
     func suggestionsWithoutAPlace(typeSize: DynamicTypeSize) async throws {
         let harness = try Screens.Harness()
-        harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: "Sayornis nigricans", commonName: "Black Phoebe", taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1_000_000, admittedAt: 0)])
+        harness.run.fakeStack = CandidateStack(candidates: [Candidate(species: Species(index: 0, scientificName: BundledPack.phoebe.scientificName, commonName: BundledPack.phoebe.name, taxonomicClass: "Aves"), score: 0.8, windowsAboveThreshold: 2, firstHeardAt: 0, lastHeardAt: 1_000_000, admittedAt: 0)])
         await harness.run.start()
         #expect(harness.run.coordinate == nil)
         let screen = NameBirdView(unnamed: try #require(harness.run.capture(Self.photo()))) {}.environment(\.occurrenceModel, Self.geomodel)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
-            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Allen's Hummingbird, ") }
+            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") }
         }
         await harness.run.stop()
 
         Screens.expectClean(labels, screen: "Name this bird, no place")
         #expect(labels.contains { $0.hasSuffix(", Place not recorded") }, "\(labels)")
         let heard = try #require(labels.firstIndex(of: "Heard this run"), "\(labels)")
-        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+        let phoebe = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.phoebe.name), ") }, "\(labels)")
         let guides = try #require(labels.firstIndex(of: "In your field guides"), "\(labels)")
-        let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, ") }, "\(labels)")
+        let allens = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") }, "\(labels)")
         #expect(heard < phoebe && phoebe < guides && guides < allens, "\(labels)")
         #expect(!labels.contains("Likely here now"), "no place, so the section is left out: \(labels)")
     }
@@ -278,15 +278,15 @@ extension CaptureAccessibilityTests {
         let model = SpyOccurrence()
         let screen = NameBirdView(unnamed: earlier) {}.environment(\.occurrenceModel, model)
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
-            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("House Finch, ") }
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("\(BundledPack.finch.name), ") }
         }
         await harness.run.stop()
 
         Screens.expectClean(labels, screen: "Name this bird, a photo from before")
         #expect(!labels.contains("Heard this run"), "the run under way didn't hear this photo's bird: \(labels)")
-        #expect(!labels.contains { $0.hasPrefix("Black Phoebe, ") }, "\(labels)")
+        #expect(!labels.contains { $0.hasPrefix("\(BundledPack.phoebe.name), ") }, "\(labels)")
         let likely = try #require(labels.firstIndex(of: "Likely here now"), "\(labels)")
-        let finch = try #require(labels.firstIndex { $0.hasPrefix("House Finch, ") }, "\(labels)")
+        let finch = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.finch.name), ") }, "\(labels)")
         #expect(likely < finch, "\(labels)")
         #expect(!labels.contains("In your field guides"), "\(labels)")
         #expect(!labels.contains { $0.hasPrefix("Your photo, Today, ") }, "its own day: \(labels)")
@@ -304,14 +304,14 @@ extension CaptureAccessibilityTests {
         #expect(idle.run.heardScientificNames.isEmpty, "no run")
 
         let harness = try await Self.runThatHeardTwo()
-        #expect(harness.run.heardScientificNames == ["Sayornis nigricans", "Haemorhous mexicanus"], "the phoebe is calling; the finch was admitted first")
+        #expect(harness.run.heardScientificNames == [BundledPack.phoebe.scientificName, BundledPack.finch.scientificName], "the phoebe is calling; the finch was admitted first")
         // They are offered for a photo of this run, and not for one from before it: what this run hears says nothing of that bird.
         let ofThisRun = try #require(harness.run.capture(Self.photo()))
-        #expect(harness.run.heardScientificNames(for: ofThisRun) == ["Sayornis nigricans", "Haemorhous mexicanus"])
+        #expect(harness.run.heardScientificNames(for: ofThisRun) == [BundledPack.phoebe.scientificName, BundledPack.finch.scientificName])
         #expect(harness.run.heardScientificNames(for: Self.photoFromBefore()).isEmpty)
         await harness.run.stop()
-        #expect(Set(harness.run.heardScientificNames(for: ofThisRun)) == ["Sayornis nigricans", "Haemorhous mexicanus"], "still its run, under review")
-        #expect(Set(harness.run.heardScientificNames) == ["Sayornis nigricans", "Haemorhous mexicanus"], "an ended run, as its review has it, still has its birds")
+        #expect(Set(harness.run.heardScientificNames(for: ofThisRun)) == [BundledPack.phoebe.scientificName, BundledPack.finch.scientificName], "still its run, under review")
+        #expect(Set(harness.run.heardScientificNames) == [BundledPack.phoebe.scientificName, BundledPack.finch.scientificName], "an ended run, as its review has it, still has its birds")
         harness.run.dismissEnded()
         #expect(harness.run.heardScientificNames.isEmpty)
     }
@@ -328,9 +328,9 @@ extension CaptureAccessibilityTests {
         Screens.expectClean(labels, screen: "Name this bird, searched on a run")
         #expect(!labels.contains("Heard this run") && !labels.contains("Likely here now"), "\(labels)")
         let guides = try #require(labels.firstIndex(of: "In your field guides"), "\(labels)")
-        let annas = try #require(labels.firstIndex { $0.hasPrefix("Anna's Hummingbird, ") }, "\(labels)")
-        let allens = try #require(labels.firstIndex { $0.hasPrefix("Allen's Hummingbird, ") }, "\(labels)")
+        let annas = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.hummingbird.name), ") }, "\(labels)")
+        let allens = try #require(labels.firstIndex { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") }, "\(labels)")
         #expect(guides < annas && annas < allens, "the likelier hummingbird first, not the first by name: \(labels)")
-        #expect(!labels.contains { $0.hasPrefix("House Finch, ") }, "only what matches: \(labels)")
+        #expect(!labels.contains { $0.hasPrefix("\(BundledPack.finch.name), ") }, "only what matches: \(labels)")
     }
 }

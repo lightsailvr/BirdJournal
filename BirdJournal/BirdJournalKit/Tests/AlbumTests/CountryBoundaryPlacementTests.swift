@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Album
 
 // Issue #210: the North America set is bounded by two countries, the United States (the 50 states and DC) and Canada,
@@ -87,11 +88,11 @@ struct CountryBoundaryPlacementTests {
         // A box close to Los Angeles County.
         let corners = [(-118.95, 33.70), (-117.65, 33.70), (-117.65, 34.82), (-118.95, 34.82), (-118.95, 33.70)]
         let county = CardSet(
-            id: "us-ca-la", name: "Los Angeles", edition: "Citrus edition", species: ["Turdus migratorius"],
+            id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus edition", species: ["Turdus migratorius"],
             regions: [CardSet.Region(name: "Los Angeles County", polygons: [[corners.map { CardSet.Point(longitude: $0.0, latitude: $0.1) }]])]
         )
         let griffithPark = Self.place(34.13, -118.29)
-        #expect(CardSet.placement(speciesID: Self.robin, at: griffithPark, in: [Self.continental, county]).setID == "us-ca-la")
+        #expect(CardSet.placement(speciesID: Self.robin, at: griffithPark, in: [Self.continental, county]).setID == LosAngelesSet.id)
         #expect(CardSet.placement(speciesID: Self.robin, at: griffithPark, in: [Self.continental]).setID == Self.continental.id)
         #expect(CardSet.placement(speciesID: Self.robin, at: Self.place(41.88, -87.63), in: [Self.continental, county]).setID == Self.continental.id)
     }

@@ -22,14 +22,14 @@ final class AtlasUITests: XCTestCase {
     @MainActor
     func testASetsPageIsAPlateThenOneCountThenItsRows() {
         let app = launch(seeded + ["-autoScreen", "set"])
-        XCTAssertTrue(app.staticTexts["Los Angeles"].waitForExistence(timeout: 15), screen(app))
-        XCTAssertTrue(app.staticTexts["Citrus edition, 160 birds"].exists, screen(app))
-        XCTAssertTrue(app.staticTexts["3 of 160 sewn"].exists, screen(app))
+        XCTAssertTrue(app.staticTexts[BundledPack.setName].waitForExistence(timeout: 15), screen(app))
+        XCTAssertTrue(app.staticTexts["\(BundledPack.editionName), \(BundledPack.speciesCount) birds"].exists, screen(app))
+        XCTAssertTrue(app.staticTexts["3 of \(BundledPack.speciesCount) sewn"].exists, screen(app))
         XCTAssertTrue(element(app, "set-plate").exists, screen(app))
-        XCTAssertTrue(app.staticTexts["157 still out there"].exists, screen(app))
+        XCTAssertTrue(app.staticTexts["\(BundledPack.speciesCount - 3) still out there"].exists, screen(app))
         XCTAssertFalse(app.staticTexts["Not yet found here"].exists)
         let row = app.buttons.matching(identifier: "set-species-silhouette").firstMatch
-        XCTAssertEqual(row.label, "001, Canada Goose, still out there")
+        XCTAssertEqual(row.label, "\(BundledPack.goose.paddedNumber), \(BundledPack.goose.name), still out there")
     }
 
     /// One of the seeded birds, found by its number: its row has a reference photo and says "Yours", and a tap on one opens the bird.
@@ -38,13 +38,13 @@ final class AtlasUITests: XCTestCase {
         let app = launch(seeded + ["-autoScreen", "set"])
         let rows = app.buttons.matching(identifier: "set-species-silhouette")
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 15), screen(app))
-        let dove = app.buttons.matching(NSPredicate(format: "label ENDSWITH 'Mourning Dove, yours, seen once'")).firstMatch
+        let dove = app.buttons.matching(NSPredicate(format: "label ENDSWITH '\(BundledPack.dove.name), yours, seen once'")).firstMatch
         for _ in 0..<20 where !dove.isHittable {
             app.swipeUp()
         }
         XCTAssertTrue(dove.isHittable, screen(app))
         dove.tap()
-        XCTAssertTrue(app.staticTexts["Zenaida macroura"].waitForExistence(timeout: 10), screen(app))
+        XCTAssertTrue(app.staticTexts[BundledPack.dove.scientificName].waitForExistence(timeout: 10), screen(app))
     }
 
     /// A set whose pack isn't on the phone has rows too, with the glyph, and says what a download adds.
@@ -63,11 +63,11 @@ final class AtlasUITests: XCTestCase {
     @MainActor
     func testATapOnAPlatesEdgeOpensThatPlatesSet() {
         let app = launch(["-autoScreen", "guide"])
-        let losAngeles = app.buttons["guide-set-us-ca-la"]
+        let losAngeles = app.buttons["guide-set-\(BundledPack.id)"]
         XCTAssertTrue(losAngeles.waitForExistence(timeout: 15), screen(app))
         losAngeles.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.98)).tap()
-        XCTAssertTrue(app.staticTexts["157 still out there"].waitForExistence(timeout: 10) || app.staticTexts["160 still out there"].waitForExistence(timeout: 5), screen(app))
-        XCTAssertTrue(app.staticTexts["Citrus edition, 160 birds"].exists, screen(app))
+        XCTAssertTrue(app.staticTexts["\(BundledPack.speciesCount - 3) still out there"].waitForExistence(timeout: 10) || app.staticTexts["\(BundledPack.speciesCount) still out there"].waitForExistence(timeout: 5), screen(app))
+        XCTAssertTrue(app.staticTexts["\(BundledPack.editionName), \(BundledPack.speciesCount) birds"].exists, screen(app))
         app.navigationBars.buttons.firstMatch.tap()
 
         let sanDiego = app.buttons["guide-set-us-ca-sd"]
@@ -81,34 +81,34 @@ final class AtlasUITests: XCTestCase {
 
     @MainActor
     func testTheMapShowsPatchesAndATapOnOneShowsItsCallout() throws {
-        let app = launch(seeded + ["-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "map"])
+        let app = launch(seeded + ["-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoScreen", "map"])
         XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
         let callout = app.otherElements["sighting-map-callout"]
         XCTAssertTrue(callout.waitForExistence(timeout: 10), "the opening sighting's callout; \(screen(app))")
-        XCTAssertTrue(callout.staticTexts["Black Phoebe"].exists, screen(app))
+        XCTAssertTrue(callout.staticTexts[BundledPack.phoebe.name].exists, screen(app))
         XCTAssertFalse(callout.buttons["Open"].exists, "it's already open behind the sheet")
         // The finch by the sidewalk is on screen, with the pond a few hundred metres away.
-        let finches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'"))
+        let finches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH '\(BundledPack.finch.name)'"))
         XCTAssertTrue(finches.firstMatch.waitForExistence(timeout: 10), screen(app))
         let window = app.windows.firstMatch.frame
         let finch = try XCTUnwrap(finches.allElementsBoundByIndex.first { window.contains($0.frame) }, "no finch on screen; \(screen(app))")
         finch.tap()
-        XCTAssertTrue(callout.staticTexts["House Finch"].waitForExistence(timeout: 5), screen(app))
+        XCTAssertTrue(callout.staticTexts[BundledPack.finch.name].waitForExistence(timeout: 5), screen(app))
         XCTAssertTrue(callout.buttons["Open"].exists, screen(app))
         callout.buttons["Open"].tap()
-        XCTAssertTrue(app.staticTexts["Haemorhous mexicanus"].waitForExistence(timeout: 10), screen(app))
+        XCTAssertTrue(app.staticTexts[BundledPack.finch.scientificName].waitForExistence(timeout: 10), screen(app))
     }
 
     /// Thirty birds at one spot: MapKit gathers them. The one the map was opened on, by the pond, stays out.
     @MainActor
     func testSightingsTooCloseToTellApartAreOneCluster() {
-        let app = launch(seeded + ["-seedBoard", "YES", "-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "map", "-autoMapAcross", "3000"])
+        let app = launch(seeded + ["-seedBoard", "YES", "-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoScreen", "map", "-autoMapAcross", "3000"])
         XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
         let cluster = element(app, "map-patch-cluster")
         XCTAssertTrue(cluster.waitForExistence(timeout: 15), screen(app))
         XCTAssertTrue(cluster.label.contains(" sightings, the newest "), cluster.label)
-        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'Black Phoebe'")).firstMatch.exists, "the one the map was opened on; \(screen(app))")
-        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts["Black Phoebe"].exists, screen(app))
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH '\(BundledPack.phoebe.name)'")).firstMatch.exists, "the one the map was opened on; \(screen(app))")
+        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts[BundledPack.phoebe.name].exists, screen(app))
 
         // All at one spot: no zoom would part them, so a tap lists them, and each opens.
         cluster.tap()
@@ -150,11 +150,11 @@ final class AtlasUITests: XCTestCase {
     /// The map opens on a sighting that's among others at one spot: it stays on the map, and a tap on it lists the spot.
     @MainActor
     func testTheOpeningSightingStaysOutOfTheClustersAndListsItsSpot() {
-        let app = launch(["-seedGallery", "YES", "-autoCardSpecies", "Haemorhous mexicanus", "-autoScreen", "map"])
+        let app = launch(["-seedGallery", "YES", "-autoCardSpecies", BundledPack.finch.scientificName, "-autoScreen", "map"])
         XCTAssertTrue(app.navigationBars["On the map"].waitForExistence(timeout: 20), screen(app))
-        let patches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH 'House Finch'"))
+        let patches = app.descendants(matching: .any).matching(NSPredicate(format: "identifier == 'map-patch' AND label BEGINSWITH '\(BundledPack.finch.name)'"))
         XCTAssertTrue(patches.firstMatch.waitForExistence(timeout: 15), "the bird the callout names is on the map; \(screen(app))")
-        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts["House Finch"].exists, screen(app))
+        XCTAssertTrue(app.otherElements["sighting-map-callout"].staticTexts[BundledPack.finch.name].exists, screen(app))
         patches.firstMatch.tap()
         XCTAssertTrue(app.otherElements["sighting-map-here"].waitForExistence(timeout: 5), screen(app))
     }
@@ -163,7 +163,7 @@ final class AtlasUITests: XCTestCase {
 
     @MainActor
     func testARecordWithoutAPhotoLeadsWithItsPatchWhichOpensIt() {
-        let app = launch(seeded + ["-autoCardSpecies", "Zenaida macroura", "-autoScreen", "sighting"])
+        let app = launch(seeded + ["-autoCardSpecies", BundledPack.dove.scientificName, "-autoScreen", "sighting"])
         let patch = element(app, "sighting-patch")
         XCTAssertTrue(patch.waitForExistence(timeout: 15), screen(app))
         XCTAssertFalse(element(app, "sighting-photo").exists)
@@ -175,7 +175,7 @@ final class AtlasUITests: XCTestCase {
     /// still answer. The record's words change with them.
     @MainActor
     func testARecordWithAPhotoLeadsWithItAndWhatsAroundItStillAnswers() {
-        let app = launch(seeded + ["-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "sighting"])
+        let app = launch(seeded + ["-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoScreen", "sighting"])
         XCTAssertTrue(element(app, "sighting-photo").waitForExistence(timeout: 15), screen(app))
         XCTAssertFalse(element(app, "sighting-patch").exists)
         XCTAssertTrue(app.staticTexts["Heard with Ray-Ban Display"].exists, screen(app))
@@ -188,7 +188,7 @@ final class AtlasUITests: XCTestCase {
 
     @MainActor
     func testARecordKeepsRarityAndIdentificationUntilYouAskAndARemovalIsConfirmed() {
-        let app = launch(seeded + ["-autoCardSpecies", "Sayornis nigricans", "-autoScreen", "sighting"])
+        let app = launch(seeded + ["-autoCardSpecies", BundledPack.phoebe.scientificName, "-autoScreen", "sighting"])
         let rarity = app.buttons["Rarity"]
         for _ in 0..<12 where !(rarity.exists && rarity.isHittable) {
             app.swipeUp()

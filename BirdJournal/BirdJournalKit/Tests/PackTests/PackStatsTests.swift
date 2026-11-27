@@ -4,7 +4,7 @@ import Testing
 
 /// Card stats and the type line (issue #55): schema-4 packs carry each species' stats from AVONET, BIRDBASE and the
 /// avian wingspan database, its threatened flag and its type line; a known gap has no stats, an older pack none of
-/// them, and the bundled Los Angeles pack has them for every species.
+/// them, and the bundled pack has them for every species.
 @Suite("PackStats")
 @MainActor
 struct PackStatsTests {
@@ -46,6 +46,7 @@ struct PackStatsTests {
 
     @Test(
         "the bundled pack's House Wren reuses old nests and is no brood parasite; the cowbird and the whydah are (#86)",
+        .tags(.losAngelesContent),
         .enabled(if: (try? SpeciesPack.bundled().info.version) ?? 0 >= 9, "the bundled pack predates the nest fix")
     )
     func bundledNestReuseAndBroodParasites() throws {
@@ -59,7 +60,7 @@ struct PackStatsTests {
         #expect(pack.species.allSatisfy { $0.stats?.nests.contains(.broodParasite) != true || $0.stats?.nests == [.broodParasite] })
     }
 
-    @Test("every species in the bundled Los Angeles pack has stats or is a listed gap, and has a type line")
+    @Test("every species in the bundled Los Angeles pack has stats or is a listed gap, and has a type line", .tags(.losAngelesContent))
     func bundledPackStats() throws {
         let pack = try SpeciesPack.bundled()
         let gaps = try SpeciesPackTests.gaps(in: pack, key: "stats")

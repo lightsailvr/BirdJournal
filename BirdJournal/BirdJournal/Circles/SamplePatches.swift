@@ -7,13 +7,9 @@ struct SamplePatches: View {
     @Environment(PackLibrary.self) private var library
     @Environment(\.dynamicTypeSize) private var typeSize
 
-    /// A few well-known Los Angeles birds. The bundled pack paints them all, and a phone without it shows blanks.
-    private static let birds: [(scientificName: String, commonName: String)] = [
-        ("Sayornis nigricans", "Black Phoebe"),
-        ("Calypte anna", "Anna's Hummingbird"),
-        ("Melanerpes formicivorus", "Acorn Woodpecker"),
-    ]
-    private static let setID = PackIndex.bundledPackID
+    /// A few well-known birds of the bundled pack. It paints them all, and a phone without it shows blanks.
+    private static let birds = [SampleBirds.phoebe, SampleBirds.hummingbird, SampleBirds.woodpecker]
+    private static let setID = SampleBirds.setID
 
     var body: some View {
         FeltBoard {

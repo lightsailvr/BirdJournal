@@ -3,8 +3,8 @@
 Builds BirdJournal species packs (issue #8, spec "Pack builder"). One command from a clean checkout:
 
 ```sh
-scripts/build-pack.sh                      # builds packs/us-ca-la/ and build/packs/us-ca-la.zip
-scripts/build-pack.sh us-ca-la --limit 60  # more candidates per species; any `packbuilder build` flag passes through
+scripts/build-pack.sh                      # builds the bundled pack: packs/<id>/ and build/packs/<id>.zip
+scripts/build-pack.sh us-ca-sd --limit 60  # a pack by id, to build/packs/; any `packbuilder build` flag passes through
 ```
 
 Needs [uv](https://docs.astral.sh/uv/) (`brew install uv`); it creates the Python 3.12+ environment from

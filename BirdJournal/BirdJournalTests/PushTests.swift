@@ -93,7 +93,7 @@ struct PushPayloadTests {
             "find": [
                 "owner": "maya", "owner_name": "Maya Ortiz", "sighting_id": "s1", "species_id": "Sayornis nigricans_Black Phoebe",
                 "scientific_name": "Sayornis nigricans", "common_name": "Black Phoebe", "method": "heard", "place": "Pasadena",
-                "found_at": "2026-11-01T08:15:00Z", "new_patch": true, "edition": "us-ca-la", "rarity": "common", "circle_first": false, "circle_ids": ["c1"],
+                "found_at": "2026-11-01T08:15:00Z", "new_patch": true, "edition": LosAngelesSet.id, "rarity": "common", "circle_first": false, "circle_ids": ["c1"],
             ] as [String: Any],
         ]
         guard case .notable(let find) = try #require(PushMessage(userInfo: userInfo)) else {
@@ -103,7 +103,7 @@ struct PushPayloadTests {
         #expect(find.friendName == "Maya Ortiz")
         #expect(find.commonName == "Black Phoebe")
         #expect(find.newPatch)
-        #expect(find.edition == "us-ca-la")
+        #expect(find.edition == LosAngelesSet.id)
         #expect(find.foundAt == Date(timeIntervalSince1970: 1_793_520_900))
         #expect(PushMessage(userInfo: userInfo)?.circleIDs == ["c1"])
     }

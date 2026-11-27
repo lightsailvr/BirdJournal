@@ -66,10 +66,10 @@ struct ReactionClientTests {
     @Test("compare reads the editions a friend found each species in, earliest first")
     func compareEditions() async throws {
         let recorder = Recorder()
-        recorder.responses = [http(200, #"{"friend":{"id":"maya","display_name":"Maya Ortiz"},"species":[{"species_id":"s","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","editions":["us-ca-sd","us-ca-la"]},{"species_id":"t","scientific_name":"Turdus merula","common_name":"Common Blackbird","method":"heard","editions":[]}]}"#)]
+        recorder.responses = [http(200, #"{"friend":{"id":"maya","display_name":"Maya Ortiz"},"species":[{"species_id":"s","scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","editions":["us-ca-sd","\#(LosAngelesSet.id)"]},{"species_id":"t","scientific_name":"Turdus merula","common_name":"Common Blackbird","method":"heard","editions":[]}]}"#)]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
         let friend = try await client.compare(friendID: "maya", accessToken: "t")
-        #expect(friend.species.map(\.editions) == [["us-ca-sd", "us-ca-la"], []])
+        #expect(friend.species.map(\.editions) == [["us-ca-sd", LosAngelesSet.id], []])
     }
 
     @Test("compare reads the friend's species")
@@ -154,7 +154,7 @@ struct BirdComparisonTests {
         let griffith = Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
         let elsewhere = Coordinate(latitude: 40, longitude: 40, accuracy: 10)
         let square = [[[CardSet.Point(longitude: 0, latitude: 0), CardSet.Point(longitude: 1, latitude: 0), CardSet.Point(longitude: 1, latitude: 1), CardSet.Point(longitude: 0, latitude: 1), CardSet.Point(longitude: 0, latitude: 0)]]]
-        let losAngeles = CardSet(id: "us-ca-la", name: "Los Angeles", edition: "Citrus", species: ["Sayornis nigricans", "Zenaida macroura"], regions: [CardSet.Region(name: "la", polygons: square)])
+        let losAngeles = CardSet(id: LosAngelesSet.id, name: "Los Angeles", edition: "Citrus", species: ["Sayornis nigricans", "Zenaida macroura"], regions: [CardSet.Region(name: "la", polygons: square)])
         let entry = { (label: String, at: TimeInterval, place: Coordinate) in
             CardCollection.Entry(identifier: UUID(), speciesID: label, confirmedAt: Date(timeIntervalSince1970: at), location: place)
         }
@@ -171,8 +171,8 @@ struct BirdComparisonTests {
         let comparison = BirdComparison(
             mine: [("Sayornis nigricans_Black Phoebe", .seen), ("Calypte anna_Anna's Hummingbird", .heard), ("Zenaida macroura_Mourning Dove", .heard)],
             theirs: [
-                .init(speciesID: "a", scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker", method: .heard, editions: ["us-ca-sd", "us-ca-la"]),
-                .init(speciesID: "b", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, editions: ["us-ca-la"]),
+                .init(speciesID: "a", scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker", method: .heard, editions: ["us-ca-sd", LosAngelesSet.id]),
+                .init(speciesID: "b", scientificName: "Sayornis nigricans", commonName: "Black Phoebe", method: .heard, editions: [LosAngelesSet.id]),
                 .init(speciesID: "c", scientificName: "Sialia mexicana", commonName: "Western Bluebird", method: .seen, editions: []),
                 .init(speciesID: "d", scientificName: "Ardea alba", commonName: "Great Egret", method: .seen, editions: ["made-up"]),
             ],
@@ -182,14 +182,14 @@ struct BirdComparisonTests {
         #expect(woodpecker.edition == "us-ca-sd", "the edition they first found it in, not any other")
         #expect(comparison.onlyTheirs.first { $0.commonName == "Western Bluebird" }?.edition == nil, "no edition from the server: the blank with its tag")
         #expect(comparison.onlyTheirs.first { $0.commonName == "Great Egret" }?.edition == "made-up", "PatchEdition draws an unknown set as a plain blank")
-        #expect(comparison.both.map(\.edition) == ["us-ca-la"], "what you both have shows the friend's")
+        #expect(comparison.both.map(\.edition) == [LosAngelesSet.id], "what you both have shows the friend's")
         #expect(comparison.onlyMine.map(\.commonName) == ["Anna's Hummingbird", "Mourning Dove"])
-        #expect(comparison.onlyMine.map(\.edition) == [nil, "us-ca-la"], "your own, the earliest sewn, or Uncharted's blank")
+        #expect(comparison.onlyMine.map(\.edition) == [nil, LosAngelesSet.id], "your own, the earliest sewn, or Uncharted's blank")
         // Where each goes.
         #expect(woodpecker.route == .species(scientificName: "Melanerpes formicivorus", commonName: "Acorn Woodpecker"))
         #expect(comparison.both.first?.route == .species(scientificName: "Sayornis nigricans", commonName: "Black Phoebe"))
         let onlyMine = try #require(comparison.onlyMine.last)
-        #expect(onlyMine.myPatch == CardCollection.Patch.Key(speciesID: "Zenaida macroura_Mourning Dove", setID: "us-ca-la"))
+        #expect(onlyMine.myPatch == CardCollection.Patch.Key(speciesID: "Zenaida macroura_Mourning Dove", setID: LosAngelesSet.id))
         #expect(onlyMine.route == .patch(try #require(onlyMine.myPatch), from: .compare))
     }
 
@@ -258,7 +258,7 @@ struct ReactionStoreTests {
     @Test("a friend's find takes the birder's reaction and shows the new count; tapping again takes it back")
     func react() async throws {
         let (store, client, circle) = try await sunday()
-        let phoebe = try #require(store.feeds[circle]?.items.first { $0.owner.id == "maya" && $0.commonName == "Black Phoebe" })
+        let phoebe = try #require(store.feeds[circle]?.items.first { $0.owner.id == "maya" && $0.commonName == BundledPack.phoebe.name })
         #expect(phoebe.reaction(.lovely) == ReactionCount(kind: .lovely, count: 2, mine: false), "Jo and Sam's, seeded")
         try await store.react(.lovely, given: true, to: phoebe)
         #expect(store.feeds[circle]?.items.first { $0.id == phoebe.id }?.reaction(.lovely) == ReactionCount(kind: .lovely, count: 3, mine: true))
@@ -295,7 +295,7 @@ struct ReactionStoreTests {
         let (store, _, _) = try await sunday()
         let maya = try await store.compare(friendID: "maya")
         #expect(maya.friend.name == "Maya Ortiz")
-        #expect(maya.species.map(\.commonName) == ["Acorn Woodpecker", "Black Phoebe", "House Finch"])
+        #expect(maya.species.map(\.commonName) == [BundledPack.woodpecker.name, BundledPack.phoebe.name, BundledPack.finch.name])
         #expect(maya.species.map(\.method) == [.heard, .seen, .seen])
         // Ari is only in Canyon Walkers, which Pat isn't in.
         await #expect(throws: CircleError.notFound) { try await store.compare(friendID: "ari") }

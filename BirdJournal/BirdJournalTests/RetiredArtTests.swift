@@ -41,7 +41,7 @@ struct RetiredArtTests {
     @Test("a stored painting never goes on a find: the find shows the patch")
     func storedPaintingStaysOffTheFind() throws {
         let library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: URL.temporaryDirectory.appending(path: "RetiredArtPacks-\(UUID().uuidString)")), indexURL: PackIndex.defaultURL)
-        let sighting = Sighting(speciesID: "Sayornis nigricans_Black Phoebe", confirmedAt: .now, location: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15), soundConfidence: 0.8, source: .glasses)
+        let sighting = Sighting(speciesID: BundledPack.phoebe.label, confirmedAt: .now, location: Coordinate(latitude: 34.1365, longitude: -118.2942, accuracy: 15), soundConfidence: 0.8, source: .glasses)
         sighting.art = Self.storedArt
         let input = FindOutbox.input(of: sighting, isNewPatch: true, packs: library, places: PlaceNames())
         let find = try #require(FindPolicy.find(for: input, sharing: .automatic))
@@ -52,9 +52,9 @@ struct RetiredArtTests {
     @Test("the feed draws a stored thumbnail only when it is a patch's")
     func onlyAPatchThumbnailIsDrawn() {
         let url = URL(string: "https://art.example/x")!
-        #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/patch/sayornis-nigricans.png", url: url).patchThumbnailURL == url)
-        #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/sayornis-nigricans.jpg", url: url).patchThumbnailURL == nil, "a watercolour's")
-        #expect(FeedItem.Art(kind: "pack", key: "packs/us-ca-la/patch/x.png", url: nil).patchThumbnailURL == nil, "no CDN yet")
+        #expect(FeedItem.Art(kind: "pack", key: "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png", url: url).patchThumbnailURL == url)
+        #expect(FeedItem.Art(kind: "pack", key: "packs/\(LosAngelesSet.id)/sayornis-nigricans.jpg", url: url).patchThumbnailURL == nil, "a watercolour's")
+        #expect(FeedItem.Art(kind: "pack", key: "packs/\(LosAngelesSet.id)/patch/x.png", url: nil).patchThumbnailURL == nil, "no CDN yet")
     }
 }
 #endif
