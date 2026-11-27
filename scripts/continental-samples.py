@@ -4,7 +4,7 @@ Nothing here is an edition: the candidates are in `art/continental-candidates.js
 Two birds, one bright and one dark, are painted in each candidate through the patch step itself (`packbuilder.patch_art`:
 the committed `patch-art` workflow, patch-prompts.json's own template, settings and clauses, the cut from the card, the
 peel and shape retries, the measure), so the look the maintainer picks is copied into patch-prompts.json's `editions`
-as it stands (#214).
+as it stands (#214: E, as `north-america`).
 
     cd packbuilder
     uv run --quiet python ../scripts/continental-samples.py prepare          # the two reference birds, from the builder's art cache
@@ -62,22 +62,12 @@ def pack_id(letter: str) -> str:
 
 
 def spec_of(candidate: dict) -> PatchSpec:
+    """A candidate as the patch step takes an edition, its canvas included (the step's own since #214). Its `aspect` is
+    the shape's nominal one, for the sheet's flag, not the range an edition has its patches painted again by."""
     outline = candidate.get("outline")
     return PatchSpec(candidate["shape"], candidate["cord"], candidate["twill"], candidate["motif"],
-                     tuple(map(tuple, outline)) if outline else None, candidate.get("shape_limit"))
-
-
-class CanvasClient(ComfyClient):
-    """Paints the patch workflow on a candidate's own canvas, where it has one: the patch step paints every edition on the card's."""
-
-    def __init__(self, base_url: str, canvas: tuple[int, int] | None):
-        super().__init__(base_url)
-        self.canvas = canvas
-
-    def paint(self, workflow, images, prompt=None, seed=None, size=None):
-        if size is None and workflow.name == "patch-art":
-            size = self.canvas
-        return super().paint(workflow, images, prompt=prompt, seed=seed, size=size)
+                     tuple(map(tuple, outline)) if outline else None, candidate.get("shape_limit"),
+                     tuple(candidate["canvas"]) if candidate.get("canvas") else None)
 
 
 def artist(letter: str, data: dict, out: Path, comfy: str) -> PatchArtist:
@@ -92,8 +82,7 @@ def artist(letter: str, data: dict, out: Path, comfy: str) -> PatchArtist:
     own = candidate.get("markings", {})
     pins = {species_id: PatchPin(bird.get("setting", "perch"), None, " ".join(filter(None, [bird.get("markings"), own.get(species_id)])) or None, None, bird.get("dark_clause", True))
             for species_id, bird in birds.items()}
-    canvas = tuple(candidate["canvas"]) if candidate.get("canvas") else None
-    return PatchArtist(CanvasClient(comfy, canvas), pack_id=pack_id(letter), lock=PatchLock.load(folder / LOCK_FILE), art_lock=art_lock,
+    return PatchArtist(ComfyClient(comfy), pack_id=pack_id(letter), lock=PatchLock.load(folder / LOCK_FILE), art_lock=art_lock,
                        cache_dir=out / "cache" / "art", prompts=prompts, pins=pins)
 
 

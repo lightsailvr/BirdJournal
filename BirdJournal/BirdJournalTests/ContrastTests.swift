@@ -425,10 +425,10 @@ struct TokenPairingTests {
 @MainActor
 struct EditionTintTests {
     nonisolated static let tints = [
-        "EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionEvergreen", "EditionBorough", "EditionBayou", "EditionUncharted",
+        "EditionCitrus", "EditionCoastal", "EditionFog", "EditionDesert", "EditionWetland", "EditionEvergreen", "EditionBorough", "EditionBayou", "EditionContinental", "EditionUncharted",
     ]
     /// The sets with an edition of their own, by pack id.
-    nonisolated static let setIDs = [LosAngelesSet.id, "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"]
+    nonisolated static let setIDs = [LosAngelesSet.id, "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south", "north-america"]
 
     @Test("4.5:1 on the page and a raised surface, and the accent's words 4.5:1 on its fill", arguments: tints + ["ThreadTogether"])
     func onThePage(_ tint: String) throws {

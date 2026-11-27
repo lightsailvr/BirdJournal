@@ -73,6 +73,9 @@ class StubComfy:
     outputs: dict[str, bytes] = field(default_factory=dict)
     unfaithful: set[str] = field(default_factory=set)
     cover_drift: int = 0
+    patch_boxes: list[tuple[float, float]] = field(default_factory=list)
+    """The next patches painted, in order, as rounded rectangles taking this share of the canvas's width and of its
+    height: the model fits a badge to its picture, so a wide canvas gives a wide patch (#213). Round ones once it's empty."""
 
     @property
     def paintings(self) -> list[Job]:
@@ -92,7 +95,7 @@ class StubComfy:
         if job.filename_prefix == "birdjournal/set-cover":
             return png(landscape(size, job.seed + self.cover_drift))
         if job.filename_prefix in ("birdjournal/patch-art", "birdjournal/mascot-patch"):
-            return png(patch_on_card(size, Image.open(io.BytesIO(job.images[0])).convert("RGB")))
+            return png(patch_on_card(size, Image.open(io.BytesIO(job.images[0])).convert("RGB"), self.patch_boxes.pop(0) if self.patch_boxes else None))
         if job.kind == "text":
             return png(bird_on(Image.new("RGB", size, "white")))
         image = np.asarray(Image.open(io.BytesIO(job.images[0])).convert("RGB")).copy()
@@ -118,18 +121,25 @@ def bird_on(image: Image.Image, box=(0.3, 0.3, 0.7, 0.75), colours=((180, 60, 40
     return image
 
 
-def patch_on_card(size: tuple[int, int], bird: Image.Image) -> Image.Image:
+def patch_on_card(size: tuple[int, int], bird: Image.Image, box: tuple[float, float] | None = None) -> Image.Image:
     """A round patch on white card with a faint shadow: a cord, the tan twill, and the reference's bird (its non-white
-    pixels) in the middle."""
+    pixels) in the middle. With `box`, a rounded rectangle that share of the card's width and of its height."""
     width, height = size
     card = Image.new("RGB", size, (244, 243, 240))
     draw = ImageDraw.Draw(card)
     r = int(min(width, height) * 0.4)
     cx, cy = width // 2, height // 2
-    draw.ellipse((cx - r + 8, cy - r + 10, cx + r + 8, cy + r + 10), fill=(225, 224, 221))  # the shadow
-    draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=PATCH_CORD)
-    inner = int(r * 0.92)
-    draw.ellipse((cx - inner, cy - inner, cx + inner, cy + inner), fill=PATCH_TWILL)
+    if box is None:
+        draw.ellipse((cx - r + 8, cy - r + 10, cx + r + 8, cy + r + 10), fill=(225, 224, 221))  # the shadow
+        draw.ellipse((cx - r, cy - r, cx + r, cy + r), fill=PATCH_CORD)
+        inner = int(r * 0.92)
+        draw.ellipse((cx - inner, cy - inner, cx + inner, cy + inner), fill=PATCH_TWILL)
+    else:
+        half_width, half_height = int(width * box[0] / 2), int(height * box[1] / 2)
+        r, cord, corner = min(half_width, half_height), int(min(half_width, half_height) * 0.08), int(half_height * 0.2)
+        draw.rounded_rectangle((cx - half_width + 8, cy - half_height + 10, cx + half_width + 8, cy + half_height + 10), corner, fill=(225, 224, 221))  # the shadow
+        draw.rounded_rectangle((cx - half_width, cy - half_height, cx + half_width, cy + half_height), corner, fill=PATCH_CORD)
+        draw.rounded_rectangle((cx - half_width + cord, cy - half_height + cord, cx + half_width - cord, cy + half_height - cord), corner - cord, fill=PATCH_TWILL)
     small = bird.copy()
     small.thumbnail((int(r * 1.1), int(r * 1.1)))
     pixels = np.asarray(small).astype(int)
