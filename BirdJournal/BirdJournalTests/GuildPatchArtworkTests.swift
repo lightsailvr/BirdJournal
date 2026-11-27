@@ -18,8 +18,9 @@ struct GuildPatchArtworkTests {
         #expect(artwork.setID == BundledPack.id)
         #expect(artwork.state.art == library.patchArt(scientificName: Self.goose, setID: BundledPack.id))
         #expect(artwork.note == "Showing \(BundledPack.editionName) artwork")
-        // This correction never changes the viewer's own patch, or claims the find happened in the bundled set.
-        #expect(library.patchArt(scientificName: Self.goose, setID: edition) == nil)
+        // This correction never changes the viewer's own patch, or claims the find happened in the bundled set: outside every
+        // set that's the generic patch (#222), and no painting of the goose.
+        #expect(library.patchArt(scientificName: Self.goose, setID: edition)?.isGeneric != false)
     }
 
     @Test("an installed edition without patches also falls back; an edition with a patch always wins")
@@ -62,7 +63,8 @@ struct GuildPatchArtworkTests {
         for edition in [nil, "us-ca-sd"] as [String?] {
             let artwork = library.guildPatchArtwork(scientificName: Self.goose, setID: edition)
             #expect(artwork.setID == edition)
-            #expect(artwork.state == .tagged)
+            // A find that names no set is Uncharted's generic patch (#222), as the viewer's own would be; a set's is its blank.
+            #expect(artwork.state == (edition == nil ? PatchArt.uncharted.map(PatchArtState.painted) : .tagged))
             #expect(artwork.note == nil)
         }
         let withBundle = PackLibrary(bundled: try SpeciesPack.bundled(), storage: PackStorage(directory: folder))

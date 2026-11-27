@@ -607,7 +607,7 @@ struct ScreenAccessibilityTests {
         }
         Self.expectClean(card, screen: "Uncharted card")
         #expect(card.contains("Uncharted, outside every set"), "\(card)")
-        #expect(!card.contains("AI illustration"), "no painting to credit: \(card)")
+        #expect(card.contains("AI illustration"), "the generic patch is one (#222): \(card)")
     }
 
     // A set the phone knows from the index and whose pack it doesn't have: Coastal (a stand-in for San Diego, around the
@@ -640,7 +640,7 @@ struct ScreenAccessibilityTests {
         return harness
     }
 
-    @Test("A bird found in a set whose pack isn't on the phone is its Uncharted patch, a tagged blank, and stays one while that pack downloads")
+    @Test("A bird found in a set whose pack isn't on the phone is its Uncharted patch, the generic one, with nothing on its way while that pack downloads")
     func aSetNotOnThePhoneTakesNoSighting() async throws {
         let harness = try Self.sanDiegoHarness()
         let state = CollectionState()
@@ -683,7 +683,7 @@ struct ScreenAccessibilityTests {
         }
         Self.expectClean(labels, screen: "Species patches")
         #expect(labels.contains { $0.hasPrefix("\(BundledPack.finch.name), \(BundledPack.editionName) patch, seen 9 times, sewn ") }, "\(labels)")
-        #expect(labels.contains { $0.hasPrefix("\(BundledPack.finch.name), Uncharted patch, seen 6 times, sewn ") }, "the blank: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.finch.name), Uncharted patch, seen 6 times, sewn ") }, "the Uncharted patch: \(labels)")
         #expect(!labels.contains { $0.contains("Coastal edition patch") }, "\(labels)")
         #expect(labels.contains("Open in Atlas"), "\(labels)")
     }

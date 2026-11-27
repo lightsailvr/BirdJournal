@@ -15,7 +15,8 @@ extension PackLibrary {
     /// The feed can still use its matching-edition CDN thumbnail when no local painting is available.
     func guildPatchArtwork(scientificName: String, setID: String?) -> GuildPatchArtwork {
         let original = patchArtState(scientificName: scientificName, setID: setID)
-        if original.art != nil { return GuildPatchArtwork(setID: setID, state: original) }
+        // A find that names no set has Uncharted's generic patch, which is no painting of the bird: another edition's is still looked for.
+        if original.art?.isGeneric == false { return GuildPatchArtwork(setID: setID, state: original) }
         let bundledID = bundled?.info.id
         let ordered = packs.sorted { left, right in
             if (left.info.id == bundledID) != (right.info.id == bundledID) { return left.info.id == bundledID }

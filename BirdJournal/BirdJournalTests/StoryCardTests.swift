@@ -336,7 +336,7 @@ struct PatchWordsTests {
         #expect(art.colour.lastPathComponent == "\(stem).avif")
         #expect(art.layers.lastPathComponent == "\(stem)-layers.avif")
         #expect(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: "us-ca-sd") == nil)
-        #expect(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: nil) == nil)
+        #expect(library.patchArt(scientificName: BundledPack.finch.scientificName, setID: nil)?.isGeneric == true, "outside every set, Uncharted's generic patch (#222)")
     }
 
     @Test("the bundled pack's patch decodes at both sizes, with its alpha, for the shader")

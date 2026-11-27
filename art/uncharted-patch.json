@@ -1,6 +1,40 @@
 {
  "version": 1,
- "comment": "CANDIDATES, not the shipped art (issue #221, of #206): the one finished embroidered patch that will stand in for every Uncharted bird, in place of the empty canvas round. The maintainer picks one of `candidates` on the contact sheet `scripts/uncharted-candidates.py` draws; #222 then ships the pick in the app and this file gives way to that patch's own prompts and lock. Painted by FLUX.3 Image Klein from text alone (the `workflow`, on the square `canvas` the mascot patches use), in the language of the real patches (`patch-prompts.json`): a merit badge lying flat on white card under even light, so the app does the lighting. The badge is Uncharted's own (`PatchEdition.of(setID: nil)`): the plain canvas round with the brown cord, so it still reads as outside every set, and the thread is that brown and cream, so no emblem claims a plumage. `emblems` are what was tried, each no particular species: the ticket's feather, plain bird and compass, and three more. `placement` (an emblem may have its own) keeps the embroidery in the bottom third: the bird's name hangs on a paper tag from a slot a tenth of the way down (`TiedTag`), and a three-line name on a board's tile reaches 0.56 of the way down. The wording was found by trial: 'within its lower half' and 'about a third as tall' put the emblem under the tag, 'a narrow band of bare canvas between it and the lower border' stitched a seam across the badge, and a strap made the binoculars a smiling face. FLUX.3 reads a caption of the finished picture. `candidates` pins what went on the sheet, lettered as there: the emblem, its seed and the cut patch's SHA-256; the same prompt and seed paint the same picture again. Bump the version when the template, the placement or an emblem changes.",
+ "comment": "The generic Uncharted patch (issues #221 and #222, of #206): the one finished embroidered patch that stands for every bird outside every set, in place of the empty canvas round, with the bird's name on its paper tag. `shipped` is the maintainer's pick of the lettered `candidates` (A, the feather, on 2026-11-26, recorded on #221): the cut painting and the painting as it came, both in `art/uncharted/`, and the two files the app lights it from, which `scripts/uncharted-candidates.py layers` made from the cut as a pack's patch is made (`ground` and `stitch_bounds` are that patch row's, and `PatchArt.uncharted`'s). `packbuilder/tests/test_uncharted_patch.py` holds the files to these hashes. The rest is how it was painted, and what else was tried. Painted by FLUX.3 Image Klein from text alone (the `workflow`, on the square `canvas` the mascot patches use), in the language of the real patches (`patch-prompts.json`): a merit badge lying flat on white card under even light, so the app does the lighting. The badge is Uncharted's own (`PatchEdition.of(setID: nil)`): the plain canvas round with the brown cord, so it still reads as outside every set, and the thread is that brown and cream, so no emblem claims a plumage. `emblems` are what was tried, each no particular species: the ticket's feather, plain bird and compass, and three more. `placement` (an emblem may have its own) keeps the embroidery in the bottom third: the bird's name hangs on a paper tag from a slot a tenth of the way down (`TiedTag`), and a three-line name on a board's tile reaches 0.56 of the way down. The wording was found by trial: 'within its lower half' and 'about a third as tall' put the emblem under the tag, 'a narrow band of bare canvas between it and the lower border' stitched a seam across the badge, and a strap made the binoculars a smiling face. FLUX.3 reads a caption of the finished picture. `candidates` pins what went on the maintainer's sheet, lettered as there: the emblem, its seed and the cut patch's SHA-256; the same prompt and seed paint the same picture again. Bump the version when the template, the placement or an emblem changes.",
+ "shipped": {
+  "letter": "A",
+  "emblem": "feather",
+  "seed": 967309561,
+  "picked": "2026-11-26, by the maintainer, on issue #221",
+  "source": "uncharted/feather.png",
+  "source_sha256": "cc3cdaceb93065c382de1c1f8cd271c9b2faeb2e80644c799881fd7cbb292c26",
+  "raw": "uncharted/feather-raw.png",
+  "raw_sha256": "6660c7d98a4b590fbb1e326a9151932f4aa50e99635c705a4955d903b307652b",
+  "colour": "BirdJournal/BirdJournal/Patch/UnchartedPatch.avif",
+  "colour_sha256": "43abee7e6361142311c95b255ec1c8e09ea1e2a15aa337f940b8d29b12568de3",
+  "layers": "BirdJournal/BirdJournal/Patch/UnchartedPatchLayers.avif",
+  "layers_sha256": "d335f214c6dd98460a8d97adb118bda7172ca3ec49cf586db1c978d0c16b2c72",
+  "ground": "#D9C5A9",
+  "stitch_bounds": [
+   0,
+   26,
+   51,
+   76,
+   102,
+   128,
+   153,
+   178,
+   204,
+   230,
+   255
+  ],
+  "emblem_box": [
+   0.174,
+   0.678,
+   0.849,
+   0.858
+  ]
+ },
  "workflow": "pack-art-text",
  "canvas": [
   1152,

@@ -1,6 +1,7 @@
-"""Candidates for the generic Uncharted patch (#221, of #206): the one finished embroidered patch that will stand in for
-every Uncharted bird. CANDIDATES ONLY: the maintainer picks one on the sheet this draws, and #222 ships the pick in the
-app. Nothing here changes what the app draws for Uncharted.
+"""Candidates for the generic Uncharted patch (#221, of #206): the one finished embroidered patch that stands in for every
+Uncharted bird. The maintainer picked A, the feather, on the sheet this draws, and #222 shipped it in the app: the pick,
+its two paintings in `art/uncharted/` and the hashes of the files the app lights are `shipped` in
+`art/uncharted-patch.json`. This is how those were made, and how another would be.
 
     cd packbuilder
     uv run --quiet python ../scripts/uncharted-candidates.py paint  ../build/uncharted-candidates --trials 4          # every emblem, four seeds each
@@ -13,7 +14,7 @@ app. Nothing here changes what the app draws for Uncharted.
 `paint` needs comfybox (UNCHARTED_COMFY, default http://comfybox:8189). Paint on the box itself, not across the tailnet:
 copy `packbuilder/src`, `art/` and this script to a checkout-shaped folder there and run it from its `packbuilder` folder
 with `PYTHONPATH=src UNCHARTED_COMFY=http://127.0.0.1:8189 ~/comfyui-flux3/.venv/bin/python ../scripts/uncharted-candidates.py paint OUT`,
-then copy OUT back. It paints each emblem of `art/uncharted-candidates.json` from text and cuts the round badge from its
+then copy OUT back. It paints each emblem of `art/uncharted-patch.json` from text and cuts the round badge from its
 card along its cord, as an exact disc (`cut_round`): `OUT/trials/<emblem>/<seed>.png` at 720 px, `-raw.png` as it came,
 and `OUT/trials/results.json` (the prompt, the seed, where the embroidery lies). A painting already there under the same
 prompt is only cut again; one that isn't round has no cut. `trials` draws them all on `OUT/trials.jpg`.
@@ -50,7 +51,7 @@ from scipy.spatial import ConvexHull
 from packbuilder.art import ART_DIR, Workflow
 from packbuilder.patch_art import SIZE, layers, peeled, trim_rim
 
-PROMPTS = ART_DIR / "uncharted-candidates.json"
+PROMPTS = ART_DIR / "uncharted-patch.json"
 COMFY = os.environ.get("UNCHARTED_COMFY", "http://comfybox:8189")
 ASPECT_SLACK, FILL_SLACK = 0.025, 0.015
 """How far a painted badge may be from round and still be drawn out to an exact disc (`cut_round`)."""

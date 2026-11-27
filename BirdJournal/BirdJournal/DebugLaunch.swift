@@ -27,6 +27,8 @@ import UIKit
 ///   only writes the first time, so later launches read a full album off the disk. `-speedTour YES` then walks the screens and
 ///   prints what each cost (`SpeedTour`).
 /// - `-seedNewestAt <place>` adds a sighting just now at one of `-autoLocation`'s places, so its set is the newest sighting's.
+/// - `-seedNoLocation "Turdus merula_Common Blackbird,…"` adds a sighting of each of those BirdNET labels just now with no
+///   location, on top of any other seed, the first the newest: Uncharted whatever the bird, with the generic patch (issue #222).
 /// - `-seedGallery YES` adds fifteen cards of the finch (`SampleBirds`) over three weeks, nine in Griffith Park and six in San Diego, for
 ///   the species' patches (issue #134).
 /// - `-autoScreen find` opens a find's page (`-autoFind <owner>/<sighting>`, by default Maya's phoebe), and `circle-info` a
@@ -162,6 +164,7 @@ struct DebugLaunch: ViewModifier {
             if defaults.bool(forKey: "seedGallery") { DebugSeeds.seedGallery(context: context, frames: frameStore) }
             if defaults.bool(forKey: "seedBoard") { DebugSeeds.seedBoard(context: context) }
             if let place = defaults.string(forKey: "seedNewestAt").flatMap(DebugPlace.init(rawValue:)) { DebugSeeds.seedNewest(at: place, context: context) }
+            if let labels = defaults.string(forKey: "seedNoLocation") { DebugSeeds.seedNoLocation(labels.split(separator: ",").map(String.init), context: context) }
             let large = defaults.integer(forKey: "seedLarge")
             if large > 0 { DebugSeeds.seedLarge(context: context, count: large) }
             for index in 0..<defaults.integer(forKey: "seedUnnamed") {
@@ -808,6 +811,15 @@ enum DebugSeeds {
     /// The finch just now at `place`, on top of any other seed: the newest sighting's set, for the painting's fallback (issue #150).
     static func seedNewest(at place: DebugPlace, context: ModelContext) {
         context.insert(Sighting(speciesID: SampleBirds.finch.label, confirmedAt: .now, location: place.coordinate, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        try? context.save()
+    }
+
+    /// Birds heard just now with no location saved, on top of any other seed, the first the newest: outside every set, whatever
+    /// the bird.
+    static func seedNoLocation(_ labels: [String], context: ModelContext) {
+        for (index, label) in labels.enumerated() {
+            context.insert(Sighting(speciesID: label, confirmedAt: Date.now.addingTimeInterval(-Double(index)), location: nil, soundConfidence: 0.7, frameImagePath: nil, source: .phone, method: .heard))
+        }
         try? context.save()
     }
 
