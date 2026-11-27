@@ -156,7 +156,7 @@ final class CardFlipUITests: XCTestCase {
         XCTAssertEqual(element(app, "card-heading").label, "Uncharted, outside every set")
         XCTAssertFalse(app.staticTexts["card-lore-excerpt"].exists, "no lore, no tale")
         XCTAssertFalse(element(app, "card-stats").exists, "no biology")
-        XCTAssertFalse(element(app, "card-art-credit").exists, "no painting, so no AI illustration")
+        XCTAssertEqual(element(app, "card-art-credit").label, "AI illustration", "its patch is the generic one (#222), an AI illustration like any")
         XCTAssertFalse(app.buttons["card-sources"].exists, "no pack, no sources")
 
         // Its record says what's missing.

@@ -7,6 +7,7 @@ import SwiftUI
 /// link, each reference sound with its recordist, license and recording page (#41), and the pack's LICENSE text. The
 /// datasets behind the card stats (#55) follow the models when a pack carries stats, and the sources of the lore and
 /// captions (#56) when a pack carries fact sheets.
+/// (The generic Uncharted patch, which ships in the app and in no pack, is credited here too: issue #222.)
 struct CreditsView: View {
     @Environment(PackLibrary.self) private var library
 
@@ -46,6 +47,15 @@ struct CreditsView: View {
                     LoreCredits(packs: library.packs)
                 } header: {
                     Text("Lore and captions")
+                }
+            }
+
+            if PatchArt.uncharted != nil {
+                Section("Uncharted patch") {
+                    Text(UnchartedPatchCredit.text)
+                        .font(JournalFont.supporting)
+                        .foregroundStyle(Color.inkSecondary)
+                        .accessibilityIdentifier("credits-uncharted-patch")
                 }
             }
 
@@ -189,4 +199,10 @@ struct LicenseTextView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { text = Result(catching: load) }
     }
+}
+
+/// The generic Uncharted patch's credit (issue #222), in the words a pack's patch is credited with (`SpeciesCreditsView`): it's
+/// an AI illustration like them, labelled so on its paper card and its share image, but painted from a description alone.
+enum UnchartedPatchCredit {
+    static let text = "AI illustration, not a photograph: one embroidered patch, a feather, painted for the app from a written description, with no photo and no bird behind it (FLUX.3 Image Klein, pack-art-text@1). Every bird outside every set wears it, with its own name on the paper tag. It shows no species, and not your bird."
 }
