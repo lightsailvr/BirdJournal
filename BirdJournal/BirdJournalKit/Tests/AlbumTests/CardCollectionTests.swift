@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Album
 
 // Issue #132 (of #131): a birder collects patches, one per species per placement (a set, or Uncharted). The first
@@ -50,7 +51,7 @@ struct CardCollectionTests {
         #expect(finchLA.sewn.identifier == Self.uuid(3), "the earliest surviving sighting sewed it")
         #expect(finchLA.latest.identifier == Self.uuid(5))
         #expect(finchLA.sightings.map(\.identifier) == [Self.uuid(5), Self.uuid(1), Self.uuid(3)], "newest first")
-        #expect(finchLA.placement.setID == "us-ca-la")
+        #expect(finchLA.placement.setID == LosAngelesSet.id)
         #expect(collection.patch(of: Self.uuid(3)) == finchLA, "every sighting finds its patch")
         #expect(collection.sewedItsPatch(Self.uuid(3)))
         #expect(!collection.sewedItsPatch(Self.uuid(1)))
@@ -59,7 +60,7 @@ struct CardCollectionTests {
         #expect(finchSD != finchLA, "the same bird in another set is another patch")
         #expect(finchSD.count == 1)
         #expect(finchSD.placement.setID == "us-ca-sd")
-        #expect(collection.patches(of: Self.finch).map(\.placement.setID) == ["us-ca-la", "us-ca-sd"], "a species' patches, earliest sewn first")
+        #expect(collection.patches(of: Self.finch).map(\.placement.setID) == [LosAngelesSet.id, "us-ca-sd"], "a species' patches, earliest sewn first")
     }
 
     @Test("sightings with no location, or outside every set, share the species' Uncharted patch")
@@ -122,9 +123,9 @@ struct CardCollectionTests {
             sets: Self.sets
         )
         // The finch is 21st in Los Angeles, the phoebe 87th.
-        #expect(collection.patches(in: "us-ca-la").map(\.speciesID) == [Self.finch, Self.phoebe])
+        #expect(collection.patches(in: LosAngelesSet.id).map(\.speciesID) == [Self.finch, Self.phoebe])
         #expect(collection.patches(in: "us-ca-sd").map(\.speciesID) == [Self.finch])
-        #expect(collection.progress(of: "us-ca-la").collected == 2, "progress counts patches")
+        #expect(collection.progress(of: LosAngelesSet.id).collected == 2, "progress counts patches")
     }
 
     @Test("the summary counts patches and sightings")

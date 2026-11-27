@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Pack
 
 /// Lookups by key (issue #208): a species by its scientific name, a photo and a sound by id, in one pack and across the
@@ -53,7 +54,7 @@ struct PackLookupTests {
         // The library reads a download before the bundled pack, and the pack of a sighting's own set before both (issue #207).
         let order = [download, bundled], bundledFirst = [bundled, download]
 
-        // Black Phoebe and Anna's Hummingbird are in both packs; the 300 written here only in the download.
+        // The test pack's two birds are in both packs; the 300 written here only in the download.
         let names = order.flatMap { $0.species.map(\.scientificName) } + ["Nope nope", ""]
         #expect(names.count > 450)
         for name in names {
@@ -74,8 +75,8 @@ struct PackLookupTests {
             let found = library.sound(id: id)
             #expect(found?.pack.info.id == scanned?.0.info.id && found?.sound == scanned?.1, "\(id)")
         }
-        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == "test-pack")
-        #expect(library.species(scientificName: "Sayornis nigricans", setID: bundled.info.id)?.pack.info.id == bundled.info.id)
+        #expect(library.species(scientificName: BundledPack.phoebe.scientificName)?.pack.info.id == "test-pack")
+        #expect(library.species(scientificName: BundledPack.phoebe.scientificName, setID: bundled.info.id)?.pack.info.id == bundled.info.id)
         #expect(library.species(scientificName: "Genus species7", setID: bundled.info.id)?.pack.info.id == "test-pack")
         #expect(library.photo(id: "inat-200007")?.pack.info.id == "test-pack" && library.sound(id: "xc-10007")?.pack.info.id == "test-pack")
     }

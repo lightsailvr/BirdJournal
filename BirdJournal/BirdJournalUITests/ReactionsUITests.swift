@@ -26,7 +26,7 @@ final class ReactionsUITests: XCTestCase {
     func testAReactionIsGivenAndTakenBack() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
         let lovely = app.buttons["react-lovely-\(Self.mayasPhoebe)"]
-        // Maya's Black Phoebe is the fourth find: scroll to it.
+        // Maya's phoebe is the fourth find: scroll to it.
         app.scrolledTo(lovely, limit: 24)
         XCTAssertTrue(lovely.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertEqual(lovely.value as? String, "2 reactions", "Jo's and Sam's, seeded")
@@ -200,7 +200,7 @@ final class ReactionsUITests: XCTestCase {
     @MainActor
     func testTheFootOfAGuildStaysPutThroughAFind() {
         let app = launch(["-fakeAccount", "signedIn", "-fakeCircles", "some", "-autoScreen", "circle"])
-        // Maya's House Finch is the last find.
+        // Maya's finch is the last find.
         let last = app.buttons["find-00000000-0000-4000-8000-000000000005"]
         XCTAssertTrue(app.scrolledTo(last, limit: 24), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<3 { app.swipeUp() }
@@ -249,10 +249,10 @@ final class ReactionsUITests: XCTestCase {
         maya.tap()
 
         XCTAssertTrue(app.navigationBars["You and Maya"].waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        let woodpecker = app.descendants(matching: .any)["compare-Melanerpes formicivorus"]
+        let woodpecker = app.descendants(matching: .any)["compare-\(BundledPack.woodpecker.scientificName)"]
         XCTAssertTrue(woodpecker.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertEqual(woodpecker.label, "Acorn Woodpecker. You: Not yet. Maya: Heard.")
-        let phoebe = app.descendants(matching: .any)["compare-Sayornis nigricans"]
+        XCTAssertEqual(woodpecker.label, "\(BundledPack.woodpecker.name). You: Not yet. Maya: Heard.")
+        let phoebe = app.descendants(matching: .any)["compare-\(BundledPack.phoebe.scientificName)"]
         XCTAssertTrue(phoebe.label.hasSuffix("Maya: Seen."), phoebe.label)
         XCTAssertTrue(app.staticTexts["Maya has these. Go find them."].exists)
         screenshot(app, "64-compare")

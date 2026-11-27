@@ -37,7 +37,7 @@ struct AtlasPackCollectionTests {
         let before = CardCollection(sightings: try sightings(), sets: PackLibrary(bundled: nil, storage: storage).cardSets)
         #expect(before.speciesCount == 2)
 
-        // "Download" the Los Angeles pack: the installed copy, as `PackStorage.install` leaves it.
+        // "Download" the bundled pack: the installed copy, as `PackStorage.install` leaves it.
         let bundled = try SpeciesPack.bundled()
         let folder = storage.url(for: bundled.info.id)
         try FileManager.default.createDirectory(at: storage.directory, withIntermediateDirectories: true)

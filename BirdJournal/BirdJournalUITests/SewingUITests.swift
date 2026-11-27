@@ -4,7 +4,7 @@ import XCTest
 /// with a painting. A first add stitches and reveals, a repeat only ticks the count, and neither comes back when the patch is
 /// reopened. Skipped when the clip is not on disk (`scripts/download-clips.sh`).
 final class SewingUITests: XCTestCase {
-    private static let name = "House Finch"
+    private static let name = BundledPack.finch.name
 
     private static func clip() throws -> String {
         let clip = URL(fileURLWithPath: #filePath)
@@ -27,7 +27,7 @@ final class SewingUITests: XCTestCase {
         return app
     }
 
-    /// Reviews the House Finch and taps its add button. The live list re-sorts as birds call, so a tap can land on the row
+    /// Reviews the finch and taps its add button. The live list re-sorts as birds call, so a tap can land on the row
     /// that has just moved under it: that bird's sheet is closed and the row tried again.
     @MainActor
     private func add(_ app: XCUIApplication, button: String, row: String? = nil) {
@@ -56,13 +56,13 @@ final class SewingUITests: XCTestCase {
         XCTAssertTrue(stitching.waitForExistence(timeout: 10), "no stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertEqual(stitching.label, "Sewing your \(Self.name) patch")
         // The page's own line: "Your first …" is also the acknowledgment's, in the toast under the page.
-        let reveal = app.staticTexts["New patch, Citrus edition"]
+        let reveal = app.staticTexts["New patch, \(BundledPack.editionName)"]
         XCTAssertFalse(reveal.exists, "the reveal waits for the stitching")
 
         stitching.tap()
         XCTAssertTrue(reveal.waitForExistence(timeout: 5), "tapping didn't finish it; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists)
-        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].exists, "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in \(BundledPack.setName)"].exists, "screen: \(app.debugDescription.prefix(4000))")
         let keepListening = app.buttons["Keep listening"]
         XCTAssertTrue(keepListening.exists, "the primary action during a run")
         keepListening.tap()
@@ -70,7 +70,7 @@ final class SewingUITests: XCTestCase {
 
         // The same bird again: the sighting and its count, with no page and nothing to tap (the maintainer, 2026-11-04).
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        let seenAgain = app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"]
+        let seenAgain = app.staticTexts["\(Self.name) seen again, 2 times in \(BundledPack.setName)"]
         XCTAssertTrue(seenAgain.waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(stitching.exists, "a repeat stitches nothing")
         XCTAssertFalse(reveal.exists, "a repeat is not a new patch")
@@ -95,7 +95,7 @@ final class SewingUITests: XCTestCase {
     func testTheStitchInFinishesOnItsOwn() throws {
         let app = try launch([])
         add(app, button: "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 15), "the stitch-in didn't end; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists)
     }
 
@@ -103,12 +103,12 @@ final class SewingUITests: XCTestCase {
     func testReduceMotionShowsTheFinishedPatchAndTheNewCountAtOnce() throws {
         let app = try launch(["-reduceMotion", "YES", "-stitchInSeconds", "60"])
         add(app, button: "Add and sew patch")
-        XCTAssertTrue(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 10), "no finished patch under a 60 s stitch-in; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "no stitching")
         app.buttons["Keep listening"].tap()
 
         add(app, button: "Add another sighting", row: "Added. Review \(Self.name)")
-        XCTAssertTrue(app.staticTexts["\(Self.name) seen again, 2 times in Los Angeles"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["\(Self.name) seen again, 2 times in \(BundledPack.setName)"].waitForExistence(timeout: 10), "no count; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "no page")
     }
 
@@ -153,11 +153,11 @@ final class SewingUITests: XCTestCase {
         waitForLensAdd(of: Self.name, app)
 
         let stitching = app.buttons["stitch-in"]
-        let reveal = app.staticTexts["New patch, Citrus edition"]
+        let reveal = app.staticTexts["New patch, \(BundledPack.editionName)"]
         XCTAssertFalse(stitching.waitForExistence(timeout: 4), "nothing on the phone mid-run; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(reveal.exists, "nothing on the phone mid-run")
         XCTAssertFalse(app.buttons["Keep listening"].exists, "nothing on the phone mid-run")
-        XCTAssertFalse(app.staticTexts["Your first \(Self.name) in Los Angeles"].exists, "not even the toast: the lens said it")
+        XCTAssertFalse(app.staticTexts["Your first \(Self.name) in \(BundledPack.setName)"].exists, "not even the toast: the lens said it")
 
         app.buttons["Stop listening"].tap()
         XCTAssertTrue(stitching.waitForExistence(timeout: 15), "no stitch-in when the run ended; screen: \(app.debugDescription.prefix(4000))")
@@ -173,7 +173,7 @@ final class SewingUITests: XCTestCase {
 
         let again = relaunch(album: album, extra: ["-stitchInSeconds", "60"])
         XCTAssertFalse(again.buttons["stitch-in"].waitForExistence(timeout: 6), "it plays once; screen: \(again.debugDescription.prefix(4000))")
-        XCTAssertFalse(again.staticTexts["New patch, Citrus edition"].exists, "it plays once")
+        XCTAssertFalse(again.staticTexts["New patch, \(BundledPack.editionName)"].exists, "it plays once")
         again.tabBars.buttons["Collection"].tap()
         let patch = again.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS 'seen once'", Self.name)).firstMatch
         XCTAssertTrue(patch.waitForExistence(timeout: 10), "the patch is there all the same; screen: \(again.debugDescription.prefix(4000))")
@@ -182,8 +182,8 @@ final class SewingUITests: XCTestCase {
     @MainActor
     func testKilledMidRunTheCeremoniesWaitForTheNextLaunchAndTheRestCanBeSkipped() throws {
         let album = Self.album()
-        let app = try launchGlassesRun(adding: "\(Self.name),Dark-eyed Junco", album: album)
-        waitForLensAdd(of: "Dark-eyed Junco", app)
+        let app = try launchGlassesRun(adding: "\(Self.name),\(BundledPack.junco.name)", album: album)
+        waitForLensAdd(of: BundledPack.junco.name, app)
 
         let next = relaunch(album: album, extra: ["-stitchInSeconds", "60"])
         let stitching = next.buttons["stitch-in"]
@@ -195,7 +195,7 @@ final class SewingUITests: XCTestCase {
         XCTAssertTrue(next.buttons["Next patch"].exists)
         XCTAssertFalse(next.buttons["revealed-patch"].exists, "the rest first")
         skip.tap()
-        XCTAssertFalse(next.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "the page closed")
+        XCTAssertFalse(next.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 2), "the page closed")
         XCTAssertFalse(stitching.exists, "and the junco's never started")
 
         let third = relaunch(album: album, extra: ["-stitchInSeconds", "60"])
@@ -204,21 +204,21 @@ final class SewingUITests: XCTestCase {
 
     @MainActor
     func testUnderReduceMotionSeveralFromTheGlassesGoFinishedPageToFinishedPage() throws {
-        let app = try launchGlassesRun(adding: "\(Self.name),Dark-eyed Junco", album: Self.album(), extra: ["-reduceMotion", "YES"])
-        waitForLensAdd(of: "Dark-eyed Junco", app)
+        let app = try launchGlassesRun(adding: "\(Self.name),\(BundledPack.junco.name)", album: Self.album(), extra: ["-reduceMotion", "YES"])
+        waitForLensAdd(of: BundledPack.junco.name, app)
         app.buttons["Stop listening"].tap()
 
         let nextPatch = app.buttons["Next patch"]
         XCTAssertTrue(nextPatch.waitForExistence(timeout: 15), "no finished page; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.buttons["stitch-in"].exists, "no stitching")
-        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].exists, "the order sewn; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in \(BundledPack.setName)"].exists, "the order sewn; screen: \(app.debugDescription.prefix(4000))")
         nextPatch.tap()
-        XCTAssertTrue(app.staticTexts["Your first Dark-eyed Junco in Los Angeles"].waitForExistence(timeout: 5), "no second patch; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(BundledPack.junco.name) in \(BundledPack.setName)"].waitForExistence(timeout: 5), "no second patch; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(nextPatch.exists, "the last one")
         XCTAssertTrue(app.buttons["revealed-patch"].exists, "the last one is the way to the collection")
         XCTAssertFalse(app.buttons["Skip the rest, 1 more"].exists)
         app.buttons["Done"].firstMatch.tap()
-        XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertFalse(app.staticTexts["New patch, \(BundledPack.editionName)"].waitForExistence(timeout: 2), "nothing more; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor
@@ -229,7 +229,7 @@ final class SewingUITests: XCTestCase {
         let stop = app.buttons["Stop listening"]
         XCTAssertTrue(stop.waitForExistence(timeout: 10), "no listening strip; screen: \(app.debugDescription.prefix(4000))")
         stop.tap()
-        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in Los Angeles"].waitForExistence(timeout: 15), "the ceremony didn't play; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.staticTexts["Your first \(Self.name) in \(BundledPack.setName)"].waitForExistence(timeout: 15), "the ceremony didn't play; screen: \(app.debugDescription.prefix(4000))")
     }
 
     @MainActor

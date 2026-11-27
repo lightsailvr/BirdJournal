@@ -118,9 +118,9 @@ struct RunSightingsTests {
     @Test("a sighting names its species from the packs, else from its label, so a removed pack leaves the journal readable")
     func namesFallBack() throws {
         let library = PackLibrary.forApp()
-        let known = Sighting(speciesID: "Sayornis nigricans_Black phoebe (label spelling)", confirmedAt: .now, soundConfidence: 0.5, source: .phone)
+        let known = Sighting(speciesID: "\(BundledPack.phoebe.scientificName)_Black phoebe (label spelling)", confirmedAt: .now, soundConfidence: 0.5, source: .phone)
         let unknown = Sighting(speciesID: "Avis ignota_Unknown Bird", confirmedAt: .now, soundConfidence: 0.5, source: .phone)
-        #expect(library.commonName(for: known) == (library.bundled == nil ? "Black phoebe (label spelling)" : "Black Phoebe"))
+        #expect(library.commonName(for: known) == (library.bundled == nil ? "Black phoebe (label spelling)" : BundledPack.phoebe.name))
         #expect(library.commonName(for: unknown) == "Unknown Bird")
     }
 }
