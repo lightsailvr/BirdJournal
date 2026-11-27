@@ -37,8 +37,8 @@ struct PackLibraryTests {
         #expect(library.status(of: descriptor) == .installed(version: 1))
         #expect(library.packs.map(\.info.id) == [PackIndex.bundledPackID, "test-pack"])
         #expect(library.available.isEmpty)
-        // Black Phoebe is in both packs: the bundled one wins.
-        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == PackIndex.bundledPackID)
+        // Black Phoebe is in both packs: the download is read before the bundled one (issue #207).
+        #expect(library.species(scientificName: "Sayornis nigricans")?.pack.info.id == "test-pack")
         let phoebe = try #require(library.pack(id: "test-pack")?.species(scientificName: "Sayornis nigricans"))
         #expect(library.photo(id: phoebe.photos[0].id)?.pack.info.id == "test-pack")
         #expect(library.sound(id: "xc-1")?.pack.info.id == "test-pack", "the test pack's song, which the bundled pack lacks")
