@@ -86,6 +86,10 @@ _Avoid_: snapshot (as a synonym for art), frame (the stream frame is only a fall
 A downloadable bundle for one set's place: species, photos, reference sounds, descriptions, stats, lore and patches. In copy, a field-guide download.
 _Avoid_: region pack, bundle, dataset
 
+**Field-guide offer**:
+The app's one unasked invitation to download a pack (#223): to a birder standing in a set whose pack isn't on the phone, that set's field guide, with its size. Once per set: "Not now" is remembered, and the set's page in the Atlas keeps its ordinary Download. Nothing downloads without a tap.
+_Avoid_: prompt, nag, upsell, recommendation
+
 **Reference sound**:
 A recorded song or call of a species shipped in a pack, for the birder to compare with what they hear.
 _Avoid_: clip (in domain language), sample

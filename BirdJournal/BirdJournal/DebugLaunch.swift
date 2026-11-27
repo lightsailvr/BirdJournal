@@ -77,6 +77,9 @@ import UIKit
 ///   picks the Listen painting (issue #150).
 /// - `-freshPackStorage YES` starts with no downloads and no index read yet, as a fresh install does; with `-packIndexURL
 ///   http://127.0.0.1:9/index.json` the index stays out of reach (issue #150).
+/// - `-autoLocation testland` is inside the pack fixtures' set and no real one, and `-packIndexURL <file URL>` reads an index a
+///   UI test wrote, whose downloads can be files too: a field guide offered, downloaded and installed with no network (issue
+///   #223). `-resetFieldGuideOffers YES` forgets which sets' offers were dismissed, as a new install has none.
 /// - `-fakeRunBirds "<scientific name>_<common name>,…"` makes a run's list these BirdNET labels and hold still, the first
 ///   calling and the rest heard 3, 5, 7… minutes ago, so a tap can't land on a row that's just moved (issue #150). The run still
 ///   needs `-autoPhoneListening <wav>` for its waveform. `-autoRowAdd <name>` adds that bird as a row's button does, past its
@@ -480,6 +483,8 @@ struct DeniedLocationProvider: LocationProvider {
 /// The places `-autoLocation` names: one in each set, and one outside them all.
 enum DebugPlace: String {
     case griffith, sanDiego = "san-diego", oakland, joshuaTree = "joshua-tree", orlando, kansas
+    /// The pack fixtures' made-up place (`test-pack`'s set, a square degree of sea off West Africa), outside every real set.
+    case testland
 
     var coordinate: Coordinate {
         switch self {
@@ -489,6 +494,7 @@ enum DebugPlace: String {
         case .joshuaTree: Coordinate(latitude: 33.8734, longitude: -115.9010, accuracy: 10)
         case .orlando: Coordinate(latitude: 28.5384, longitude: -81.3789, accuracy: 10)
         case .kansas: Coordinate(latitude: 38.5, longitude: -98.5, accuracy: 10)
+        case .testland: Coordinate(latitude: 0.5, longitude: 0.5, accuracy: 10)
         }
     }
 }
