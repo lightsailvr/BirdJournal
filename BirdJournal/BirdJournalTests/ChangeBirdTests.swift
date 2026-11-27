@@ -77,8 +77,8 @@ struct ChangeBirdTests {
         #expect(patch.placement.collectorNumber == "001/002", "the new bird's place in the set")
         #expect(collection.patches(of: Self.allens.speciesID).isEmpty, "the old bird's patch is unpicked")
         #expect(collection.patchCount == 1)
-        #expect(collection.collected(in: "us-ca-la") == ["Haemorhous mexicanus"], "the set's progress is the new bird's")
-        #expect(collection.progress(of: "us-ca-la").collected == 1)
+        #expect(collection.collected(in: LosAngelesSet.id) == ["Haemorhous mexicanus"], "the set's progress is the new bird's")
+        #expect(collection.progress(of: LosAngelesSet.id).collected == 1)
     }
 
     @Test("a patch with other sightings keeps them: the old bird's patch loses one, the new bird's gains one, and a bird outside every set lands in Uncharted")
@@ -88,7 +88,7 @@ struct ChangeBirdTests {
         try fixture.ledger.add(RunSightingsTests.candidate(score: 0.5), confirmedAt: Self.taken.addingTimeInterval(-60), location: Self.losFeliz, frame: nil, source: .phone)
         let sighting = try fixture.named(Self.allens)
         #expect(fixture.collection.patch(of: sighting.identifier)?.count == 2)
-        #expect(fixture.collection.progress(of: "us-ca-la").collected == 2)
+        #expect(fixture.collection.progress(of: LosAngelesSet.id).collected == 2)
 
         #expect(fixture.edits.changeBird(of: sighting, to: Self.finch))
 
@@ -96,7 +96,7 @@ struct ChangeBirdTests {
         #expect(collection.patch(of: sighting.identifier)?.scientificName == "Haemorhous mexicanus")
         #expect(collection.patch(of: sighting.identifier)?.count == 2, "with the one heard")
         #expect(collection.patches(of: Self.allens.speciesID).map(\.count) == [1], "the old bird keeps its patch and its other sighting")
-        #expect(collection.progress(of: "us-ca-la").collected == 2)
+        #expect(collection.progress(of: LosAngelesSet.id).collected == 2)
 
         #expect(fixture.edits.changeBird(of: sighting, to: Self.hermit))
 
@@ -104,7 +104,7 @@ struct ChangeBirdTests {
         #expect(collection.patch(of: sighting.identifier)?.placement == .uncharted, "no set lists it")
         #expect(collection.unchartedSpeciesCount == 1)
         #expect(collection.patches(of: Self.finch.speciesID).map(\.count) == [1])
-        #expect(collection.progress(of: "us-ca-la").collected == 2, "both set birds still have a sighting there")
+        #expect(collection.progress(of: LosAngelesSet.id).collected == 2, "both set birds still have a sighting there")
     }
 
     @Test("the rarity is read again for the new bird, at the sighting's own place and in the week it was taken")
@@ -170,7 +170,7 @@ struct ChangeBirdTests {
 
     @Test("what Change bird says: the button, the bird it already is, and what the change does to both patches before it happens")
     func words() {
-        let losAngeles = CardPlacement.numbered(setID: "us-ca-la", setName: "Los Angeles", edition: "Citrus edition", number: 2, total: 2)
+        let losAngeles = CardPlacement.numbered(setID: LosAngelesSet.id, setName: "Los Angeles", edition: "Citrus edition", number: 2, total: 2)
 
         #expect(ChangeBirdText.title == "Change bird")
         #expect(ChangeBirdText.confirmTitle(seenHere: nil) == "Change bird", "nothing chosen yet")

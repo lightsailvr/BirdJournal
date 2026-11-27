@@ -36,7 +36,7 @@ struct UnnamedSightingAccessibilityTests {
         Screens.expectOneWordPerThing(labels, screen: "Run with unnamed sightings")
         let section = try #require(labels.firstIndex(of: "Seen this run"), "\(labels)")
         let rows = Array(labels[(section + 1)...].prefix(3))
-        #expect(rows == [Self.row, "Allen's Hummingbird, Seen, your photo, New patch", Self.row], "in the order taken, named or not: \(labels)")
+        #expect(rows == [Self.row, "\(BundledPack.otherHummingbird.name), Seen, your photo, New patch", Self.row], "in the order taken, named or not: \(labels)")
         #expect(!labels.contains { $0.contains("Unnamed") && $0.contains("New patch") }, "it has earned nothing: \(labels)")
     }
 

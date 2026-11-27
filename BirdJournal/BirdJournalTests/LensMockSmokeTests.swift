@@ -280,7 +280,7 @@ extension MockDeviceKitTests {
                 await pushes.received(FriendBanners.samplePush())
                 try await waitUntil(timeout: .seconds(1)) { if case .friend = lens.page { true } else { false } }
                 #expect(lens.card.elements == [
-                    .status("A friend's find"), .heading("Maya heard a Black Phoebe · Pasadena"), .meta("Tap or swipe right to close"),
+                    .status("A friend's find"), .heading("Maya heard a \(BundledPack.phoebe.name) · Pasadena"), .meta("Tap or swipe right to close"),
                 ])
                 let input = glasses.services.input
                 input.select()
@@ -296,7 +296,7 @@ extension MockDeviceKitTests {
                 #expect(lens.page == .details(index: 1))
                 input.navUp()
                 try await waitUntil(timeout: .seconds(1)) { if case .friend = lens.page { true } else { false } }
-                #expect(lens.card.elements.contains(.heading("Maya heard a Black Phoebe · Pasadena")))
+                #expect(lens.card.elements.contains(.heading("Maya heard a \(BundledPack.phoebe.name) · Pasadena")))
                 input.navRight()
                 try await waitUntil(timeout: .seconds(1)) { lens.page == .species(index: 1) }
                 #expect(lens.machine.heldBanner == nil)

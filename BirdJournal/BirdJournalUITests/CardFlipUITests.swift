@@ -47,24 +47,24 @@ final class CardFlipUITests: XCTestCase {
 
     @MainActor
     func testThePatchSaysWhatItIsInTypeBelowIt() {
-        let app = launch("card", ["-autoCardSpecies", "Sayornis nigricans"])
+        let app = launch("card", ["-autoCardSpecies", BundledPack.phoebe.scientificName])
         XCTAssertTrue(turn(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
         XCTAssertTrue(turn(app).isHittable, "Turn over is visible and in reach")
-        XCTAssertTrue(face(app).label.hasPrefix("Black Phoebe, Citrus edition patch, seen once, sewn "), face(app).label)
+        XCTAssertTrue(face(app).label.hasPrefix("\(BundledPack.phoebe.name), \(BundledPack.editionName) patch, seen once, sewn "), face(app).label)
         XCTAssertEqual(face(app).value as? String ?? "", "")
-        XCTAssertTrue(app.staticTexts["Black Phoebe"].exists)
-        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in Los Angeles, sewn "), element(app, "patch-count").label)
-        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH 'Citrus edition, No. '")).firstMatch
+        XCTAssertTrue(app.staticTexts[BundledPack.phoebe.name].exists)
+        XCTAssertTrue(element(app, "patch-count").label.hasPrefix("Seen once in \(BundledPack.setName), sewn "), element(app, "patch-count").label)
+        let line = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.editionName), No. '")).firstMatch
         XCTAssertTrue(line.exists, "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertFalse(app.staticTexts.matching(NSPredicate(format: "label CONTAINS 'Legendary'")).firstMatch.exists)
     }
 
     @MainActor
     func testTheCardCarriesTheStoryAndYourHistory() {
-        let app = launch("card-back", ["-autoCardSpecies", "Haemorhous mexicanus"])
+        let app = launch("card-back", ["-autoCardSpecies", BundledPack.finch.scientificName])
         assertShowing(card: true, app)
-        XCTAssertEqual(element(app, "card-heading").label, "Citrus edition, number 130 of 160 in Los Angeles")
-        XCTAssertEqual(element(app, "card-name").label, "House Finch")
+        XCTAssertEqual(element(app, "card-heading").label, "\(BundledPack.editionName), number \(BundledPack.finch.number) of \(BundledPack.speciesCount) in \(BundledPack.setName)")
+        XCTAssertEqual(element(app, "card-name").label, BundledPack.finch.name)
         XCTAssertEqual(element(app, "card-story-title").label, "Painted by Its Berries")
         let excerpt = app.staticTexts["card-lore-excerpt"]
         XCTAssertTrue(excerpt.exists, "screen: \(app.debugDescription.prefix(4000))")
@@ -77,7 +77,7 @@ final class CardFlipUITests: XCTestCase {
 
     @MainActor
     func testASightingOnTheCardOpensItsRecordAndComesBackToTheCard() {
-        let app = launch("card-back", ["-autoCardSpecies", "Sayornis nigricans"])
+        let app = launch("card-back", ["-autoCardSpecies", BundledPack.phoebe.scientificName])
         assertShowing(card: true, app)
         let row = app.buttons["card-history-sighting"]
         XCTAssertTrue(row.waitForExistence(timeout: 5), "screen: \(app.debugDescription.prefix(4000))")
@@ -91,7 +91,7 @@ final class CardFlipUITests: XCTestCase {
 
     @MainActor
     func testAllSightingsAndSourcesOpenFromTheFooter() {
-        let app = launch("card-back", ["-autoCardSpecies", "Haemorhous mexicanus"])
+        let app = launch("card-back", ["-autoCardSpecies", BundledPack.finch.scientificName])
         assertShowing(card: true, app)
         let all = app.buttons["card-all-sightings"]
         XCTAssertTrue(all.isHittable, "the footer stays in view; screen: \(app.debugDescription.prefix(4000))")
@@ -176,7 +176,7 @@ final class CardFlipUITests: XCTestCase {
     func testSwipingMovesThroughEveryPatchAndLandsOnItsFace() {
         let app = launch("card")
         XCTAssertTrue(face(app).waitForExistence(timeout: 15), "the patch did not open; screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
+        XCTAssertTrue(face(app).label.hasPrefix(BundledPack.finch.name), face(app).label)
         XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "dove, phoebe, finch, then the two Uncharted; screen: \(app.debugDescription.prefix(3000))")
 
         // From the patch: the next patch, the first Uncharted.
@@ -190,7 +190,7 @@ final class CardFlipUITests: XCTestCase {
         app.swipeRight()
         XCTAssertTrue(app.patchPage("3 of 5").waitForExistence(timeout: 5), "the swipe from the card did not move; screen: \(app.debugDescription.prefix(3000))")
         assertShowing(card: false, app)
-        XCTAssertTrue(face(app).label.hasPrefix("House Finch"), face(app).label)
+        XCTAssertTrue(face(app).label.hasPrefix(BundledPack.finch.name), face(app).label)
 
         // And coming back to the one turned over, it's the patch again.
         app.swipeLeft()
@@ -243,8 +243,8 @@ final class CardFlipUITests: XCTestCase {
         app.navigationBars.buttons.element(boundBy: 0).tap()
 
         // In again through the patch's card: the row says Seen, and so does the record.
-        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'House Finch'")).firstMatch
-        XCTAssertTrue(tile.waitForExistence(timeout: 10), "no House Finch patch; screen: \(app.debugDescription.prefix(4000))")
+        let tile = app.buttons.matching(NSPredicate(format: "label BEGINSWITH '\(BundledPack.finch.name)'")).firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 10), "no \(BundledPack.finch.name) patch; screen: \(app.debugDescription.prefix(4000))")
         tile.tap()
         XCTAssertTrue(turn(app).waitForExistence(timeout: 10))
         turn(app).tap()
@@ -279,7 +279,7 @@ final class CardFlipUITests: XCTestCase {
     /// picker, which is out of XCUITest's reach: its button hands over a picture as the picker's item would.
     @MainActor
     func testAPhotoAttachedToASightingShowsOnItAndCanBeRemoved() {
-        let app = launch("sighting", ["-autoCardSpecies", "Zenaida macroura", "-fakeLibraryPhoto", "YES"])
+        let app = launch("sighting", ["-autoCardSpecies", BundledPack.dove.scientificName, "-fakeLibraryPhoto", "YES"])
         let attach = app.buttons["sighting-attach-photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
@@ -320,7 +320,7 @@ final class CardFlipUITests: XCTestCase {
     /// and takes the tap.
     @MainActor
     func testTheAttachActionIsThereWithoutTheStandIn() {
-        let app = launch("sighting", ["-autoCardSpecies", "Zenaida macroura"])
+        let app = launch("sighting", ["-autoCardSpecies", BundledPack.dove.scientificName])
         let attach = app.buttons["sighting-attach-photo"]
         XCTAssertTrue(app.staticTexts["Your note"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<8 where !attach.isHittable { app.swipeUp() }
@@ -330,7 +330,7 @@ final class CardFlipUITests: XCTestCase {
 }
 
 private extension XCUIApplication {
-    /// A patch's page by its position: its title also names the place, "Los Angeles, 3 of 5" (issue #150).
+    /// A patch's page by its position: its title also names the place, "<set name>, 3 of 5" (issue #150).
     func patchPage(_ position: String) -> XCUIElement {
         navigationBars.matching(NSPredicate(format: "identifier ENDSWITH %@", ", \(position)")).firstMatch
     }

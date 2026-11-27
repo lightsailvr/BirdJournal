@@ -67,7 +67,7 @@ struct UnchartedPatchTests {
     func oneForEveryBird() async throws {
         let library = Self.emptyLibrary()
         let blackbird = try #require(library.patchArt(scientificName: "Turdus merula", setID: nil), "a bird no pack describes")
-        #expect(library.patchArt(scientificName: "Calypte anna", setID: nil) == blackbird, "the same embroidery for every bird")
+        #expect(library.patchArt(scientificName: "Erithacus rubecula", setID: nil) == blackbird, "the same embroidery for every bird")
         #expect(library.patchArtState(scientificName: "Turdus merula", setID: nil) == .painted(blackbird))
         let full = try #require(await PatchTextures.load(blackbird, size: .full))
         #expect(full.colourBitmap.width == 720 && full.colourBitmap.height == 720)
@@ -118,7 +118,8 @@ struct UnchartedPatchTests {
         #expect(underTag < 0.5, "and leaves the feather alone: \(underTag)")
     }
 
-    /// How far down a `side`-point patch its tag reaches, as a part of its height: the lowest row the tag changes.
+    /// How far down a `side`-point patch its tag reaches, as a part of its height: the lowest row the tag changes. The names
+    /// below are words on a tag, looked up in no pack: "Northern Rough-winged Swallow" is the three-line name #221 measured with.
     private static func tagReach(_ name: String, side: CGFloat, size: PatchTextures.Size, typeSize: DynamicTypeSize, art: PatchArt) async throws -> Double {
         let tagged = try await render(PatchView(state: .painted(art), edition: uncharted, size: size, tag: name).environment(\.dynamicTypeSize, typeSize), side: side)
         let untagged = try await render(PatchView(art: art, edition: uncharted, size: size).environment(\.dynamicTypeSize, typeSize), side: side)

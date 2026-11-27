@@ -25,7 +25,7 @@ private let itemJSON = """
 {"sighting_id":"6f9619ff-8b86-d011-b42d-00c04fc964ff","species_id":"Sayornis nigricans_Black Phoebe",
  "scientific_name":"Sayornis nigricans","common_name":"Black Phoebe","method":"seen","place":"Pasadena",
  "found_at":"2026-11-01T08:15:00Z","new_patch":true,"edition":"us-ca-sd","rarity":"rare",
- "art":{"kind":"pack","key":"packs/us-ca-la/sayornis-nigricans.jpg","url":"https://d111.cloudfront.net/packs/us-ca-la/sayornis-nigricans.jpg"},
+ "art":{"kind":"pack","key":"packs/\(LosAngelesSet.id)/sayornis-nigricans.jpg","url":"https://d111.cloudfront.net/packs/\(LosAngelesSet.id)/sayornis-nigricans.jpg"},
  "owner":{"id":"maya","display_name":"Maya Ortiz"},"circle_first":true,"is_mine":false}
 """
 
@@ -72,7 +72,7 @@ struct FindClientTests {
         #expect(item.newPatch && item.circleFirst && !item.isMine)
         #expect(item.edition == "us-ca-sd")
         #expect(item.owner.name == "Maya Ortiz")
-        #expect(item.art?.url == URL(string: "https://d111.cloudfront.net/packs/us-ca-la/sayornis-nigricans.jpg"))
+        #expect(item.art?.url == URL(string: "https://d111.cloudfront.net/packs/\(LosAngelesSet.id)/sayornis-nigricans.jpg"))
         #expect(item.foundAt == Date(timeIntervalSince1970: 1_793_520_900))
     }
 
@@ -98,7 +98,7 @@ struct LegacyFindWireTests {
 
     private static func find() throws -> FindPolicy.Find {
         var input = FindPolicyTests.input(isNewPatch: true)
-        input.edition = "us-ca-la"
+        input.edition = LosAngelesSet.id
         return try #require(FindPolicy.find(for: input, sharing: .automatic))
     }
 
@@ -114,7 +114,7 @@ struct LegacyFindWireTests {
         try await client.putFind(try Self.find(), sightingID: UUID(), accessToken: "t")
         #expect(recorder.requests.count == 1)
         let body = try Self.json(recorder.requests[0])
-        #expect(body["new_patch"] as? Bool == true && body["edition"] as? String == "us-ca-la" && body["legendary"] == nil)
+        #expect(body["new_patch"] as? Bool == true && body["edition"] as? String == LosAngelesSet.id && body["legendary"] == nil)
     }
 
     @Test("a server that refuses new_patch gets the old form, and the find stays a new patch")
@@ -157,20 +157,20 @@ struct LegacyFindWireTests {
     func oldFeed() async throws {
         let oldItem = itemJSON
             .replacingOccurrences(of: #""new_patch":true,"edition":"us-ca-sd""#, with: #""legendary":true"#)
-            .replacingOccurrences(of: "packs/us-ca-la/sayornis-nigricans.jpg", with: "packs/us-ca-la/patch/sayornis-nigricans.png")
+            .replacingOccurrences(of: "packs/\(LosAngelesSet.id)/sayornis-nigricans.jpg", with: "packs/\(LosAngelesSet.id)/patch/sayornis-nigricans.png")
         #expect(!oldItem.contains("new_patch"))
         let recorder = Recorder()
         recorder.responses = [http(200, #"{"items":[\#(oldItem)],"next_cursor":null}"#)]
         let client = HTTPCircleClient(baseURL: api, transport: recorder.transport)
         let item = try #require(try await client.feed(circleID: "c1", cursor: nil, accessToken: "t").items.first)
         #expect(item.newPatch)
-        #expect(item.edition == "us-ca-la")
+        #expect(item.edition == LosAngelesSet.id)
     }
 
     @Test("an edition comes only from a patch's key: pack art can be another set's, even for a find outside every set")
     func editionOfArtKey() {
-        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/patch/x.png") == "us-ca-la")
-        #expect(LegacyFindWire.edition(ofArtKey: "packs/us-ca-la/x.jpg") == nil)
+        #expect(LegacyFindWire.edition(ofArtKey: "packs/\(LosAngelesSet.id)/patch/x.png") == LosAngelesSet.id)
+        #expect(LegacyFindWire.edition(ofArtKey: "packs/\(LosAngelesSet.id)/x.jpg") == nil)
         #expect(LegacyFindWire.edition(ofArtKey: "art/sub/x.jpg") == nil)
         #expect(LegacyFindWire.edition(ofArtKey: nil) == nil)
     }
@@ -290,8 +290,8 @@ struct CircleFeedStoreTests {
         await store.loadFeed(circleID: sunday.id)
         let feed = try #require(store.feeds[sunday.id])
         #expect(feed.isLoaded)
-        #expect(feed.items.map(\.commonName) == ["California Gnatcatcher", "Black Phoebe", "Anna's Hummingbird", "Black Phoebe", "Acorn Woodpecker", "House Finch"])
-        #expect(feed.items.map(\.circleFirst) == [true, false, true, true, true, true], "Maya's earlier Black Phoebe is the circle's first")
+        #expect(feed.items.map(\.commonName) == [BundledPack.gnatcatcher.name, BundledPack.phoebe.name, BundledPack.hummingbird.name, BundledPack.phoebe.name, BundledPack.woodpecker.name, BundledPack.finch.name])
+        #expect(feed.items.map(\.circleFirst) == [true, false, true, true, true, true], "Maya's earlier phoebe is the circle's first")
         #expect(feed.items.first?.place == "a secret spot")
         store.clear()
         #expect(store.feeds.isEmpty)
@@ -634,8 +634,8 @@ struct FriendsAroundTheAppTests {
     func who() async {
         let (store, _) = seeded()
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Sayornis nigricans").map(\.id) == ["jo", "maya"], "by name")
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.name) == ["Maya Ortiz"])
+        #expect(store.friends(having: BundledPack.phoebe.scientificName).map(\.id) == ["jo", "maya"], "by name")
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.name) == ["Maya Ortiz"])
         #expect(store.friends(having: "Turdus merula").isEmpty)
         #expect(!store.friendsBySpecies.values.joined().contains { $0.id == FakeCircleClient.me })
     }
@@ -668,10 +668,10 @@ struct FriendsAroundTheAppTests {
     func blocked() async throws {
         let (store, client) = seeded()
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
         try await store.setBlocked(true, accountID: "maya", name: "Maya Ortiz")
-        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
-        #expect(store.friends(having: "Sayornis nigricans").map(\.id) == ["jo"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).isEmpty)
+        #expect(store.friends(having: BundledPack.phoebe.scientificName).map(\.id) == ["jo"])
 
         let reads = client.compareLog.count
         await store.loadFriendsBirds()
@@ -679,7 +679,7 @@ struct FriendsAroundTheAppTests {
 
         try await store.setBlocked(false, accountID: "maya", name: "Maya Ortiz")
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
     }
 
     @Test("someone already blocked at the start is never asked for")
@@ -689,7 +689,7 @@ struct FriendsAroundTheAppTests {
         let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
         await store.loadFriendsBirds()
         #expect(!client.compareLog.contains("maya"))
-        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).isEmpty)
     }
 
     @Test("a block made elsewhere comes back as not found: they go, and aren't asked again")
@@ -698,7 +698,7 @@ struct FriendsAroundTheAppTests {
         await store.loadFriendsBirds()
         try await client.setBlocked(true, accountID: "jo", accessToken: "t")
         await #expect(throws: CircleError.notFound) { try await store.compare(friendID: "jo") }
-        #expect(store.friends(having: "Calypte anna").isEmpty)
+        #expect(store.friends(having: BundledPack.hummingbird.scientificName).isEmpty)
         let reads = client.compareLog.count
         await store.loadFriendsBirds()
         #expect(client.compareLog.count == reads)
@@ -710,7 +710,7 @@ struct FriendsAroundTheAppTests {
         await store.loadFriendsBirds()
         let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
         try await store.leave(circleID: sunday.id)
-        #expect(store.friends(having: "Melanerpes formicivorus").isEmpty)
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).isEmpty)
     }
 
     /// Pat in Canyon Walkers too, with Maya, who's found a bird only there.
@@ -720,7 +720,7 @@ struct FriendsAroundTheAppTests {
         client.add(FeedItem(
             sightingID: "00000000-0000-4000-8000-000000000040", speciesID: "Ardea alba_Great Egret", scientificName: "Ardea alba", commonName: "Great Egret",
             method: .seen, place: "Ojai", foundAt: .now, newPatch: true, rarity: .common, art: nil,
-            owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"), circleFirst: false, isMine: false, edition: "us-ca-la"
+            owner: FeedItem.Owner(id: "maya", displayName: "Maya Ortiz"), circleFirst: false, isMine: false, edition: LosAngelesSet.id
         ), to: canyon.circle.id)
         await store.loadFriendsBirds()
         #expect(store.friends(having: "Ardea alba").map(\.id) == ["maya"])
@@ -738,7 +738,7 @@ struct FriendsAroundTheAppTests {
         await store.loadFriendsBirds()
         #expect(client.compareLog.filter { $0 == "maya" }.count == reads + 1)
         #expect(store.friends(having: "Ardea alba").isEmpty, "the server no longer counts it")
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"], "Sunday Group's still count")
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"], "Sunday Group's still count")
     }
 
     @Test("an answer on its way when the Guild was left isn't kept")
@@ -751,7 +751,7 @@ struct FriendsAroundTheAppTests {
         client.compareAnswerLatency = .zero
         _ = try await read.value
         #expect(store.friends(having: "Ardea alba").isEmpty)
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
     }
 
     @Test("a Guild gone from the list, left on another device, does the same")
@@ -761,7 +761,7 @@ struct FriendsAroundTheAppTests {
         await store.refresh()
         #expect(store.friends(having: "Ardea alba").isEmpty)
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
     }
 
     @Test("a detail read that's lost a member drops what was read of them, though another Guild keeps them friends")
@@ -770,15 +770,15 @@ struct FriendsAroundTheAppTests {
         client.seedSharedFinds()
         let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"), "only in Sunday Group")
+        #expect(store.friends(having: BundledPack.phoebe.scientificName).map(\.id).contains("jo"), "only in Sunday Group")
         let sunday = try #require(store.circles.first { $0.name == "Sunday Group" })
         try await store.remove(memberID: "jo", circleID: sunday.id)
         #expect(store.friendBirds["jo"] == nil)
-        #expect(!store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"))
+        #expect(!store.friends(having: BundledPack.phoebe.scientificName).map(\.id).contains("jo"))
 
         await store.loadFriendsBirds()
-        #expect(!store.friends(having: "Sayornis nigricans").map(\.id).contains("jo"))
-        #expect(store.friends(having: "Calypte anna").map(\.id).contains("jo"), "the hummingbird's in Family too")
+        #expect(!store.friends(having: BundledPack.phoebe.scientificName).map(\.id).contains("jo"))
+        #expect(store.friends(having: BundledPack.hummingbird.scientificName).map(\.id).contains("jo"), "the hummingbird's in Family too")
     }
 
     @Test("no connection from the start costs one call, not one per Guild or friend")
@@ -789,7 +789,7 @@ struct FriendsAroundTheAppTests {
         #expect(client.compareLog.isEmpty, "it never got as far as a friend")
         client.isOffline = false
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
     }
 
     @Test("the screen that asked going away doesn't stop the read: the next screen is waiting on it")
@@ -800,7 +800,7 @@ struct FriendsAroundTheAppTests {
         try? await Task.sleep(for: .milliseconds(30))
         first.cancel()
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
         #expect(client.compareLog.count == 5, "each once")
     }
 
@@ -814,7 +814,7 @@ struct FriendsAroundTheAppTests {
         #expect(client.compareLog.count == 1, "one failure, not one per friend")
         client.isOffline = false
         await store.loadFriendsBirds()
-        #expect(store.friends(having: "Melanerpes formicivorus").map(\.id) == ["maya"])
+        #expect(store.friends(having: BundledPack.woodpecker.scientificName).map(\.id) == ["maya"])
     }
 
     @Test("a friend's editions come from their finds, earliest found first, and none is none")
@@ -824,8 +824,8 @@ struct FriendsAroundTheAppTests {
         let store = CircleStore(account: FakeAccount.session(signedIn: true), client: client)
         await store.refresh()
         let lee = try await store.compare(friendID: "lee")
-        #expect(lee.species.first { $0.commonName == "Black Phoebe" }?.editions == ["us-ca-sd"])
-        #expect(lee.species.first { $0.commonName == "House Finch" }?.editions == ["us-ca-la"])
+        #expect(lee.species.first { $0.commonName == BundledPack.phoebe.name }?.editions == ["us-ca-sd"])
+        #expect(lee.species.first { $0.commonName == BundledPack.finch.name }?.editions == [BundledPack.id])
     }
 }
 
@@ -940,7 +940,7 @@ struct FindFeedRowTests {
         find.edition = "us-ca-sd"
         find.art = .init(kind: "pack", key: "packs/us-ca-sd/patch/x.png", url: url)
         #expect(FindPatchPicture.thumbnail(of: find) == url)
-        find.art = .init(kind: "pack", key: "packs/us-ca-la/patch/x.png", url: url)
+        find.art = .init(kind: "pack", key: "packs/\(LosAngelesSet.id)/patch/x.png", url: url)
         #expect(FindPatchPicture.thumbnail(of: find) == nil, "never another edition's")
         find.art = .init(kind: "pack", key: "packs/us-ca-sd/x.jpg", url: url)
         #expect(FindPatchPicture.thumbnail(of: find) == nil, "not a patch")
@@ -1360,7 +1360,7 @@ struct MergedFeedTests {
             Issue.record("the newest row is Lee's line: \(rows.first?.id ?? "")")
             return
         }
-        #expect(line.map(\.item.commonName) == ["House Finch", "Mourning Dove", "House Finch"])
+        #expect(line.map(\.item.commonName) == [BundledPack.finch.name, BundledPack.dove.name, BundledPack.finch.name])
     }
 
     @Test("the merged feed outlives a launch through the cache, and goes on sign-out")

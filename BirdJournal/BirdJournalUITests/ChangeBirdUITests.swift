@@ -48,26 +48,26 @@ final class ChangeBirdUITests: XCTestCase {
     func testABirdSeenThisRunIsChangedFromItsPageAndTheRunFollowsWithNoStitchIn() throws {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", "Haemorhous mexicanus_House Finch",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", BundledPack.finch.label,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "listening",
             "-fakeCamera", "ready", "-reduceMotion", "YES", "-acknowledgmentSeconds", "90",
-            "-autoSeen", "Selasphorus sasin",
+            "-autoSeen", BundledPack.otherHummingbird.scientificName,
         ]
         app.launch()
-        let row = app.buttons["seen-row-Selasphorus sasin"]
+        let row = app.buttons["seen-row-\(BundledPack.otherHummingbird.scientificName)"]
         XCTAssertTrue(row.waitForExistence(timeout: 120), "no seen bird; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(row.label, "Allen's Hummingbird, Seen, your photo, New patch")
-        XCTAssertTrue(app.staticTexts["Your first Allen's Hummingbird in Los Angeles"].waitForExistence(timeout: 10), "the add's acknowledgment; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertEqual(row.label, "\(BundledPack.otherHummingbird.name), Seen, your photo, New patch")
+        XCTAssertTrue(app.staticTexts["Your first \(BundledPack.otherHummingbird.name) in \(BundledPack.setName)"].waitForExistence(timeout: 10), "the add's acknowledgment; screen: \(app.debugDescription.prefix(4000))")
 
         row.tap()
-        XCTAssertTrue(app.navigationBars["Allen's Hummingbird"].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.otherHummingbird.name].waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(element(app, "sighting-named-by-you").waitForExistence(timeout: 10))
         openChangeBird(app)
 
         // The sheet is the naming sheet, on the sighting: its bird, nothing to name later or delete, nothing to press yet.
         let photo = element(app, "name-bird-photo")
         XCTAssertTrue(photo.waitForExistence(timeout: 5))
-        XCTAssertTrue(photo.label.hasPrefix("Allen's Hummingbird, your photo, Today, "), photo.label)
+        XCTAssertTrue(photo.label.hasPrefix("\(BundledPack.otherHummingbird.name), your photo, Today, "), photo.label)
         XCTAssertTrue(app.buttons["change-bird-cancel"].exists)
         XCTAssertFalse(app.buttons["name-bird-later"].exists)
         XCTAssertFalse(app.buttons["name-bird-delete"].exists)
@@ -76,34 +76,34 @@ final class ChangeBirdUITests: XCTestCase {
         XCTAssertFalse(confirm.isEnabled, "nothing chosen")
         XCTAssertTrue(app.staticTexts["Heard this run"].waitForExistence(timeout: 30), "the run's birds are suggested for a bird seen on it; screen: \(app.debugDescription.prefix(4000))")
 
-        let anna = choose(app, search: "calypte", scientificName: "Calypte anna")
-        XCTAssertEqual(anna.label, "Anna's Hummingbird, Los Angeles, New to you here")
+        let anna = choose(app, search: BundledPack.hummingbird.genus.lowercased(), scientificName: BundledPack.hummingbird.scientificName)
+        XCTAssertEqual(anna.label, "\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here")
         anna.tap()
         XCTAssertTrue(confirm.isEnabled)
         XCTAssertEqual(confirm.label, "Change and sew patch")
         XCTAssertTrue(
-            app.staticTexts["Anna's Hummingbird, new to you here. Your Allen's Hummingbird patch in Los Angeles will be unpicked."].exists,
+            app.staticTexts["\(BundledPack.hummingbird.name), new to you here. Your \(BundledPack.otherHummingbird.name) patch in \(BundledPack.setName) will be unpicked."].exists,
             "screen: \(app.debugDescription.prefix(4000))"
         )
         confirm.tap()
 
         // The sheet closes on the same page, now the new bird's, and nothing is celebrated: no stitch-in, no new patch's page.
         XCTAssertTrue(app.navigationBars["Change bird"].waitForNonExistence(timeout: 15), "the sheet stayed; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertTrue(app.navigationBars["Anna's Hummingbird"].waitForExistence(timeout: 15), "the page isn't the new bird's; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.hummingbird.name].waitForExistence(timeout: 15), "the page isn't the new bird's; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(element(app, "sighting-attached-photo").exists, "its photo is still its own")
         Thread.sleep(forTimeInterval: 2)
         XCTAssertFalse(element(app, "stitch-in").exists, "a stitch-in played for a change")
         XCTAssertFalse(element(app, "revealed-patch").exists, "a new patch's page opened for a change")
-        XCTAssertFalse(app.staticTexts["New patch, Citrus edition"].exists)
-        XCTAssertTrue(app.navigationBars["Anna's Hummingbird"].exists)
+        XCTAssertFalse(app.staticTexts["New patch, \(BundledPack.editionName)"].exists)
+        XCTAssertTrue(app.navigationBars[BundledPack.hummingbird.name].exists)
 
         // Back on the run: the row is the new bird's, and the acknowledgment that named the old one has gone.
         app.navigationBars.buttons.firstMatch.tap()
-        let changed = app.buttons["seen-row-Calypte anna"]
+        let changed = app.buttons["seen-row-\(BundledPack.hummingbird.scientificName)"]
         XCTAssertTrue(changed.waitForExistence(timeout: 15), "the run's row didn't follow; screen: \(app.debugDescription.prefix(4000))")
-        XCTAssertEqual(changed.label, "Anna's Hummingbird, Seen, your photo, New patch")
-        XCTAssertFalse(app.buttons["seen-row-Selasphorus sasin"].exists)
-        XCTAssertFalse(app.staticTexts["Your first Allen's Hummingbird in Los Angeles"].exists, "the old bird's acknowledgment stayed")
+        XCTAssertEqual(changed.label, "\(BundledPack.hummingbird.name), Seen, your photo, New patch")
+        XCTAssertFalse(app.buttons["seen-row-\(BundledPack.otherHummingbird.scientificName)"].exists)
+        XCTAssertFalse(app.staticTexts["Your first \(BundledPack.otherHummingbird.name) in \(BundledPack.setName)"].exists, "the old bird's acknowledgment stayed")
         XCTAssertFalse(app.buttons["Undo"].exists)
     }
 
@@ -112,43 +112,43 @@ final class ChangeBirdUITests: XCTestCase {
     @MainActor
     func testANamedSightingInTheCollectionChangesToABirdWithAPatchAndAHeardOneCannot() throws {
         let app = XCUIApplication()
-        let seeded = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-seedSeen", "Selasphorus sasin", "-collectionIntroShown", "YES", "-reduceMotion", "YES"]
-        app.launchArguments = seeded + ["-autoScreen", "sighting", "-autoCardSpecies", "Selasphorus sasin"]
+        let seeded = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-seedSeen", BundledPack.otherHummingbird.scientificName, "-collectionIntroShown", "YES", "-reduceMotion", "YES"]
+        app.launchArguments = seeded + ["-autoScreen", "sighting", "-autoCardSpecies", BundledPack.otherHummingbird.scientificName]
         app.launch()
-        XCTAssertTrue(app.navigationBars["Allen's Hummingbird"].waitForExistence(timeout: 90), "no sighting's page; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.otherHummingbird.name].waitForExistence(timeout: 90), "no sighting's page; screen: \(app.debugDescription.prefix(4000))")
         openChangeBird(app)
         let confirm = app.buttons["change-bird-confirm"]
 
-        // The House Finch has been heard twice in Los Angeles: the change adds to its patch and sews none.
-        let finch = choose(app, search: "house finch", scientificName: "Haemorhous mexicanus")
-        XCTAssertEqual(finch.label, "House Finch, Los Angeles, Seen 2 times here")
+        // The finch has been heard twice in the bundled pack's set: the change adds to its patch and sews none.
+        let finch = choose(app, search: BundledPack.finch.name.lowercased(), scientificName: BundledPack.finch.scientificName)
+        XCTAssertEqual(finch.label, "\(BundledPack.finch.name), \(BundledPack.setName), Seen 2 times here")
         finch.tap()
         XCTAssertEqual(confirm.label, "Change bird")
         XCTAssertTrue(
-            app.staticTexts["House Finch, seen 2 times here. Your Allen's Hummingbird patch in Los Angeles will be unpicked."].exists,
+            app.staticTexts["\(BundledPack.finch.name), seen 2 times here. Your \(BundledPack.otherHummingbird.name) patch in \(BundledPack.setName) will be unpicked."].exists,
             "screen: \(app.debugDescription.prefix(4000))"
         )
         confirm.tap()
-        XCTAssertTrue(app.navigationBars["House Finch"].waitForExistence(timeout: 15), "the page isn't the new bird's; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.finch.name].waitForExistence(timeout: 15), "the page isn't the new bird's; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(element(app, "sighting-named-by-you").exists, "still a bird the birder saw and named")
         XCTAssertFalse(element(app, "stitch-in").exists)
         XCTAssertFalse(element(app, "revealed-patch").exists)
 
-        // The sheet opens again on the House Finch, and Cancel leaves it. (Nothing is typed this time: a second keyboard in
+        // The sheet opens again on the finch, and Cancel leaves it. (Nothing is typed this time: a second keyboard in
         // one launch has hung XCUITest's idle wait, #188 and #189. The bird it is being marked is held in process.)
         openChangeBird(app)
         let photo = element(app, "name-bird-photo")
         XCTAssertTrue(photo.waitForExistence(timeout: 5))
-        XCTAssertTrue(photo.label.hasPrefix("House Finch, your photo, "), photo.label)
+        XCTAssertTrue(photo.label.hasPrefix("\(BundledPack.finch.name), your photo, "), photo.label)
         app.buttons["change-bird-cancel"].tap()
         XCTAssertTrue(app.navigationBars["Change bird"].waitForNonExistence(timeout: 10))
-        XCTAssertTrue(app.navigationBars["House Finch"].exists, "Cancel changed nothing")
+        XCTAssertTrue(app.navigationBars[BundledPack.finch.name].exists, "Cancel changed nothing")
 
-        // A sighting BirdNET heard: the Black Phoebe.
+        // A sighting BirdNET heard: the phoebe.
         app.terminate()
-        app.launchArguments = seeded + ["-autoScreen", "sighting", "-autoCardSpecies", "Sayornis nigricans"]
+        app.launchArguments = seeded + ["-autoScreen", "sighting", "-autoCardSpecies", BundledPack.phoebe.scientificName]
         app.launch()
-        XCTAssertTrue(app.navigationBars["Black Phoebe"].waitForExistence(timeout: 90), "no sighting's page; screen: \(app.debugDescription.prefix(4000))")
+        XCTAssertTrue(app.navigationBars[BundledPack.phoebe.name].waitForExistence(timeout: 90), "no sighting's page; screen: \(app.debugDescription.prefix(4000))")
         XCTAssertTrue(app.segmentedControls.firstMatch.waitForExistence(timeout: 10), "Heard or Seen, for a bird BirdNET heard")
         XCTAssertFalse(app.buttons["sighting-change-bird"].exists, "a heard sighting has no Change bird")
         XCTAssertFalse(element(app, "sighting-named-by-you").exists)

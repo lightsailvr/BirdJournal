@@ -1,9 +1,10 @@
 import Foundation
 import Testing
+import PackFixture
 @testable import Pack
 
 /// Sets (issue #54): schema-4 packs carry their set definition, the reader still opens schemas 2 and 3, the index
-/// carries every pack's set so a set works before its pack is downloaded, and the bundled Los Angeles pack places
+/// carries every pack's set so a set works before its pack is downloaded, and the bundled pack places
 /// every one of its species in its set.
 @Suite("PackSet")
 @MainActor
@@ -42,7 +43,7 @@ struct PackSetTests {
         #expect(region.name == "Testland" && region.polygons.count == 1 && region.polygons[0][0].count == 5)
     }
 
-    @Test("every species in the bundled Los Angeles pack has a set position")
+    @Test("every species in the bundled Los Angeles pack has a set position", .tags(.losAngelesContent))
     func bundledPackSet() throws {
         let pack = try SpeciesPack.bundled()
         #expect(pack.info.schemaVersion >= 4)
@@ -90,11 +91,11 @@ struct PackSetTests {
             regions: [], species: [.init(scientificName: "Calypte anna", commonName: "Anna's Hummingbird")]
         )
         let staleBundledSet = PackSet(
-            id: PackIndex.bundledPackID, name: "Los Angeles", edition: .init(name: "Old edition", theme: "x"), taxonomy: "x", regions: [], species: []
+            id: PackIndex.bundledPackID, name: BundledPack.setName, edition: .init(name: "Old edition", theme: "x"), taxonomy: "x", regions: [], species: []
         )
         let zip = try Fixtures.testPackZip()
         let index = PackIndex(packs: [
-            PackDescriptor(id: PackIndex.bundledPackID, name: "Los Angeles", version: 1, url: zip, sha256: "x", byteCount: 1, schemaVersion: 4, set: staleBundledSet),
+            PackDescriptor(id: PackIndex.bundledPackID, name: BundledPack.setName, version: 1, url: zip, sha256: "x", byteCount: 1, schemaVersion: 4, set: staleBundledSet),
             PackDescriptor(id: "us-ca-sd", name: "San Diego", version: 1, url: zip, sha256: "x", byteCount: 1, schemaVersion: 4, set: indexSet),
         ])
         let indexURL = root.appending(path: "index.json")
@@ -138,7 +139,7 @@ struct PackSetTests {
         let root = try Fixtures.temporaryFolder()
         defer { try? FileManager.default.removeItem(at: root) }
         let shipped = BundledCovers.shipped.sets
-        #expect(Set(shipped.map(\.id)) == ["us-ca-la", "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"])
+        #expect(Set(shipped.map(\.id)) == [LosAngelesSet.id, "us-ca-sd", "us-ca-bay", "us-ca-desert", "us-fl-orlando", "us-pnw", "us-ny-nyc", "us-la-south"])
         #expect(shipped.allSatisfy { !$0.regions.isEmpty && !$0.species.isEmpty }, "whole definitions, with boundaries and birds")
 
         let unreachable = PackLibrary(

@@ -11,8 +11,8 @@ import UIKit
 // screens (they share a window): the button on the page of a sighting the birder named, and not on one
 // BirdNET heard; the naming sheet opened on a sighting; and the change made with the sheet's own controls.
 extension CaptureAccessibilityTests {
-    /// A run in Griffith Park on which the birder saw and named an Allen's Hummingbird, new to them in Los Angeles. The
-    /// seeds hold an Anna's Hummingbird heard with no place, and a House Finch heard twice in Los Angeles.
+    /// A run in Griffith Park on which the birder saw and named the other hummingbird, new to them in the bundled pack's set. The
+    /// seeds hold the hummingbird heard with no place, and the finch heard twice in that set.
     static func runThatNamedAnAllens() async throws -> (harness: Screens.Harness, sighting: Sighting) {
         let harness = try Screens.Harness(location: [griffithPark])
         await harness.run.start()
@@ -54,8 +54,8 @@ extension CaptureAccessibilityTests {
         #expect(named < change && change < note, "under the line that says the name is yours: \(labels)")
         #expect(labels.count { $0 == "Change bird" } == 1, "\(labels)")
 
-        // The seeded Black Phoebe was heard; say it was seen too, as its page lets the birder do.
-        let heard = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == "Sayornis nigricans" })
+        // The seeded phoebe was heard; say it was seen too, as its page lets the birder do.
+        let heard = try #require(try harness.album.mainContext.fetch(Sighting.newestFirst()).first { $0.scientificName == BundledPack.phoebe.scientificName })
         harness.edits.setMethod(.seen, on: heard)
         let heardLabels = try await Screens.walk(SightingDetailView(id: heard.persistentModelID), harness: harness, typeSize: typeSize) { labels in
             labels.contains("You saw this bird.") && labels.contains("Your note")
@@ -69,12 +69,12 @@ extension CaptureAccessibilityTests {
     @Test("Change bird: the sighting's bird and photo, Cancel where a photo has Name it later and Delete photo, the bird it is marked, and nothing to press until another is chosen", arguments: Screens.sizes)
     func changeBirdSheet(typeSize: DynamicTypeSize) async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
-        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { _ in true } close: {}
+        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: BundledPack.otherHummingbird.name)) { _ in true } close: {}
             .environment(\.occurrenceModel, Self.geomodel)
             .environment(\.autoNameQuery, "hummingbird")
 
         let labels = try await Screens.walk(screen, harness: harness, typeSize: typeSize, inStack: false) { labels in
-            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("Anna's Hummingbird, ") }
+            labels.contains("In your field guides") && labels.contains { $0.hasPrefix("\(BundledPack.hummingbird.name), ") }
         }
         await harness.run.stop()
 
@@ -85,9 +85,9 @@ extension CaptureAccessibilityTests {
         #expect(!labels.contains("Name this bird"), "\(labels)")
         #expect(labels.contains("Cancel"), "\(labels)")
         #expect(!labels.contains("Name it later") && !labels.contains("Delete photo"), "a sighting isn't a photo waiting: \(labels)")
-        #expect(labels.contains { $0.hasPrefix("Allen's Hummingbird, your photo, Today, ") && $0.contains(", Near ") }, "the sighting: \(labels)")
-        #expect(labels.contains("Allen's Hummingbird, Los Angeles, This sighting's bird"), "\(labels)")
-        #expect(labels.contains("Anna's Hummingbird, Los Angeles, New to you here"), "the seeds' one has no place: \(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), your photo, Today, ") && $0.contains(", Near ") }, "the sighting: \(labels)")
+        #expect(labels.contains("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), This sighting's bird"), "\(labels)")
+        #expect(labels.contains("\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here"), "the seeds' one has no place: \(labels)")
         #expect(labels.contains("Choose the bird you saw."), "\(labels)")
         #expect(!labels.contains("Add sighting") && !labels.contains("Add and sew patch") && !labels.contains("Choose the bird in your photo."), "\(labels)")
     }
@@ -96,22 +96,22 @@ extension CaptureAccessibilityTests {
     func paperCardAfterAChange(typeSize: DynamicTypeSize) async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
         let before = try #require(harness.collectionStore.collection.patch(of: sighting.identifier))
-        #expect(before.scientificName == "Selasphorus sasin")
+        #expect(before.scientificName == BundledPack.otherHummingbird.scientificName)
 
         #expect(harness.edits.changeBird(of: sighting, to: Self.annas))
 
         let collection = harness.collectionStore.collection
-        #expect(collection.patch(key: before.id) == nil, "the Allen's Hummingbird's patch is unpicked")
+        #expect(collection.patch(key: before.id) == nil, "the other hummingbird's patch is unpicked")
         let patch = try #require(collection.patch(of: sighting.identifier))
-        #expect(patch.scientificName == "Calypte anna" && patch.placement.setName == "Los Angeles")
+        #expect(patch.scientificName == BundledPack.hummingbird.scientificName && patch.placement.setName == BundledPack.setName)
         let labels = try await Screens.walk(PatchDetailView(key: patch.id, startsTurned: true), harness: harness, typeSize: typeSize) { labels in
             labels.contains("Turn back") && labels.contains { $0.hasPrefix("1 sighting") }
         }
         await harness.run.stop()
         Screens.expectClean(labels, screen: "Paper card after a change")
         Self.expectNoScore(labels, screen: "Paper card after a change")
-        #expect(labels.contains { $0.contains("Anna's Hummingbird") }, "\(labels)")
-        #expect(!labels.contains { $0.contains("Allen's Hummingbird") }, "\(labels)")
+        #expect(labels.contains { $0.contains(BundledPack.hummingbird.name) }, "\(labels)")
+        #expect(!labels.contains { $0.contains(BundledPack.otherHummingbird.name) }, "\(labels)")
         #expect(labels.contains { $0.contains(", Seen, ") }, "its line in the history: \(labels)")
     }
 
@@ -119,16 +119,16 @@ extension CaptureAccessibilityTests {
     func changeBirdSheetWithoutItsPhoto() async throws {
         let (harness, sighting) = try await Self.runThatNamedAnAllens()
         harness.edits.removeAttachedPhoto(try #require(sighting.attachedPhotoPaths.first), from: sighting)
-        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { _ in true } close: {}
+        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: BundledPack.otherHummingbird.name)) { _ in true } close: {}
             .environment(\.occurrenceModel, Self.geomodel)
 
         let labels = try await Screens.walk(screen, harness: harness, inStack: false) { labels in
-            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("Anna's Hummingbird, ") }
+            labels.contains("Likely here now") && labels.contains { $0.hasPrefix("\(BundledPack.hummingbird.name), ") }
         }
         await harness.run.stop()
 
         Screens.expectClean(labels, screen: "Change bird, no photo")
-        #expect(labels.contains { $0.hasPrefix("Allen's Hummingbird, Today, ") && $0.contains(", Near ") }, "\(labels)")
+        #expect(labels.contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), Today, ") && $0.contains(", Near ") }, "\(labels)")
         #expect(!labels.contains { $0.localizedCaseInsensitiveContains("your photo") }, "there is none to speak of: \(labels)")
         #expect(labels.contains("Choose the bird you saw."), "\(labels)")
     }
@@ -139,7 +139,7 @@ extension CaptureAccessibilityTests {
         let identifier = sighting.identifier
         final class Closed { var count = 0 }
         let closed = Closed()
-        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: "Allen's Hummingbird")) { bird in
+        let screen = NameBirdView(changing: NamedSighting(sighting, commonName: BundledPack.otherHummingbird.name)) { bird in
             harness.edits.changeBird(of: sighting, to: bird)
         } close: {
             closed.count += 1
@@ -149,24 +149,24 @@ extension CaptureAccessibilityTests {
 
         try await Self.onScreen(screen, harness: harness) { elements in
             let listed = try await CameraControlsTests.settled(elements) { found in
-                CameraControlsTests.labels(found).contains { $0.hasPrefix("Anna's Hummingbird, ") }
+                CameraControlsTests.labels(found).contains { $0.hasPrefix("\(BundledPack.hummingbird.name), ") }
             }
             let button = try #require(listed.last { $0.accessibilityLabel == "Change bird" && $0.accessibilityTraits.contains(.button) }, "\(CameraControlsTests.labels(listed))")
             #expect(button.accessibilityTraits.contains(.notEnabled), "nothing chosen")
 
             // The bird it already is can be looked at, not chosen as the change.
-            let current = try #require(CameraControlsTests.element("Allen's Hummingbird, Los Angeles, This sighting's bird", in: listed), "\(CameraControlsTests.labels(listed))")
+            let current = try #require(CameraControlsTests.element("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), This sighting's bird", in: listed), "\(CameraControlsTests.labels(listed))")
             #expect(current.accessibilityActivate())
-            let same = try await CameraControlsTests.settled(elements) { CameraControlsTests.labels($0).contains("This sighting is already named Allen's Hummingbird.") }
-            #expect(CameraControlsTests.labels(same).contains("This sighting is already named Allen's Hummingbird."), "\(CameraControlsTests.labels(same))")
+            let same = try await CameraControlsTests.settled(elements) { CameraControlsTests.labels($0).contains("This sighting is already named \(BundledPack.otherHummingbird.name).") }
+            #expect(CameraControlsTests.labels(same).contains("This sighting is already named \(BundledPack.otherHummingbird.name)."), "\(CameraControlsTests.labels(same))")
             let still = try #require(same.last { $0.accessibilityLabel == "Change bird" && $0.accessibilityTraits.contains(.button) })
             #expect(still.accessibilityTraits.contains(.notEnabled))
 
-            let annas = try #require(CameraControlsTests.element("Anna's Hummingbird, Los Angeles, New to you here", in: same), "\(CameraControlsTests.labels(same))")
+            let annas = try #require(CameraControlsTests.element("\(BundledPack.hummingbird.name), \(BundledPack.setName), New to you here", in: same), "\(CameraControlsTests.labels(same))")
             #expect(annas.accessibilityActivate())
             let chosen = try await CameraControlsTests.settled(elements) { CameraControlsTests.labels($0).contains("Change and sew patch") }
             #expect(
-                CameraControlsTests.labels(chosen).contains("Anna's Hummingbird, new to you here. Your Allen's Hummingbird patch in Los Angeles will be unpicked."),
+                CameraControlsTests.labels(chosen).contains("\(BundledPack.hummingbird.name), new to you here. Your \(BundledPack.otherHummingbird.name) patch in \(BundledPack.setName) will be unpicked."),
                 "\(CameraControlsTests.labels(chosen))"
             )
             let confirm = try #require(CameraControlsTests.element("Change and sew patch", in: chosen), "\(CameraControlsTests.labels(chosen))")
@@ -176,11 +176,11 @@ extension CaptureAccessibilityTests {
         }
 
         #expect(closed.count == 1, "the sheet closes once the change is written")
-        #expect(sighting.speciesID == "Calypte anna_Anna's Hummingbird")
+        #expect(sighting.speciesID == BundledPack.hummingbird.label)
         let collection = harness.collectionStore.collection
         let patch = try #require(collection.patch(of: identifier))
-        #expect(patch.scientificName == "Calypte anna" && patch.placement.setName == "Los Angeles" && patch.count == 1)
-        #expect(collection.patch(scientificName: "Selasphorus sasin", setID: patch.placement.setID) == nil, "the Allen's patch is unpicked")
+        #expect(patch.scientificName == BundledPack.hummingbird.scientificName && patch.placement.setName == BundledPack.setName && patch.count == 1)
+        #expect(collection.patch(scientificName: BundledPack.otherHummingbird.scientificName, setID: patch.placement.setID) == nil, "the other hummingbird's patch is unpicked")
         #expect(harness.run.reveal == nil && !harness.run.hasCeremonyWaiting, "no stitch-in for the patch the change sewed")
         await harness.run.stop()
         #expect(harness.run.reveal == nil)

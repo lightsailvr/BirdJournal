@@ -36,11 +36,11 @@ final class ListenUITests: XCTestCase {
         XCTAssertGreaterThan(settings.frame.height, 80, "inline is 54 pt, large 106 pt")
         settings.buttons.element(boundBy: 0).tap()
 
-        let localSet = app.buttons["Your local set, Los Angeles"]
+        let localSet = app.buttons["Your local set, \(BundledPack.setName)"]
         XCTAssertTrue(localSet.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         localSet.tap()
         // A set's page is the exception, as the reference draws it (issue #150): its plate is its title, and its search a pull away.
-        let plate = app.staticTexts["Citrus edition, 160 birds"]
+        let plate = app.staticTexts["\(BundledPack.editionName), \(BundledPack.speciesCount) birds"]
         XCTAssertTrue(plate.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         XCTAssertLessThan(app.navigationBars.firstMatch.frame.height, 80, "no large title over the plate")
     }

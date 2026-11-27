@@ -143,8 +143,8 @@ struct LibraryCaptureScreenTests {
         let harness = try Screens.Harness(seeded: false)
         let photos = StandInPhotosLibrary(access: .notAsked, answer: .allowed)
         let picture = Self.griffithPicture()
-        // Where and when the photo was taken, an Allen's Hummingbird is likely.
-        let geomodel = ScriptedOccurrence(["Selasphorus sasin": 0.75])
+        // Where and when the photo was taken, the bundled pack's second hummingbird is likely.
+        let geomodel = ScriptedOccurrence([BundledPack.otherHummingbird.scientificName: 0.75])
         let taken = try Date("2026-04-18T13:42:10Z", strategy: .iso8601)
 
         try await Self.onScreen(CaptureSightingView(), harness: harness, photos: photos, libraryPhoto: picture, geomodel: geomodel) { elements in
@@ -153,7 +153,7 @@ struct LibraryCaptureScreenTests {
             #expect(library.accessibilityActivate())
 
             let naming = try await Controls.settled(elements) { labels in
-                Controls.labels(labels).contains("The sighting takes this photo's own date and place.") && Controls.labels(labels).contains { $0.hasPrefix("Allen's Hummingbird, ") }
+                Controls.labels(labels).contains("The sighting takes this photo's own date and place.") && Controls.labels(labels).contains { $0.hasPrefix("\(BundledPack.otherHummingbird.name), ") }
             }
             let labels = Controls.labels(naming)
             Screens.expectClean(labels, screen: "Name this bird, from the library")
@@ -161,7 +161,7 @@ struct LibraryCaptureScreenTests {
             let header = try #require(labels.first { $0.hasPrefix("Your photo, ") }, "\(labels)")
             #expect(header.hasPrefix("Your photo, Apr 18, 2026"), "the photo's date, not today's: \(header)")
             #expect(header.contains(", Near "), "the photo's place: \(header)")
-            #expect(labels.contains("Allen's Hummingbird, Los Angeles, New to you here"), "placed where the photo was taken: \(labels)")
+            #expect(labels.contains("\(BundledPack.otherHummingbird.name), \(BundledPack.setName), New to you here"), "placed where the photo was taken: \(labels)")
             // What is suggested is what is likely where and when the photo was taken, not here and now (#189).
             #expect(labels.contains("Likely here now"), "\(labels)")
             let asked = try #require(geomodel.asked.first, "the geomodel was not read")

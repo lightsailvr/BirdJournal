@@ -41,7 +41,7 @@ LAUNCH = [
     signpost(7, "end", "Open bundled pack", 110_500),
     signpost(7, "end", "Open packs", 115_000),
     signpost(7, "end", "Stores ready", 150_000),
-    signpost(7, "event", "Launch context", 240_000, "sightings: 0; packs: us-ca-la:12"),
+    signpost(7, "event", "Launch context", 240_000, "sightings: 0; packs: the-bundled-pack:12"),
     signpost(7, "event", "Journal interactive", 250_000),
 ]
 
@@ -58,7 +58,7 @@ class RunTests(unittest.TestCase):
         self.assertEqual(result["open_bundled_pack_ms"], 9.5)
         self.assertEqual(result["open_packs_ms"], 14.0)
         self.assertEqual(result["stores_ready_ms"], 49.9)
-        self.assertEqual(result["context"], "sightings: 0; packs: us-ca-la:12")
+        self.assertEqual(result["context"], "sightings: 0; packs: the-bundled-pack:12")
         self.assertEqual(result["configuration"], "Debug")
         self.assertNotIn("build_collection_ms", result, "an interval the launch never logged is left out")
 
@@ -81,7 +81,7 @@ class SummaryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             for label, times in [("before", [900.0, 700.0, 800.0]), ("after", [650.0, 750.0])]:
                 lines = [{"process_to_interactive_ms": time, "open_bundled_pack_ms": time / 100, "load_average": 4.0 + index,
-                          "configuration": "Debug", "commit": label, "context": "sightings: 0; packs: us-ca-la:12"} for index, time in enumerate(times)]
+                          "configuration": "Debug", "commit": label, "context": "sightings: 0; packs: the-bundled-pack:12"} for index, time in enumerate(times)]
                 (Path(folder) / f"{label}.jsonl").write_text("".join(json.dumps(line) + "\n" for line in lines))
             printed = io.StringIO()
             with contextlib.redirect_stdout(printed):
@@ -92,7 +92,7 @@ class SummaryTests(unittest.TestCase):
         self.assertIn("| `Open bundled pack` | 8.0 (7.0 to 9.0) | 7.0 (6.5 to 7.5) |", table)
         self.assertIn("| Load average (1 min) over the launches | 4.0 to 6.0 | 4.0 to 5.0 |", table)
         self.assertFalse(any("Build collection" in line for line in table), "a row no launch has is left out")
-        self.assertIn("- before, context: sightings: 0; packs: us-ca-la:12", table)
+        self.assertIn("- before, context: sightings: 0; packs: the-bundled-pack:12", table)
 
     def test_launches_taken_under_load_can_be_left_out(self):
         with tempfile.TemporaryDirectory() as folder:

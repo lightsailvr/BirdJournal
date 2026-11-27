@@ -6,7 +6,7 @@ import XCTest
 final class ShareCardUITests: XCTestCase {
     private func openSheet(_ arguments: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-autoScreen", "card", "-autoCardSpecies", "Sayornis nigricans"] + arguments
+        app.launchArguments = ["-inMemoryAlbum", "YES", "-seedJournal", "YES", "-autoScreen", "card", "-autoCardSpecies", BundledPack.phoebe.scientificName] + arguments
         app.launch()
         let share = app.navigationBars.buttons["Share"]
         XCTAssertTrue(share.waitForExistence(timeout: 15), "screen: \(app.debugDescription.prefix(3000))")
@@ -41,7 +41,7 @@ final class ShareCardUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = [
             "-inMemoryAlbum", "YES", "-seedJournal", "YES", "-collectionIntroShown", "YES", "-autoScreen", "sighting",
-            "-autoCardSpecies", "Zenaida macroura", "-fakeLibraryPhoto", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some",
+            "-autoCardSpecies", BundledPack.dove.scientificName, "-fakeLibraryPhoto", "YES", "-fakeAccount", "signedIn", "-fakeCircles", "some",
         ]
         app.launch()
         let share = app.navigationBars.buttons["Share"]
@@ -109,7 +109,7 @@ final class ShareCardUITests: XCTestCase {
         XCTAssertTrue(app.buttons["Invite friends"].waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
         for _ in 0..<16 where !mine.exists { app.swipeUp() }
         XCTAssertTrue(mine.waitForExistence(timeout: 10), "screen: \(app.debugDescription.prefix(3000))")
-        XCTAssertTrue(mine.label.contains("Black Phoebe") && mine.label.contains("Tail dipping over the pond"), mine.label)
+        XCTAssertTrue(mine.label.contains(BundledPack.phoebe.name) && mine.label.contains("Tail dipping over the pond"), mine.label)
 
         app.navigationBars.buttons.element(boundBy: 0).tap()
         app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Family'")).firstMatch.tap()

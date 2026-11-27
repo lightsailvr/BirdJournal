@@ -219,7 +219,7 @@ private struct FriendBannerSection: View {
         } header: {
             Text("Friend banner")
         } footer: {
-            Text(status ?? "\"Maya heard a Black Phoebe · Pasadena\" on a running lens, held on the viewfinder, a details page or a sounds page.")
+            Text(status ?? "\"Maya heard a \(SampleBirds.phoebe.commonName) · Pasadena\" on a running lens, held on the viewfinder, a details page or a sounds page.")
         }
     }
 }

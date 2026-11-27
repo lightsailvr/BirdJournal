@@ -18,7 +18,7 @@ final class CameraControlsUITests: XCTestCase {
     private func launchCamera() throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
-            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", "Haemorhous mexicanus_House Finch",
+            "-inMemoryAlbum", "YES", "-collectionIntroShown", "YES", "-fakeRunBirds", BundledPack.finch.label,
             "-autoPhoneListening", try Self.clip(), "-autoLocation", "griffith", "-autoScreen", "capture",
             "-fakeCamera", "ready", "-reduceMotion", "YES",
         ]
