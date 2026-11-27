@@ -12,6 +12,7 @@ struct SetView: View {
     @Environment(PackLibrary.self) private var library
     @Environment(CollectionStore.self) private var collectionStore
     @Environment(CircleStore.self) private var circles
+    @Environment(FieldGuideOffers.self) private var offers
     let id: String
     @State private var query = ""
     /// The plate names the set, so the bar only does once the plate has scrolled away.
@@ -36,11 +37,17 @@ struct SetView: View {
             ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    // The birder is standing in this set without its field guide (issue #223): the offer stands in for the
+                    // ordinary Download and its words, which come back once it's dismissed.
+                    let offer = offers.offer(forSet: set.id)
                     if query.isEmpty {
-                        SetTile(set: set, progress: progress, opensSet: false)
+                        SetTile(set: set, progress: progress, opensSet: false, showsTransfer: offer == nil)
                             .padding(.top, 4)
                     }
-                    if query.isEmpty, pack == nil {
+                    if query.isEmpty, let offer {
+                        FieldGuideOfferCard(standingIn: set, descriptor: offer) { offers.dismiss(setID: set.id) }
+                            .padding(.top, 12)
+                    } else if query.isEmpty, pack == nil {
                         Text(Self.notOnPhoneText(canDownload: library.index?.descriptor(id: set.id) != nil))
                             .font(JournalFont.supporting)
                             .foregroundStyle(Color.inkSecondary)

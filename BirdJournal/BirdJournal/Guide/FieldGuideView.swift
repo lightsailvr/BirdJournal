@@ -163,6 +163,8 @@ struct SetTile: View {
     let set: PackSet
     let progress: SetProgress
     var opensSet = true
+    /// False where a field guide's offer under the plate has the download's control (issue #223).
+    var showsTransfer = true
 
     var body: some View {
         let descriptor = library.index?.descriptor(id: set.id)
@@ -183,7 +185,7 @@ struct SetTile: View {
                     .accessibilityElement(children: .contain)
                     .accessibilityIdentifier("set-plate")
             }
-            if !installed || Self.isTransferring(status) {
+            if showsTransfer, !installed || Self.isTransferring(status) {
                 PackTransferStatus(status: status, descriptor: descriptor)
             }
         }

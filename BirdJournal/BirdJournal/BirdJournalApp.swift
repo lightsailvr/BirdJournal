@@ -21,6 +21,7 @@ struct BirdJournalApp: App {
     @State private var packs: PackLibrary
     @State private var collectionStore: CollectionStore
     @State private var place: CurrentPlace
+    @State private var offers: FieldGuideOffers
     @State private var journalEdits: JournalEdits
     @State private var account: AccountSession
     @State private var circles: CircleStore
@@ -98,7 +99,10 @@ struct BirdJournalApp: App {
         _packs = State(initialValue: packs)
         let collectionStore = CollectionStore(container: album, deferred: true, sets: { packs.cardSets })
         _collectionStore = State(initialValue: collectionStore)
-        _place = State(initialValue: CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation()))
+        let place = CurrentPlace(library: packs, collection: { collectionStore.collection }, location: Self.makePlaceLocation())
+        _place = State(initialValue: place)
+        // A set's field guide, offered where the birder is standing (issue #223).
+        _offers = State(initialValue: FieldGuideOffers(library: packs, place: { place.standingInSetID }))
         // The run on the Lock Screen, and the patch on the Home Screen (issue #150). Neither waits for a view: a run goes on
         // behind a locked phone.
         runActivity = RunActivityController(host: ActivityKitRunHost())
@@ -364,6 +368,7 @@ struct BirdJournalApp: App {
             .environment(packs)
             .environment(collectionStore)
             .environment(place)
+            .environment(offers)
             .environment(\.warmEngine) { BundledIdentification.warm() }
             .environment(\.frameStore, frames)
             .onAppear {

@@ -36,20 +36,25 @@ struct ScreenAccessibilityTests {
         let pushes: PushCenter
         let places = PlaceNames()
         let place: CurrentPlace
+        let offers: FieldGuideOffers
 
         /// - Parameters:
         ///   - index: what the phone last read of the pack index, so a set can be known before its pack is on the phone.
         ///   - session: what its downloads go through.
         ///   - location: what a phone run is told of where it is, and the camera opened with no run (issue #191); by default
         ///     that it may not know.
-        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied]) throws {
+        ///   - standingAt: the phone's last known position, which picks the place (issue #150) and what's offered there
+        ///     (issue #223); by default it has none.
+        init(seeded: Bool = true, index: PackIndex? = nil, session: URLSession = .shared, signedIn: Bool = true, location: [LocationFix] = [.denied], standingAt: Coordinate? = nil) throws {
             album = try AlbumSchema.makeContainer(inMemory: true)
             frames = FrameStore(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibility-\(UUID().uuidString)", directoryHint: .isDirectory))
             let storage = PackStorage(directory: URL.temporaryDirectory.appending(path: "ScreenAccessibilityPacks-\(UUID().uuidString)"))
             if let index { try storage.cacheIndex(index) }
             library = PackLibrary(bundled: try SpeciesPack.bundled(), storage: storage, indexURL: PackIndex.defaultURL, session: session, availableCapacity: { .max })
             collectionStore = CollectionStore(container: album, sets: { [library] in library.cardSets })
-            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: ScriptedLocationProvider([.denied]), defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
+            let lastKnown: any LocationProvider = standingAt.map { PlaceTests.Place(coordinate: $0) } ?? ScriptedLocationProvider([.denied])
+            place = CurrentPlace(library: library, collection: { [collectionStore] in collectionStore.collection }, location: lastKnown, defaults: UserDefaults(suiteName: "screen-ax-place-\(UUID().uuidString)")!)
+            offers = FieldGuideOffers(library: library, place: { [place] in place.standingInSetID }, defaults: UserDefaults(suiteName: "screen-ax-offers-\(UUID().uuidString)")!)
             edits = JournalEdits(container: album, frames: frames)
             account = FakeAccount.session(signedIn: signedIn)
             let client = FakeCircleClient(seeded: true)
@@ -91,6 +96,7 @@ struct ScreenAccessibilityTests {
             .environment(circles)
             .environment(collectionStore)
             .environment(place)
+            .environment(offers)
             .environment(outbox)
             .environment(pushes)
             .environment(places)
