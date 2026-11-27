@@ -113,6 +113,7 @@ struct ListenCoverHeader: View {
 /// "Your local set" (the Listen mock's lower half): the set's name, which opens its page, and how many of its birds are sewn; the
 /// thread; and the latest patches.
 struct LocalSetSection: View {
+    @Environment(FieldGuideOffers.self) private var offers
     @Environment(\.dynamicTypeSize) private var typeSize
     @ScaledMetric(relativeTo: .body) private var patchSide: CGFloat = 80
     let local: LocalSet
@@ -135,7 +136,11 @@ struct LocalSetSection: View {
             ThreadProgress(local.progress)
                 .id(local.set.id)
             let latest = latestPatches
-            if latest.isEmpty {
+            if let offer = offers.offer(forSet: local.set.id) {
+                // The birder is standing here without the set's field guide (issue #223): the offer, where the plain words were.
+                FieldGuideOfferCard(standingIn: local.set, descriptor: offer) { offers.dismiss(setID: local.set.id) }
+                    .padding(.top, 14)
+            } else if latest.isEmpty {
                 Text(local.isOnPhone ? "Birds you add are sewn as patches here, one for every bird in every place." : Self.notOnPhoneText)
                     .font(JournalFont.supporting)
                     .foregroundStyle(Color.inkSecondary)
@@ -153,7 +158,8 @@ struct LocalSetSection: View {
         .padding(.top, JournalLayout.sectionGap)
     }
 
-    /// What stands where the latest patches would, for a place whose set's pack isn't on the phone (issue #207).
+    /// What stands where the latest patches would, for a place whose set's pack isn't on the phone (issue #207), once its
+    /// offer has been dismissed or when there's no download to offer (issue #223).
     static let notOnPhoneText = "This set's field guide isn't on your iPhone yet, so birds you find here aren't sewn into this set."
 
     /// The set's name is the way to its page. It's the section's heading for VoiceOver, which also says whose set it is.
