@@ -17,6 +17,14 @@ sources are a dataset and its Wikipedia revision; the hummingbird has none. Sinc
 approved story title; `test-pack-untitled.zip` beside it is the schema-4 pack from before, whose `lore` table has no
 `title` column, kept as written then. Since #114 the test pack has an approved set cover (`COVER_SEED`, a 1536 x 864
 landscape of bands); the Los Angeles form, like every pack built before covers, has none.
+
+    cd packbuilder && uv run python -m tests.make_fixture_pack ../BirdJournal/BirdJournalKit/Tests/PackTests/Fixtures/north-america-stand-in.zip north-america 1
+
+The third form (issue #215) is a stand-in for the North America pack, for the tests that need it on a phone as a
+download beside the bundled pack before the real one exists: the committed set (`packs/north-america/set.json`: its
+300 birds in order, its boundary, the Continental edition) with two of its birds, the American Robin and the American
+Crow, each with drawn photos and an approved patch that is a drawing too (`stand_in_patch`: the edition's wide rectangle
+in its cord and twill), never one of the pack's paintings, which only the maintainer's review lets into a pack.
 """
 
 from __future__ import annotations
@@ -42,6 +50,67 @@ from packbuilder.writer import ChosenPhoto, SpeciesResult, write_pack
 from PIL import Image
 from tests.comfy_stub import bird_on, landscape
 from tests.conftest import make_candidate, synthetic_photo
+
+NORTH_AMERICA = "north-america"
+REPO_PACKS = Path(__file__).resolve().parents[1] / "packs"
+CONTINENTAL_CORD, CONTINENTAL_TWILL = (201, 143, 42), (191, 179, 196)
+"""The Continental edition's cord and twill (#214: `#C98F2A`, `#BFB3C4`)."""
+
+
+def stand_in_definition(version: int) -> PackDefinition:
+    """The North America definition's own fields with two of its birds."""
+    whole = PackDefinition.load(REPO_PACKS / NORTH_AMERICA / "pack.json")
+    return whole.only(["turdus-migratorius", "corvus-brachyrhynchos"])
+
+
+def stand_in_patch(colours: tuple[tuple[int, int, int], tuple[int, int, int]]) -> Image.Image:
+    """A drawn Continental patch as `cut_from_card` would leave a painted one: the wide rectangle, 1.42 to 1, 720 px
+    on its long side, on transparency, its cord and twill with a little grain (flat colour has no thread to light) and
+    a two-tone bird."""
+    import numpy as np
+    from PIL import ImageDraw
+
+    width, height = 720, round(720 / 1.42)
+    patch = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(patch)
+    draw.rounded_rectangle((0, 0, width - 1, height - 1), round(height * 0.1), fill=(*CONTINENTAL_CORD, 255))
+    draw.rounded_rectangle((25, 25, width - 26, height - 26), round(height * 0.1) - 25, fill=(*CONTINENTAL_TWILL, 255))
+    bird = Image.new("RGB", (width, height), CONTINENTAL_TWILL)
+    bird_on(bird, box=(0.38, 0.2, 0.62, 0.82), colours=colours)
+    mask = Image.fromarray((np.any(np.asarray(bird) != np.array(CONTINENTAL_TWILL), axis=-1) * 255).astype(np.uint8))
+    patch.paste(bird, (0, 0), mask)
+    pixels = np.asarray(patch).astype(int)
+    grain = np.random.default_rng(215).integers(-10, 11, size=(height, width, 1))
+    pixels[..., :3] = np.clip(pixels[..., :3] + grain, 0, 255)
+    return Image.fromarray(pixels.astype(np.uint8), "RGBA")
+
+
+def stand_in_main(target: Path, version: int) -> None:
+    import json
+
+    from packbuilder.patch_art import Patch
+
+    pack = stand_in_definition(version)
+    card_set = json.loads((REPO_PACKS / NORTH_AMERICA / "set.json").read_text())
+    work = Path(tempfile.mkdtemp(prefix="fixture-pack-"))
+    try:
+        robin, crow = pack.species
+        described = Description(summary="A stand-in for the North America pack's robin.", field_marks="Brick-red breast, grey back.", size="25 cm", habitat="lawns, woods",
+                                source="https://en.wikipedia.org/w/index.php?title=American_robin&oldid=1")
+        results = [result_for(robin, [215001, 215002, 215003], work, description=described), result_for(crow, [215011, 215012, 215013], work)]
+        patches = {}
+        for result, colours in ((results[0], ((70, 70, 72), (186, 84, 40))), (results[1], ((16, 16, 18), (24, 24, 28)))):
+            result.sounds = SoundResult()
+            file = work / f"{result.entry.id}.png"
+            stand_in_patch(colours).save(file)
+            patches[result.entry.id] = Patch(result.entry.id, "approved", file, (result.photos[0].candidate.photo_id,))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        write_pack(pack, results, work / "out", built_at="2026-11-26T00:00:00Z", archive_path=target, card_set=card_set, patches=patches,
+                   patch_versions="a drawing standing in for a painting (tests/make_fixture_pack.py)")
+        print(f"wrote {target} ({target.stat().st_size} bytes)")
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
 
 def definition(pack_id: str = "test-pack", version: int = 1) -> PackDefinition:
     return PackDefinition(
@@ -134,6 +203,8 @@ def tone_sound(work: Path) -> ChosenSound:
 
 
 def main(target: Path, pack_id: str = "test-pack", version: int = 1) -> None:
+    if pack_id == NORTH_AMERICA:
+        return stand_in_main(target, version)
     pack = definition(pack_id, version)
     work = Path(tempfile.mkdtemp(prefix="fixture-pack-"))
     try:
